@@ -4,5 +4,7 @@
   "item.momentum.jet_booster.tooltip": "Enhanced movement capabilities when equipped",
   "key.momentum.lower_center": "lower center",
   "key.momentum.change_momentum": "change momentum",
-  "key.category.momentum.category": "Momentum"
+  "key.category.momentum.category": "Momentum",
+  "message.momentum.momentum_disabled": "Momentum disabled",
+  "message.momentum.momentum_enabled": "Momentum enabled"
 }

@@ -1,13 +1,6 @@
 package com.akirahane.momentum.compat.curios;
 
-import net.minecraft.world.item.ItemStack;
-import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModList;
-import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
-import top.theillusivec4.curios.api.CuriosCapability;
-import top.theillusivec4.curios.api.type.capability.ICurio;
-
-import static com.akirahane.momentum.Momentum.JET_BOOSTER_ITEM;
 
 /**
  * Curios API 兼容层入口
