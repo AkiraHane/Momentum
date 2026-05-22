@@ -1,13 +1,7 @@
 {
-  "itemGroup.momentum": "Example Mod Tab",
-  "block.momentum.example_block": "Example Block",
-  "item.momentum.example_item": "Example Item",
-
-  "momentum.configuration.title": "Momentum Configs",
-  "momentum.configuration.section.momentum.common.toml": "Momentum Configs",
-  "momentum.configuration.section.momentum.common.toml.title": "Momentum Configs",
-  "momentum.configuration.items": "Item List",
-  "momentum.configuration.logDirtBlock": "Log Dirt Block",
-  "momentum.configuration.magicNumberIntroduction": "Magic Number Text",
-  "momentum.configuration.magicNumber": "Magic Number"
+  "item.momentum.jet_booster": "Jet Booster",
+  "itemGroup.momentum": "Momentum",
+  "item.momentum.jet_booster.tooltip": "Enhanced movement capabilities when equipped",
+  "key.momentum.lower_center": "lower center",
+  "key.category.momentum.category": "Momentum"
 }
