@@ -2,8 +2,11 @@ package com.akirahane.momentum;
 
 import com.akirahane.momentum.config.ClientConfig;
 import com.akirahane.momentum.config.ServerConfig;
+import com.mojang.serialization.Codec;
 import net.minecraft.world.item.Rarity;
 import net.neoforged.fml.config.ModConfig;
+import net.neoforged.neoforge.attachment.AttachmentType;
+import net.neoforged.neoforge.registries.NeoForgeRegistries;
 import org.jetbrains.annotations.NotNull;
 
 import net.minecraft.world.item.CreativeModeTabs;
@@ -14,6 +17,8 @@ import net.neoforged.fml.ModContainer;
 import net.neoforged.neoforge.event.BuildCreativeModeTabContentsEvent;
 import net.neoforged.neoforge.registries.DeferredItem;
 import net.neoforged.neoforge.registries.DeferredRegister;
+
+import java.util.function.Supplier;
 
 // 此处的值应与 META-INF/neoforge.mods.toml 文件中的条目匹配
 @Mod(Momentum.MODID)
@@ -28,6 +33,16 @@ public class Momentum {
             p -> p.stacksTo(1) // 设置物品可堆叠1
                     .rarity(Rarity.RARE)
     );
+    // 注册持久化
+    private static final DeferredRegister<@NotNull AttachmentType<?>> ATTACHMENT_TYPES =
+            DeferredRegister.create(NeoForgeRegistries.ATTACHMENT_TYPES, MODID);
+    public static final Supplier<AttachmentType<@NotNull Boolean>> MOMENTUM_ENABLED =
+            ATTACHMENT_TYPES.register("momentum_enabled",
+                    () -> AttachmentType.builder(() -> false)
+                            .serialize(Codec.BOOL.fieldOf("momentum_enabled"))
+                            .copyOnDeath()
+                            .build()
+            );
 
     // mod 类的构造函数是 mod 加载时运行的第一段代码。
     // FML 会识别某些参数类型（如 IEventBus 或 ModContainer）并自动传入。
@@ -37,6 +52,8 @@ public class Momentum {
         modContainer.registerConfig(ModConfig.Type.CLIENT, ClientConfig.SPEC);
         // 将延迟注册器注册到 mod 事件总线，以便物品被注册
         ITEMS.register(modEventBus);
+        // 注册持久化数据
+        ATTACHMENT_TYPES.register(modEventBus);
         // 将物品注册到创造模式标签页
         modEventBus.addListener(this::addCreative);
     }
