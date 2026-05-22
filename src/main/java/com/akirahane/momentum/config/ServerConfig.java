@@ -19,6 +19,10 @@ public class ServerConfig {
             .comment("装备助推器时体力消耗的减免幅度", "0.0 = 无减免，1.0 = 完全减免")
             .defineInRange("boosterStaminaReduction", 1.0, 0.0, 1.0);
 
+    public static final ModConfigSpec.BooleanValue AUTO_CLIMB = BUILDER
+            .comment("是否开启自动上坡", "默认值: true")
+            .define("autoClimb", true);
+
     // ========== 体力系统配置 ==========
 
     public static final ModConfigSpec.BooleanValue MANEUVER_CONSUMES_STAMINA = BUILDER
