@@ -1,7 +1,8 @@
 package com.akirahane.momentum.core.common.state.states.ground;
 
+import com.akirahane.momentum.core.common.state.MovementStateType;
 import com.akirahane.momentum.core.common.state.states.MovementState;
-import com.akirahane.momentum.core.common.state.states.ground.action.CrouchState;
+import com.akirahane.momentum.core.common.state.states.ground.action.ProneState;
 import com.akirahane.momentum.core.content.PlayerMovementContext;
 import com.akirahane.momentum.server.config.ServerConfig;
 import net.minecraft.world.entity.player.Player;
@@ -23,12 +24,18 @@ public class GroundState extends MovementState {
     }
 
     public static MovementState newStateCheck(Player player, MovementState nowState, PlayerMovementContext data) {
-        if (LOWER_CENTER_KEY_MAPPING.get().isDown() && data.getVelocity().horizontalDistance() < ServerConfig.MIN_SLIDE_SPEED.get()) {
-            return CrouchState.newStateCheck(player, nowState, data);
+        LOGGER.debug("horizontalDistance: {}", player.getDeltaMovement().horizontalDistance() * 20);
+        if (LOWER_CENTER_KEY_MAPPING.get().isDown() && player.getDeltaMovement().horizontalDistance() * 20 < ServerConfig.MIN_SLIDE_SPEED.get()) {
+            return ProneState.newStateCheck(player, nowState, data);
         }
         if (!(nowState.getClass() == GroundState.class)) {
             return new GroundState(data);
         }
         return nowState;
+    }
+
+    @Override
+    public MovementStateType getStateType() {
+        return MovementStateType.GROUND;
     }
 }

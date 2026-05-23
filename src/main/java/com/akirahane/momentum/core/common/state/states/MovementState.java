@@ -1,5 +1,6 @@
 package com.akirahane.momentum.core.common.state.states;
 
+import com.akirahane.momentum.core.common.state.MovementStateType;
 import com.akirahane.momentum.core.common.state.states.ground.GroundState;
 import com.akirahane.momentum.core.content.PlayerMovementContext;
 import com.mojang.logging.LogUtils;
@@ -8,7 +9,7 @@ import net.minecraft.world.entity.player.Player;
 import org.slf4j.Logger;
 
 @Getter
-public class MovementState {
+public abstract class MovementState {
     // 日志
     protected static final Logger LOGGER = LogUtils.getLogger();
 
@@ -56,50 +57,5 @@ public class MovementState {
         return nowState;
     }
 
-
-//    // 物理参数，子类按需覆写
-//    public float getFriction() {
-//        return -1;
-//    }
-//
-//    public float getGravityMultiplier() {
-//        return 1.0f;
-//    }
-//
-//    public float getJumpPowerMultiplier() {
-//        return 1.0f;
-//    }
-//
-//    public float getFallDamageMultiplier() {
-//        return 1.0f;
-//    }
-//
-//    public Vec3 getVelocityOverride() {
-//        return null;
-//    }
-//
-//    public boolean isInvincible() {
-//        return false;
-//    }
-
-    // 视觉
-
-    /**
-     * 摄像机倾斜角度，0为不倾斜
-     */
-    public float getCameraRoll() {
-        return 0f;
-    }
-
-    /**
-     * 客户端粒子
-     */
-    public void spawnParticles(Player player) {
-    }
-
-    /**
-     * 循环音效
-     */
-    public void playLoopingSound(Player player) {
-    }
+    public abstract MovementStateType getStateType();
 }

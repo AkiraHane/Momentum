@@ -1,6 +1,8 @@
 package com.akirahane.momentum.core.init;
 
 import com.akirahane.momentum.Momentum;
+import com.akirahane.momentum.core.common.state.MovementStateMachine;
+import com.akirahane.momentum.core.network.StateTransitionPacket;
 import com.akirahane.momentum.core.network.SyncMomentumEnabledPacket;
 import com.akirahane.momentum.core.network.ToggleMomentumPacket;
 import net.minecraft.network.chat.Component;
@@ -47,6 +49,17 @@ public class ModNetwork {
                 (packet, context) -> {
                     Player player = context.player();
                     player.setData(ModAttachments.MOMENTUM_ENABLED, packet.enabled());
+                }
+        );
+
+        registrar.playToServer(
+                StateTransitionPacket.TYPE,
+                StateTransitionPacket.STREAM_CODEC,
+                (packet, context) -> {
+                    // 已经在主线程了，NeoForge 1.21.1默认在主线程处理
+                    Player player = context.player();
+                    MovementStateMachine stateMachine = player.getData(ModAttachments.MOVEMENT_STATE);
+                    stateMachine.setStateFromClient(packet.stateType(), player);
                 }
         );
     }

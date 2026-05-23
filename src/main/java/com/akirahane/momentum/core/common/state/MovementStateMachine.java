@@ -1,14 +1,17 @@
 package com.akirahane.momentum.core.common.state;
 
 import com.akirahane.momentum.core.common.state.states.MovementState;
+import com.akirahane.momentum.core.common.state.states.ground.GroundState;
 import com.akirahane.momentum.core.content.PlayerMovementContext;
 import com.akirahane.momentum.core.init.ModAttachments;
+import com.akirahane.momentum.core.network.StateTransitionPacket;
 import com.mojang.logging.LogUtils;
 import lombok.Getter;
 import lombok.Setter;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
+import net.neoforged.neoforge.client.network.ClientPacketDistributor;
 import org.slf4j.Logger;
 
 @Getter
@@ -20,7 +23,7 @@ public class MovementStateMachine {
     private MovementState currentState;
 
     public MovementStateMachine() {
-        currentState = new MovementState(new PlayerMovementContext());
+        currentState = new GroundState(new PlayerMovementContext());
     }
 
     // ==================== 生命周期 ====================
@@ -36,10 +39,10 @@ public class MovementStateMachine {
 //        CameraHandler.setTargetRoll(currentState.getCameraRoll());
 
         // 粒子效果（滑铲火花、蹬墙灰尘）
-        currentState.spawnParticles(player);
-
-        // 音效
-        currentState.playLoopingSound(player);
+//        currentState.spawnParticles(player);
+//
+//        // 音效
+//        currentState.playLoopingSound(player);
     }
 
     public void serverTick(ServerPlayer player) {
@@ -60,11 +63,14 @@ public class MovementStateMachine {
         currentState.exit(currentState, player);
         currentState = next;
         currentState.enter(currentState, player);
+        ClientPacketDistributor.sendToServer(new StateTransitionPacket(next.getStateType()));
     }
 
-    public void setStateFromClient(MovementState newState, Player player) {
-        if (newState == null) return;
-        transition(newState, player);
+    public void setStateFromClient(MovementStateType newStateType, Player player) {
+        if (newStateType == null) return;
+        transition(newStateType.getStateInstance(), player);
     }
+
+    // ==================== 状态检查 ====================
 
 }

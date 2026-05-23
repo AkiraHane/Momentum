@@ -8,9 +8,12 @@ import com.akirahane.momentum.core.network.ToggleMomentumPacket;
 import net.minecraft.client.player.LocalPlayer;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
+import net.neoforged.neoforge.client.gui.ConfigurationScreen;
+import net.neoforged.neoforge.client.gui.IConfigScreenFactory;
 import net.neoforged.neoforge.client.network.ClientPacketDistributor;
 import net.neoforged.neoforge.event.tick.PlayerTickEvent;
 
@@ -20,6 +23,11 @@ import net.neoforged.neoforge.event.tick.PlayerTickEvent;
 @EventBusSubscriber(modid = Momentum.MODID, value = Dist.CLIENT)
 public class MomentumClient {
     private static boolean wasToggleDown = false;
+
+    public MomentumClient(ModContainer modContainer) {
+        // 注册我们 mod 的 ModConfigSpec，以便 FML 可以为我们创建和加载配置文件
+        modContainer.registerExtensionPoint(IConfigScreenFactory.class, ConfigurationScreen::new);
+    }
 
     // 客户端驱动（用于预测和视觉效果）
     @SubscribeEvent
