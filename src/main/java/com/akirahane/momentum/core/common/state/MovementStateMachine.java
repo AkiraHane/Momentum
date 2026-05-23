@@ -2,7 +2,6 @@ package com.akirahane.momentum.core.common.state;
 
 import com.akirahane.momentum.core.common.state.states.MovementState;
 import com.akirahane.momentum.core.content.PlayerMovementContext;
-import com.akirahane.momentum.client.handler.CameraHandler;
 import com.akirahane.momentum.core.init.ModAttachments;
 import com.mojang.logging.LogUtils;
 import lombok.Getter;
