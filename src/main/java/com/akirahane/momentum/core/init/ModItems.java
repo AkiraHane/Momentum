@@ -1,4 +1,4 @@
-package com.akirahane.momentum.init;
+package com.akirahane.momentum.core.init;
 
 import net.minecraft.world.item.CreativeModeTabs;
 import net.minecraft.world.item.Item;

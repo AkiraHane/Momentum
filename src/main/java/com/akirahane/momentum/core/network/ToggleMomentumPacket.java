@@ -1,17 +1,13 @@
-package com.akirahane.momentum.network;
+package com.akirahane.momentum.core.network;
 
-import com.akirahane.momentum.Momentum;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.Identifier;
-import net.neoforged.fml.common.EventBusSubscriber;
 import org.jetbrains.annotations.NotNull;
 
 import static com.akirahane.momentum.Momentum.MODID;
 
-// 你可以使用 EventBusSubscriber 来自动注册类中所有带有 @SubscribeEvent 注解的静态方法
-@EventBusSubscriber(modid = Momentum.MODID)
 public record ToggleMomentumPacket() implements CustomPacketPayload {
 
     public static final ToggleMomentumPacket INSTANCE = new ToggleMomentumPacket();

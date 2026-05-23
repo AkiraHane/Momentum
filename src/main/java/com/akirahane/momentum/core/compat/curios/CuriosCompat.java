@@ -1,4 +1,4 @@
-package com.akirahane.momentum.compat.curios;
+package com.akirahane.momentum.core.compat.curios;
 
 import net.neoforged.fml.ModList;
 

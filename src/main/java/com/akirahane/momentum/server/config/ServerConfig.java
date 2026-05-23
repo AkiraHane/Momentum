@@ -1,4 +1,4 @@
-package com.akirahane.momentum.config;
+package com.akirahane.momentum.server.config;
 
 import net.neoforged.neoforge.common.ModConfigSpec;
 
@@ -40,6 +40,11 @@ public class ServerConfig {
     public static final ModConfigSpec.DoubleValue STAMINA_REGEN_DELAY = BUILDER
             .comment("体力恢复延迟（秒，停止消耗后多久开始恢复）", "默认值: 2.0")
             .defineInRange("staminaRegenDelay", 2.0, 0.0, 10.0);
+
+    // ========== 机动配置 ==========
+    public static final ModConfigSpec.DoubleValue MIN_SLIDE_SPEED = BUILDER
+            .comment("滑铲最低速度（米/秒）", "默认值: 0.5")
+            .defineInRange("minSlideSpeed", 2.0, 1.0, 100.0);
 
     public static final ModConfigSpec SPEC = BUILDER.build();
 }

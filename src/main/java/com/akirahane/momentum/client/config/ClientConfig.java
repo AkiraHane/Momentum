@@ -1,4 +1,4 @@
-package com.akirahane.momentum.config;
+package com.akirahane.momentum.client.config;
 
 import net.neoforged.neoforge.common.ModConfigSpec;
 

@@ -1,5 +1,6 @@
-package com.akirahane.momentum.init;
+package com.akirahane.momentum.core.init;
 
+import com.akirahane.momentum.core.common.state.MovementStateMachine;
 import com.mojang.serialization.Codec;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.attachment.AttachmentType;
@@ -17,9 +18,14 @@ public class ModAttachments {
             DeferredRegister.create(NeoForgeRegistries.ATTACHMENT_TYPES, MODID);
     public static final Supplier<AttachmentType<@NotNull Boolean>> MOMENTUM_ENABLED =
             ATTACHMENT_TYPES.register("momentum_enabled",
-                    () -> AttachmentType.builder(() -> false)
+                    () -> AttachmentType.builder(() -> true)
                             .serialize(Codec.BOOL.fieldOf("momentum_enabled"))
                             .copyOnDeath()
+                            .build()
+            );
+    public static final Supplier<AttachmentType<@NotNull MovementStateMachine>> MOVEMENT_STATE =
+            ATTACHMENT_TYPES.register("movement_state",
+                    () -> AttachmentType.builder(MovementStateMachine::new)
                             .build()
             );
 
