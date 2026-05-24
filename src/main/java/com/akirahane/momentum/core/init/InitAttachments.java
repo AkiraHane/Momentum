@@ -12,7 +12,7 @@ import java.util.function.Supplier;
 
 import static com.akirahane.momentum.Momentum.MODID;
 
-public class ModAttachments {
+public class InitAttachments {
     // 注册持久化
     private static final DeferredRegister<@NotNull AttachmentType<?>> ATTACHMENT_TYPES =
             DeferredRegister.create(NeoForgeRegistries.ATTACHMENT_TYPES, MODID);

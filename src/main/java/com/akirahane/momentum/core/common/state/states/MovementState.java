@@ -8,15 +8,15 @@ import lombok.Getter;
 import net.minecraft.world.entity.player.Player;
 import org.slf4j.Logger;
 
-@Getter
 public abstract class MovementState {
     // 日志
     protected static final Logger LOGGER = LogUtils.getLogger();
 
-    protected final PlayerMovementContext data; // 玩家运动数据的引用
+    @Getter
+    protected final PlayerMovementContext context; // 玩家运动数据的引用
 
-    public MovementState(PlayerMovementContext data) {
-        this.data = data;
+    public MovementState(PlayerMovementContext context) {
+        this.context = context;
     }
 
     /**
@@ -38,7 +38,7 @@ public abstract class MovementState {
      * 每tick调用，返回下一个状态（返回this表示不切换）
      */
     public MovementState tick(Player player, MovementState nowState) {
-        data.syncFromPlayer(player);
+        context.syncFromPlayer(player);
         tickEffect(player);
         return toStateCheck(player, nowState);
     }
@@ -47,7 +47,7 @@ public abstract class MovementState {
     }
 
     public MovementState toStateCheck(Player player, MovementState nowState) {
-        return newStateCheck(player, nowState, data);
+        return newStateCheck(player, nowState, context);
     }
 
     public static MovementState newStateCheck(Player player, MovementState nowState, PlayerMovementContext data) {

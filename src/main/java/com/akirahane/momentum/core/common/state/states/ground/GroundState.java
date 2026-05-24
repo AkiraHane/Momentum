@@ -3,33 +3,35 @@ package com.akirahane.momentum.core.common.state.states.ground;
 import com.akirahane.momentum.core.common.state.MovementStateType;
 import com.akirahane.momentum.core.common.state.states.MovementState;
 import com.akirahane.momentum.core.common.state.states.ground.action.ProneState;
+import com.akirahane.momentum.core.common.state.states.ground.action.SlideState;
 import com.akirahane.momentum.core.content.PlayerMovementContext;
 import com.akirahane.momentum.server.config.ServerConfig;
 import net.minecraft.world.entity.player.Player;
 
-import static com.akirahane.momentum.client.init.ModKeyMappings.LOWER_CENTER_KEY_MAPPING;
-
 public class GroundState extends MovementState {
-    public GroundState(PlayerMovementContext data) {
-        super(data);
+    public GroundState(PlayerMovementContext context) {
+        super(context);
     }
 
     @Override
     public MovementState toStateCheck(Player player, MovementState nowState) {
         MovementState needState = super.toStateCheck(player, nowState);
-        if (!needState.getClass().isInstance(nowState)) {
+        if (!needState.getClass().isInstance(this)) {
             return needState;
         }
-        return newStateCheck(player, nowState, data);
+        return newStateCheck(player, nowState, context);
     }
 
-    public static MovementState newStateCheck(Player player, MovementState nowState, PlayerMovementContext data) {
+    public static MovementState newStateCheck(Player player, MovementState nowState, PlayerMovementContext context) {
         LOGGER.debug("horizontalDistance: {}", player.getDeltaMovement().horizontalDistance() * 20);
-        if (LOWER_CENTER_KEY_MAPPING.get().isDown() && player.getDeltaMovement().horizontalDistance() * 20 < ServerConfig.MIN_SLIDE_SPEED.get()) {
-            return ProneState.newStateCheck(player, nowState, data);
+        if (context.isLowerCenter() && player.getDeltaMovement().horizontalDistance() * 20 <= ServerConfig.MIN_SLIDE_SPEED.get()) {
+            return ProneState.newStateCheck(player, nowState, context);
+        }
+        if (context.isLowerCenter() && player.getDeltaMovement().horizontalDistance() * 20 > ServerConfig.MIN_SLIDE_SPEED.get()) {
+            return SlideState.newStateCheck(player, nowState, context);
         }
         if (!(nowState.getClass() == GroundState.class)) {
-            return new GroundState(data);
+            return new GroundState(context);
         }
         return nowState;
     }

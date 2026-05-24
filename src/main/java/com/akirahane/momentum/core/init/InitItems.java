@@ -11,7 +11,7 @@ import org.jetbrains.annotations.NotNull;
 
 import static com.akirahane.momentum.Momentum.MODID;
 
-public class ModItems {
+public class InitItems {
     // 创建一个延迟注册器来持有物品，所有物品都将注册在 "momentum" 命名空间下
     public static final DeferredRegister.Items ITEMS = DeferredRegister.createItems(MODID);
 
@@ -26,7 +26,7 @@ public class ModItems {
         // 将延迟注册器注册到 mod 事件总线，以便物品被注册
         ITEMS.register(modEventBus);
         // 将物品注册到创造模式标签页
-        modEventBus.addListener(ModItems::addCreative);
+        modEventBus.addListener(InitItems::addCreative);
     }
 
     // 将示例方块物品添加到战斗标签页

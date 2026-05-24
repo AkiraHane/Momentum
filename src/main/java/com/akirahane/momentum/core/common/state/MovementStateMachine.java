@@ -3,7 +3,7 @@ package com.akirahane.momentum.core.common.state;
 import com.akirahane.momentum.core.common.state.states.MovementState;
 import com.akirahane.momentum.core.common.state.states.ground.GroundState;
 import com.akirahane.momentum.core.content.PlayerMovementContext;
-import com.akirahane.momentum.core.init.ModAttachments;
+import com.akirahane.momentum.core.init.InitAttachments;
 import com.akirahane.momentum.core.network.StateTransitionPacket;
 import com.mojang.logging.LogUtils;
 import lombok.Getter;
@@ -29,9 +29,6 @@ public class MovementStateMachine {
     // ==================== 生命周期 ====================
 
     public void clientTick(LocalPlayer player) {
-        if (!player.getData(ModAttachments.MOMENTUM_ENABLED)) return;
-
-        // 当前状态tick，可能返回新状态
         MovementState next = currentState.tick(player, currentState);
         transition(next, player);
 
@@ -46,9 +43,7 @@ public class MovementStateMachine {
     }
 
     public void serverTick(ServerPlayer player) {
-        if (!player.getData(ModAttachments.MOMENTUM_ENABLED)) return;
         if (currentState == null) return;
-
         // 服务端只关心无敌帧倒计时、耐久消耗等
         currentState.tickEffect(player);
     }
@@ -57,7 +52,7 @@ public class MovementStateMachine {
     // ==================== 状态转换 ====================
 
     private void transition(MovementState next, Player player) {
-        if (next == null || next == currentState) return;
+        if (next == null || next.getClass() == currentState.getClass()) return;
         LOGGER.debug("[{}] ->> [{}] transition", currentState.getClass().getSimpleName(), next.getClass().getSimpleName());
 
         currentState.exit(currentState, player);
@@ -68,7 +63,7 @@ public class MovementStateMachine {
 
     public void setStateFromClient(MovementStateType newStateType, Player player) {
         if (newStateType == null) return;
-        transition(newStateType.getStateInstance(), player);
+        transition(newStateType.getStateInstance(currentState.getContext()), player);
     }
 
     // ==================== 状态检查 ====================

@@ -2,9 +2,10 @@ package com.akirahane.momentum.server;
 
 import com.akirahane.momentum.Momentum;
 import com.akirahane.momentum.core.common.state.MovementStateMachine;
-import com.akirahane.momentum.core.init.ModAttachments;
+import com.akirahane.momentum.core.init.InitAttachments;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.api.distmarker.Dist;
+import net.neoforged.bus.api.EventPriority;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.fml.common.Mod;
@@ -16,10 +17,10 @@ import net.neoforged.neoforge.event.tick.PlayerTickEvent;
 public class MomentumServer {
 
     // 服务端驱动
-    @SubscribeEvent
-    public static void onPlayerTick(PlayerTickEvent.Post event) {
-        if (event.getEntity() instanceof ServerPlayer player) {
-            MovementStateMachine sm = player.getData(ModAttachments.MOVEMENT_STATE);
+    @SubscribeEvent(priority = EventPriority.LOWEST)
+    public static void onPlayerTick(PlayerTickEvent.Pre event) {
+        if (event.getEntity() instanceof ServerPlayer player && player.getData(InitAttachments.MOMENTUM_ENABLED)) {
+            MovementStateMachine sm = player.getData(InitAttachments.MOVEMENT_STATE);
             sm.serverTick(player);
         }
     }

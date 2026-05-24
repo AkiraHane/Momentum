@@ -15,27 +15,21 @@ import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
 import net.neoforged.neoforge.network.registration.PayloadRegistrar;
 
 @EventBusSubscriber(modid = Momentum.MODID)
-public class ModNetwork {
+public class InitNetwork {
 
     @SubscribeEvent // on the mod event bus
     public static void register(RegisterPayloadHandlersEvent event) {
         final PayloadRegistrar registrar = event.registrar("1");
 
+        // 机动模式切换
         registrar.playToServer(
                 ToggleMomentumPacket.TYPE,
                 ToggleMomentumPacket.STREAM_CODEC,
                 (packet, context) -> {
                     // 已经在主线程了，NeoForge 1.21.1默认在主线程处理
                     Player player = context.player();
-                    boolean current = !player.getData(ModAttachments.MOMENTUM_ENABLED);
-                    player.setData(ModAttachments.MOMENTUM_ENABLED, current);
-
-                    player.sendOverlayMessage(
-                            Component.translatable(current
-                                    ? "message.momentum.momentum_enabled"
-                                    : "message.momentum.momentum_disabled")
-                    );
-
+                    boolean current = !player.getData(InitAttachments.MOMENTUM_ENABLED);
+                    player.setData(InitAttachments.MOMENTUM_ENABLED, current);
                     // 同步给客户端
                     if (player instanceof ServerPlayer sp) {
                         PacketDistributor.sendToPlayer(sp, new SyncMomentumEnabledPacket(current));
@@ -48,17 +42,23 @@ public class ModNetwork {
                 SyncMomentumEnabledPacket.STREAM_CODEC,
                 (packet, context) -> {
                     Player player = context.player();
-                    player.setData(ModAttachments.MOMENTUM_ENABLED, packet.enabled());
+                    player.setData(InitAttachments.MOMENTUM_ENABLED, packet.enabled());
+                    player.sendOverlayMessage(
+                            Component.translatable(packet.enabled()
+                                    ? "message.momentum.momentum_enabled"
+                                    : "message.momentum.momentum_disabled")
+                    );
                 }
         );
 
+        // 状态机同步
         registrar.playToServer(
                 StateTransitionPacket.TYPE,
                 StateTransitionPacket.STREAM_CODEC,
                 (packet, context) -> {
                     // 已经在主线程了，NeoForge 1.21.1默认在主线程处理
                     Player player = context.player();
-                    MovementStateMachine stateMachine = player.getData(ModAttachments.MOVEMENT_STATE);
+                    MovementStateMachine stateMachine = player.getData(InitAttachments.MOVEMENT_STATE);
                     stateMachine.setStateFromClient(packet.stateType(), player);
                 }
         );

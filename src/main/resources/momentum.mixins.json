@@ -2,7 +2,9 @@
   "required": true,
   "package": "com.akirahane.momentum.core.mixin",
   "compatibilityLevel": "JAVA_25",
-  "mixins": [],
+  "mixins": [
+    "LivingEntityMixin"
+  ],
   "injectors": {
     "defaultRequire": 1
   },

@@ -1,8 +1,8 @@
 package com.akirahane.momentum;
 
 import com.akirahane.momentum.client.config.ClientConfig;
-import com.akirahane.momentum.core.init.ModAttachments;
-import com.akirahane.momentum.core.init.ModItems;
+import com.akirahane.momentum.core.init.InitAttachments;
+import com.akirahane.momentum.core.init.InitItems;
 import com.akirahane.momentum.server.config.ServerConfig;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModContainer;
@@ -17,7 +17,7 @@ public class Momentum {
     public Momentum(IEventBus modEventBus, ModContainer modContainer) {
         modContainer.registerConfig(ModConfig.Type.SERVER, ServerConfig.SPEC);
         modContainer.registerConfig(ModConfig.Type.CLIENT, ClientConfig.SPEC);
-        ModItems.register(modEventBus);
-        ModAttachments.register(modEventBus);
+        InitItems.register(modEventBus);
+        InitAttachments.register(modEventBus);
     }
 }
