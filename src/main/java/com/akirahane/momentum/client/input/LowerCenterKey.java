@@ -50,7 +50,7 @@ public class LowerCenterKey {
         boolean toggleBound = LOWER_CENTER_TOGGLE_KEY.get().getKey() != InputConstants.UNKNOWN;
         if (!holdBound && !toggleBound) return;
         MovementStateMachine machine = player.getData(InitAttachments.MOVEMENT_STATE);
-        boolean lower_center = machine.getCurrentState().getContext().isLowerCenter();
+        boolean lower_center = machine.getContext().isLowerCenter();
         if (holdBound) {
             // hold 优先
             lower_center = LOWER_CENTER_HOLD_KEY.get().isDown();
@@ -58,8 +58,8 @@ public class LowerCenterKey {
             lower_center = !lower_center;
         }
         wasToggleDown = LOWER_CENTER_TOGGLE_KEY.get().isDown();
-        if (lower_center != machine.getCurrentState().getContext().isLowerCenter()){
-            machine.getCurrentState().getContext().setLowerCenter(lower_center);
+        if (lower_center != machine.getContext().isLowerCenter()){
+            machine.getContext().setLowerCenter(lower_center);
             player.setData(InitAttachments.MOVEMENT_STATE, machine);
         }
     }

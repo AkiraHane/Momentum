@@ -28,7 +28,7 @@ public class MomentumClient {
     // 客户端驱动（用于预测和视觉效果） 状态机处理放在原版逻辑之前, 但是要晚于玩家输入处理
     @SubscribeEvent(priority = EventPriority.LOWEST)
     public static void onClientPlayerTick(PlayerTickEvent.Pre event) {
-        if (event.getEntity() instanceof LocalPlayer player && player.getData(InitAttachments.MOMENTUM_ENABLED)) {
+        if (event.getEntity() instanceof LocalPlayer player) {
             MovementStateMachine sm = player.getData(InitAttachments.MOVEMENT_STATE);
             sm.clientTick(player);
         }

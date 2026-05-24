@@ -1,7 +1,7 @@
 package com.akirahane.momentum.core.mixin;
 
 import com.akirahane.momentum.core.common.state.MovementStateMachine;
-import com.akirahane.momentum.core.common.state.MovementStateType;
+import com.akirahane.momentum.core.common.state.StateType;
 import com.akirahane.momentum.core.init.InitAttachments;
 import net.minecraft.world.entity.Attackable;
 import net.minecraft.world.entity.Entity;
@@ -39,7 +39,7 @@ public abstract class LivingEntityMixin extends Entity implements Attackable, Wa
         if (stateMachine == null) return original;
 
         // 示例：滑铲状态下清空输入，防止玩家主动加速
-        if (stateMachine.getCurrentState().getStateType() == MovementStateType.SLIDE) {
+        if (stateMachine.getCurrentState().getStateType() == StateType.SLIDE) {
             return Vec3.ZERO;
         }
 
@@ -66,7 +66,7 @@ public abstract class LivingEntityMixin extends Entity implements Attackable, Wa
         if (stateMachine == null) return input;
 
         // 示例：滑铲状态下清空输入，防止玩家主动加速
-        if (stateMachine.getCurrentState().getStateType() == MovementStateType.SLIDE) {
+        if (stateMachine.getCurrentState().getStateType() == StateType.SLIDE) {
             return input + ((1F - input) / 2);
         }
         return input;

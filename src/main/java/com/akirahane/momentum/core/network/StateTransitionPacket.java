@@ -1,6 +1,6 @@
 package com.akirahane.momentum.core.network;
 
-import com.akirahane.momentum.core.common.state.MovementStateType;
+import com.akirahane.momentum.core.common.state.StateType;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
@@ -11,7 +11,7 @@ import org.jetbrains.annotations.NotNull;
 import static com.akirahane.momentum.Momentum.MODID;
 
 // 客户端状态机切换状态后, 给服务器发送 (服务器只考虑属性状态 不参与计算状态转换)
-public record StateTransitionPacket(MovementStateType stateType) implements CustomPacketPayload {
+public record StateTransitionPacket(StateType stateType) implements CustomPacketPayload {
     public static final CustomPacketPayload.Type<@NotNull StateTransitionPacket> TYPE =
             new CustomPacketPayload.Type<>(Identifier.fromNamespaceAndPath(MODID, "sync_momentum_state"));
 
@@ -19,7 +19,7 @@ public record StateTransitionPacket(MovementStateType stateType) implements Cust
             StreamCodec.composite(
                     ByteBufCodecs.VAR_INT, pkt -> pkt.stateType.getId(),
                     (state) -> new StateTransitionPacket(
-                            MovementStateType.fromId(state)
+                            StateType.fromId(state)
                     )
             );
 

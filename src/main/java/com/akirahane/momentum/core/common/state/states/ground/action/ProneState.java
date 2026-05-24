@@ -1,7 +1,7 @@
 package com.akirahane.momentum.core.common.state.states.ground.action;
 
-import com.akirahane.momentum.core.common.state.MovementStateType;
-import com.akirahane.momentum.core.common.state.states.MovementState;
+import com.akirahane.momentum.core.common.state.State;
+import com.akirahane.momentum.core.common.state.StateType;
 import com.akirahane.momentum.core.common.state.states.ground.GroundState;
 import com.akirahane.momentum.core.content.PlayerMovementContext;
 import net.minecraft.world.entity.Pose;
@@ -9,35 +9,20 @@ import net.minecraft.world.entity.player.Player;
 
 
 public class ProneState extends GroundState {
-    public ProneState(PlayerMovementContext context) {
-        super(context);
+    public static State checkChildTransition(Player player, PlayerMovementContext context) {
+        if (!context.isLowerCenter()) {
+            return WalkState.checkChildTransition(player, context);
+        }
+        return StateType.PRONE.getState();
     }
 
     @Override
-    public void enter(MovementState previousState, Player player) {
+    public void onEnter(Player player, PlayerMovementContext context) {
         player.setForcedPose(Pose.SWIMMING);
     }
 
-    /**
-     * 离开状态时调用一次
-     */
     @Override
-    public void exit(MovementState nextState, Player player) {
+    public void onExit(Player player, PlayerMovementContext context) {
         player.setForcedPose(null);
-    }
-
-    public static MovementState newStateCheck(Player player, MovementState nowState, PlayerMovementContext context) {
-        if (!context.isLowerCenter()) {
-            return GroundState.newStateCheck(player, nowState, context);
-        }
-        if (!(nowState.getClass() == ProneState.class)) {
-            return new ProneState(context);
-        }
-        return nowState;
-    }
-
-    @Override
-    public MovementStateType getStateType() {
-        return MovementStateType.PRONE;
     }
 }
