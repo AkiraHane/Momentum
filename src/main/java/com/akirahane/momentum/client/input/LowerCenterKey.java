@@ -23,7 +23,7 @@ import static com.akirahane.momentum.client.init.InitKeyMappings.MOMENTUM_CATEGO
 public class LowerCenterKey {
 
     private static boolean wasToggleDown = false;
-    // 键映射是延迟初始化的，因此在注册之前它并不会存在。
+
     // 按住生效
     public static final Lazy<@NotNull KeyMapping> LOWER_CENTER_HOLD_KEY = Lazy.of(() -> new KeyMapping(
             "key.momentum.lower_center_hold", // 将使用此翻译密钥进行本地化处理

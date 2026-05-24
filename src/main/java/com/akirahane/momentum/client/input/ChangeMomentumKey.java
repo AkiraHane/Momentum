@@ -41,12 +41,5 @@ public class ChangeMomentumKey {
             ClientPacketDistributor.sendToServer(new ToggleMomentumPacket());
         }
         wasToggleDown = isDown;
-//        public final KeyMapping keyUp;
-//        public final KeyMapping keyLeft;
-//        public final KeyMapping keyDown;
-//        public final KeyMapping keyRight;
-//        public final KeyMapping keyJump;
-//        public final KeyMapping keyShift;
-//        public final KeyMapping keySprint;
     }
 }

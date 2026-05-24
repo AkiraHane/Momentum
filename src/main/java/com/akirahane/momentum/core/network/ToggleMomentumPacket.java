@@ -8,6 +8,7 @@ import org.jetbrains.annotations.NotNull;
 
 import static com.akirahane.momentum.Momentum.MODID;
 
+// 用于切换功能开启和关闭的状态 无参数的包
 public record ToggleMomentumPacket() implements CustomPacketPayload {
 
     public static final ToggleMomentumPacket INSTANCE = new ToggleMomentumPacket();

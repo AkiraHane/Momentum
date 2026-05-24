@@ -16,7 +16,7 @@ import net.neoforged.neoforge.event.tick.PlayerTickEvent;
 @EventBusSubscriber(modid = Momentum.MODID)
 public class MomentumServer {
 
-    // 服务端驱动
+    // 服务端驱动 状态机处理放在原版逻辑之前, 但是要晚于玩家输入处理
     @SubscribeEvent(priority = EventPriority.LOWEST)
     public static void onPlayerTick(PlayerTickEvent.Pre event) {
         if (event.getEntity() instanceof ServerPlayer player && player.getData(InitAttachments.MOMENTUM_ENABLED)) {

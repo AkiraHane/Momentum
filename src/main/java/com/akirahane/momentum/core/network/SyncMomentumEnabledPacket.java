@@ -9,6 +9,7 @@ import org.jetbrains.annotations.NotNull;
 
 import static com.akirahane.momentum.Momentum.MODID;
 
+// 同步服务器的功能开启情况包
 public record SyncMomentumEnabledPacket(boolean enabled) implements CustomPacketPayload {
     public static final CustomPacketPayload.Type<@NotNull SyncMomentumEnabledPacket> TYPE =
             new CustomPacketPayload.Type<>(Identifier.fromNamespaceAndPath(MODID, "sync_momentum_enabled"));

@@ -12,7 +12,7 @@ import static com.akirahane.momentum.client.input.ChangeMomentumKey.CHANGE_MOMEN
 import static com.akirahane.momentum.client.input.LowerCenterKey.LOWER_CENTER_HOLD_KEY;
 import static com.akirahane.momentum.client.input.LowerCenterKey.LOWER_CENTER_TOGGLE_KEY;
 
-// 你可以使用 EventBusSubscriber 来自动注册类中所有带有 @SubscribeEvent 注解的静态方法
+// 可以使用 EventBusSubscriber 来自动注册类中所有带有 @SubscribeEvent 注解的静态方法
 @EventBusSubscriber(modid = Momentum.MODID, value = Dist.CLIENT)
 public class InitKeyMappings {
     public static final KeyMapping.Category MOMENTUM_CATEGORY = new KeyMapping.Category(
