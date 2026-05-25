@@ -1,5 +1,8 @@
 package com.akirahane.momentum.core.mixin;
 
+import com.akirahane.momentum.core.common.state.MovementStateMachine;
+import com.akirahane.momentum.core.common.state.StateType;
+import com.akirahane.momentum.core.init.InitAttachments;
 import com.llamalad7.mixinextras.sugar.Local;
 import it.unimi.dsi.fastutil.floats.FloatArraySet;
 import it.unimi.dsi.fastutil.floats.FloatArrays;
@@ -55,12 +58,6 @@ public abstract class EntityMixin {
 
     protected EntityMixin(EntityType<?> type, Level level) {
     }
-//
-//    @Shadow
-//    private Level level;
-//
-//    @Shadow
-//    private static native List<VoxelShape> collectColliders(@Nullable Entity source, Level level, List<VoxelShape> entityColliders, AABB boundingBox);
 
     // 自动下坡
     @Inject(
@@ -72,13 +69,19 @@ public abstract class EntityMixin {
             Vec3 movement,
             CallbackInfoReturnable<Vec3> cir,
             @Local(name = "aabb") AABB aabb,
-            @Local(name = "entityColliders") List<VoxelShape> entityColliders,
             @Local(name = "movementStep") Vec3 movementStep,
             @Local(name = "onGroundAfterCollision") boolean onGroundAfterCollision
     ) {
-        if (!((Object) this instanceof LocalPlayer player)) {
+        Entity self = (Entity) (Object) this;
+        if (!(self instanceof LocalPlayer player)) {
             return;
         }
+        MovementStateMachine stateMachine = player.getData(InitAttachments.MOVEMENT_STATE);
+        if (stateMachine.getCurrentState().getStateType().equals(StateType.ORIGINAL)) {
+            return;
+        }
+        // =================== 内容 ===================
+
         // 已经上坡则不需要下坡
         if (!cir.getReturnValue().equals(movementStep)) {
             return;
@@ -91,10 +94,9 @@ public abstract class EntityMixin {
         if (movement.y < -player.getAttributeValue(Attributes.GRAVITY)) {
             return;
         }
-        Entity thisE = (Entity) (Object) this;
 
-        entityColliders = this.level().getEntityCollisions(
-                thisE,
+        List<VoxelShape> entityColliders = this.level.getEntityCollisions(
+                self,
                 aabb.expandTowards(movement.subtract(0, this.maxUpStep(), 0))
         );
         // 正常行走无法落地才考虑要不要下坡
@@ -102,15 +104,15 @@ public abstract class EntityMixin {
             AABB stepDownAABB = aabb.expandTowards(movement.x, (double) -this.maxUpStep(), movement.z);
             // 似乎是原版修复浮点精度的, 但是不太理解, 目前不知道去掉会有什么bug, 推测是落地判定相关, 所以先保留
             if (!onGroundAfterCollision) {
-                stepDownAABB = stepDownAABB.expandTowards((double) 0.0F, (double) -1.0E-5F, (double) 0.0F);
+                stepDownAABB = stepDownAABB.expandTowards(0.0F, -1.0E-5F, 0.0F);
             }
             // 获取所有碰撞
-            List<VoxelShape> colliders = collectColliders(thisE, this.level, entityColliders, stepDownAABB);
+            List<VoxelShape> colliders = collectColliders(self, this.level, entityColliders, stepDownAABB);
             float stepHeightToSkip = (float) movementStep.y;
             float[] candidateStepDownHeights = momentum$collectCandidateStepDownHeights(aabb, colliders, -this.maxUpStep(), stepHeightToSkip);
 
             for (float candidateStepDHeight : candidateStepDownHeights) {
-                Vec3 stepFromGround = collideWithShapes(new Vec3(movement.x, (double) candidateStepDHeight, movement.z), aabb, colliders);
+                Vec3 stepFromGround = collideWithShapes(new Vec3(movement.x, candidateStepDHeight, movement.z), aabb, colliders);
                 if (stepFromGround.horizontalDistanceSqr() > 0) {
                     cir.setReturnValue(stepFromGround);
                     return;
@@ -124,7 +126,7 @@ public abstract class EntityMixin {
         FloatSet candidates = new FloatArraySet(4);
 
         for (VoxelShape collider : colliders) {
-            double coord = (Double) collider.max(Direction.Axis.Y);
+            double coord = collider.max(Direction.Axis.Y);
             float relativeCoord = (float) (coord - boundingBox.minY);
             if (!(relativeCoord > 0.0F) && relativeCoord != stepHeightToSkip) {
                 if (relativeCoord < maxStepHeight) {

@@ -35,11 +35,15 @@ public abstract class LivingEntityMixin extends Entity implements Attackable, Wa
             // 第一个Vec3参数
             name = "input")
     private Vec3 modifyTravelInput(Vec3 original) {
-        if (!((Object) this instanceof LocalPlayer player)) {
+        LivingEntity self = (LivingEntity) (Object) this;
+        if (!(self instanceof LocalPlayer player)) {
             return original;
         }
-
         MovementStateMachine stateMachine = player.getData(InitAttachments.MOVEMENT_STATE);
+        if (stateMachine.getCurrentState().getStateType().equals(StateType.ORIGINAL)) {
+            return original;
+        }
+        // =================== 内容 ===================
         PlayerMovementContext.TempData tempData;
         if (stateMachine == null) return original;
 
@@ -63,21 +67,22 @@ public abstract class LivingEntityMixin extends Entity implements Attackable, Wa
     }
 
     @ModifyVariable(method = "travelInAir", at = @At("STORE"), name = "friction")
-    private float friction(float input) {
-        if (!((Object) this instanceof LocalPlayer player)) {
-            return input;
+    private float friction(float original) {
+        LivingEntity self = (LivingEntity) (Object) this;
+        if (!(self instanceof LocalPlayer player)) {
+            return original;
         }
-
         MovementStateMachine stateMachine = player.getData(InitAttachments.MOVEMENT_STATE);
-        if (stateMachine == null) return input;
-
-        // 示例：滑铲状态下清空输入，防止玩家主动加速
+        if (stateMachine.getCurrentState().getStateType().equals(StateType.ORIGINAL)) {
+            return original;
+        }
+        // =================== 内容 ===================
         if (stateMachine.getContext().getTempMap()
                 .get(PlayerMovementContext.TempDataType.TEMP_FRICTION).getDuration() != 0) {
-            input = 1F - (1F - input) * stateMachine.getContext().getTempMap()
+            original = 1F - (1F - original) * stateMachine.getContext().getTempMap()
                     .get(PlayerMovementContext.TempDataType.TEMP_FRICTION).getMultiplier();
         }
-        return input;
+        return original;
     }
 
     @ModifyConstant(
@@ -87,11 +92,13 @@ public abstract class LivingEntityMixin extends Entity implements Attackable, Wa
     private float modifyAirFriction(float original) {
         LivingEntity self = (LivingEntity) (Object) this;
         if (!(self instanceof LocalPlayer player)) {
-            return original;
+            return 0.91F;
         }
-        if (!player.getData(InitAttachments.MOVEMENT_STATE).getCurrentState().getStateType().equals(StateType.ORIGINAL)) {
-            return ServerConfig.AIR_FRICTION.get().floatValue();  // 非原版模式下减少空气阻力
+        MovementStateMachine stateMachine = player.getData(InitAttachments.MOVEMENT_STATE);
+        if (stateMachine.getCurrentState().getStateType().equals(StateType.ORIGINAL)) {
+            return 0.91F;
         }
-        return original;
+        // =================== 内容 ===================
+        return ServerConfig.AIR_FRICTION.get().floatValue();
     }
 }
