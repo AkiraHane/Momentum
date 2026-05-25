@@ -40,7 +40,7 @@ public abstract class GroundState extends State {
             if (attr != null) {
                 attr.addTransientModifier(new AttributeModifier(
                         SLIDE_STEP_HEIGHT_ID,
-                        0.4,
+                        0.5,
                         AttributeModifier.Operation.ADD_VALUE
                 ));
             }
