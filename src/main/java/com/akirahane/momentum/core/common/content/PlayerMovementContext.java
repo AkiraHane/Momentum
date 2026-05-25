@@ -1,4 +1,4 @@
-package com.akirahane.momentum.core.content;
+package com.akirahane.momentum.core.common.content;
 
 import com.akirahane.momentum.core.compat.curios.CuriosCompat;
 import com.akirahane.momentum.server.config.ServerConfig;
@@ -7,14 +7,67 @@ import lombok.Getter;
 import lombok.Setter;
 import net.minecraft.world.entity.player.Player;
 
+import java.util.Map;
+
 @Getter
 @Setter
 public class PlayerMovementContext {
-    private int slopeHeight;         // 坡面高度差
     private boolean lowerCenter;     // 是否降低重心
+    private boolean noMoveInput;     // 是否不接受移动输入
+    // 摩擦力倍率
+    private int slopeHeight;         // 坡面高度差
     private int coyoteTimer;         // 离开地面/墙面后的宽容tick
     private boolean hasJetBooster;   // 是否装备喷射器
     private boolean canMomentum;     // 是否能进行机动
+
+
+    // 临时变量
+    @Getter
+    @Setter
+    public class TempData {
+        // 数值
+        private float value;
+        // 每Tick衰减数值
+        private float decayValue;
+        // 倍率
+        private float multiplier;
+        // 每Tick衰减倍率
+        private float decayMultiplier;
+        // 持续Tick
+        private int duration;
+
+        public TempData() {
+            this.value = 0;
+            this.decayValue = 0;
+            this.multiplier = 1;
+            this.decayMultiplier = 0;
+            this.duration = 0;
+        }
+
+        public TempData(float value, float decayValue, float multiplier, float decayMultiplier, int duration) {
+            this.value = value;
+            this.decayValue = decayValue;
+            this.multiplier = multiplier;
+            this.decayMultiplier = decayMultiplier;
+            this.duration = duration;
+        }
+
+        // 处理
+        public float handle(float input) {
+            input += this.value;
+            input *= this.multiplier;
+            return input;
+        }
+    }
+
+    public enum TempDataType {
+        // 临时加速
+        TEMP_ACCELERATION,
+    }
+
+    public Map<TempDataType, TempData> tempData = Map.of(
+            TempDataType.TEMP_ACCELERATION, new TempData()
+    );
 
     public PlayerMovementContext() {
         this.slopeHeight = 0;
@@ -29,6 +82,20 @@ public class PlayerMovementContext {
      * 在状态机tick之前调用，从Player读取最新数据
      */
     public void syncFromPlayer(Player player) {
+        // 临时变量处理
+        for (Map.Entry<TempDataType, TempData> entry : tempData.entrySet()) {
+            TempData tempData = entry.getValue();
+            tempData.duration--;
+            if (tempData.duration <= 0) {
+                tempData.value = 0;
+                tempData.decayValue = 0;
+                tempData.multiplier = 0;
+                tempData.decayMultiplier = 0;
+            }
+            tempData.value -= tempData.decayValue;
+            tempData.multiplier -= tempData.decayMultiplier;
+        }
+
         this.hasJetBooster = checkBoosterEquipped(player);
         this.canMomentum = checkMomentum(this.hasJetBooster);
         // 碰撞检测

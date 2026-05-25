@@ -2,6 +2,7 @@ package com.akirahane.momentum.core.common.state;
 
 import com.akirahane.momentum.core.common.state.base.BaseState;
 import com.akirahane.momentum.core.common.state.states.OriginalState;
+import com.akirahane.momentum.core.common.state.states.air.AirborneState;
 import com.akirahane.momentum.core.common.state.states.ground.action.ProneState;
 import com.akirahane.momentum.core.common.state.states.ground.action.SlideState;
 import com.akirahane.momentum.core.common.state.states.ground.action.WalkState;
@@ -15,7 +16,8 @@ public enum StateType {
     ORIGINAL(new OriginalState()),
     WALK(new WalkState()),
     PRONE(new ProneState()),
-    SLIDE(new SlideState());
+    SLIDE(new SlideState()),
+    AIR(new AirborneState());
     // 日志
     static final Logger LOGGER = LogUtils.getLogger();
 

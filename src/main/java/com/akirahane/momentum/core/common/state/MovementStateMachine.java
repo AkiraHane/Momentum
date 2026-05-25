@@ -1,6 +1,6 @@
 package com.akirahane.momentum.core.common.state;
 
-import com.akirahane.momentum.core.content.PlayerMovementContext;
+import com.akirahane.momentum.core.common.content.PlayerMovementContext;
 import com.akirahane.momentum.core.network.StateTransitionPacket;
 import com.mojang.logging.LogUtils;
 import lombok.Getter;
@@ -11,9 +11,9 @@ import net.minecraft.world.entity.player.Player;
 import net.neoforged.neoforge.client.network.ClientPacketDistributor;
 import org.slf4j.Logger;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.*;
 
 import static com.akirahane.momentum.core.common.state.StateType.ORIGINAL;
 
@@ -22,6 +22,8 @@ import static com.akirahane.momentum.core.common.state.StateType.ORIGINAL;
 public class MovementStateMachine {
     // 日志
     protected static final Logger LOGGER = LogUtils.getLogger();
+
+    private static final Map<String, Method> METHOD_CACHE = new HashMap<>();
 
     private State currentState;
 
@@ -37,7 +39,9 @@ public class MovementStateMachine {
 
     public void clientTick(LocalPlayer player) {
         State next = currentState.tick(player, context);
+        if (next == null || next.getClass() == currentState.getClass()) return;
         transition(next, player);
+        ClientPacketDistributor.sendToServer(new StateTransitionPacket(next.getStateType()));
     }
 
     public void serverTick(ServerPlayer player) {
@@ -57,7 +61,6 @@ public class MovementStateMachine {
     // ==================== 状态转换 ====================
 
     private void transition(State next, Player player) {
-        if (next == null || next.getClass() == currentState.getClass()) return;
         // 找到公共祖先
         List<Class<? extends State>> fromChain = currentState.getStateType().getAncestorChain();
         List<Class<? extends State>> toChain = next.getStateType().getAncestorChain();
@@ -68,22 +71,44 @@ public class MovementStateMachine {
         // 从当前状态向上 exit，直到公共祖先（不包含公共祖先）
         for (Class<? extends State> clazz : fromChain) {
             if (clazz == commonAncestor) break;
-            StateType.getStateType(clazz).getState().onExit(player, context);
+            Method method = METHOD_CACHE.computeIfAbsent(clazz.getName() + "$onExit", key -> {
+                try {
+                    return clazz.getMethod("onExit", Player.class, PlayerMovementContext.class);
+                } catch (NoSuchMethodException e) {
+                    throw new RuntimeException(e);
+                }
+            });
+            try {
+                LOGGER.debug("[{}] onExit", clazz.getSimpleName());
+                method.invoke(null, player, context);
+            } catch (InvocationTargetException | IllegalAccessException e) {
+                throw new RuntimeException(e);
+            }
         }
 
         // 从公共祖先向下 entry，直到目标状态
         List<Class<? extends State>> entryPath = new ArrayList<>(toChain.subList(0, toChain.indexOf(commonAncestor)));
         Collections.reverse(entryPath);
         for (Class<? extends State> clazz : entryPath) {
-            StateType.getStateType(clazz).getState().onEnter(player, context);
+            Method method = METHOD_CACHE.computeIfAbsent(clazz.getName() + "$onEnter", key -> {
+                try {
+                    return clazz.getMethod("onEnter", Player.class, PlayerMovementContext.class);
+                } catch (NoSuchMethodException e) {
+                    throw new RuntimeException(e);
+                }
+            });
+            try {
+                LOGGER.debug("[{}] onEnter", clazz.getSimpleName());
+                method.invoke(null, player, context);
+            } catch (InvocationTargetException | IllegalAccessException e) {
+                throw new RuntimeException(e);
+            }
         }
         currentState = next;
-
-        ClientPacketDistributor.sendToServer(new StateTransitionPacket(next.getStateType()));
     }
 
     public void setStateFromClient(StateType newStateType, Player player) {
-        if (newStateType == null) return;
+        if (newStateType.getState() == null || newStateType.getState().getClass() == currentState.getClass()) return;
         transition(newStateType.getState(), player);
     }
 

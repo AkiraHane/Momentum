@@ -2,19 +2,17 @@ package com.akirahane.momentum.core.common.state;
 
 import com.akirahane.momentum.core.common.state.base.BaseState;
 import com.akirahane.momentum.core.common.state.states.OriginalState;
-import com.akirahane.momentum.core.content.PlayerMovementContext;
+import com.akirahane.momentum.core.common.content.PlayerMovementContext;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 
 public abstract class State extends BaseState {
     // ==================== 生命周期 ====================
-    @Override
-    public void onEnter(Player player, PlayerMovementContext context) {
+    public static void onEnter(Player player, PlayerMovementContext context) {
     }
 
-    @Override
-    public void onExit(Player player, PlayerMovementContext context) {
+    public static void onExit(Player player, PlayerMovementContext context) {
     }
 
     @Override

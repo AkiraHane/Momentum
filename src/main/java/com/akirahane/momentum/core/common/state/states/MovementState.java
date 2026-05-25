@@ -1,8 +1,9 @@
 package com.akirahane.momentum.core.common.state.states;
 
 import com.akirahane.momentum.core.common.state.State;
+import com.akirahane.momentum.core.common.state.states.air.AirborneState;
 import com.akirahane.momentum.core.common.state.states.ground.GroundState;
-import com.akirahane.momentum.core.content.PlayerMovementContext;
+import com.akirahane.momentum.core.common.content.PlayerMovementContext;
 import net.minecraft.world.entity.player.Player;
 
 public abstract class MovementState extends State {
@@ -10,7 +11,7 @@ public abstract class MovementState extends State {
         if (player.onGround()) {
             return GroundState.checkChildTransition(player, context);
         } else {
-            return null;
+            return AirborneState.checkChildTransition(player, context);
         }
 
     }

@@ -13,8 +13,12 @@ import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.waypoints.WaypointTransmitter;
 import net.neoforged.neoforge.common.extensions.ILivingEntityExtension;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyArg;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(LivingEntity.class)
 public abstract class LivingEntityMixin extends Entity implements Attackable, WaypointTransmitter, ILivingEntityExtension {
@@ -23,6 +27,7 @@ public abstract class LivingEntityMixin extends Entity implements Attackable, Wa
     protected LivingEntityMixin(EntityType<?> type, Level level) {
         super(type, level);
     }
+
 
     @ModifyVariable(
             method = "travelInAir",
@@ -38,10 +43,7 @@ public abstract class LivingEntityMixin extends Entity implements Attackable, Wa
         MovementStateMachine stateMachine = this.getData(InitAttachments.MOVEMENT_STATE);
         if (stateMachine == null) return original;
 
-        // 示例：滑铲状态下清空输入，防止玩家主动加速
-        if (stateMachine.getCurrentState().getStateType() == StateType.SLIDE) {
-            return Vec3.ZERO;
-        }
+
 
 //        // 示例：跑墙状态下重定向输入
 //        if (model.getCurrentStateType() == MovementStateType.WALL_RUN) {
@@ -78,6 +80,23 @@ public abstract class LivingEntityMixin extends Entity implements Attackable, Wa
             return input;
         }
 
+        MovementStateMachine stateMachine = this.getData(InitAttachments.MOVEMENT_STATE);
+        if (stateMachine == null) return input;
+
+        // 示例：滑铲状态下清空输入，防止玩家主动加速
+        if (stateMachine.getCurrentState().getStateType() == StateType.SLIDE) {
+            return input + ((1F - input) / 2);
+        }
+        return input;
+    }
+
+    @ModifyVariable(method = "travelInAir", at = @At("STORE"), name = "movement")
+    private Vec3 blockFriction(Vec3 movement) {
+        if (!((Object) this instanceof Player player)) {
+            return movement;
+        }
+//        System.out.println(speed);
+
 //        MovementStateMachine stateMachine = this.getData(InitAttachments.MOVEMENT_STATE);
 //        if (stateMachine == null) return input;
 //
@@ -85,6 +104,13 @@ public abstract class LivingEntityMixin extends Entity implements Attackable, Wa
 //        if (stateMachine.getCurrentState().getStateType() == MovementStateType.SLIDE) {
 //            return input + ((1F - input) / 2);
 //        }
-        return input;
+        return movement;
+    }
+
+    @Inject(method = "travelInAir", at = @At("HEAD"))
+    private void travelInAir(Vec3 input, CallbackInfo ci) {
+        if (!((Object) this instanceof Player player)) {
+            return;
+        }
     }
 }

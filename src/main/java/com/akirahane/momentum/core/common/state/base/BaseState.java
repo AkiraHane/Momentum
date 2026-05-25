@@ -2,7 +2,7 @@ package com.akirahane.momentum.core.common.state.base;
 
 import com.akirahane.momentum.core.common.state.State;
 import com.akirahane.momentum.core.common.state.StateType;
-import com.akirahane.momentum.core.content.PlayerMovementContext;
+import com.akirahane.momentum.core.common.content.PlayerMovementContext;
 import com.mojang.logging.LogUtils;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.server.level.ServerPlayer;
@@ -19,13 +19,17 @@ public abstract class BaseState {
      * 进入状态时调用一次。
      * 如果目标状态与当前状态的父类层级不同，会沿层级依次调用差异父类的 onEnter。
      */
-    public abstract void onEnter(Player player, PlayerMovementContext context);
+    public static void onEnter(Player player, PlayerMovementContext context) {
+
+    }
 
     /**
      * 离开状态时调用一次。
      * 如果目标状态与当前状态的父类层级不同，会沿层级依次调用差异父类的 onExit。
      */
-    public abstract void onExit(Player player, PlayerMovementContext context);
+    public static void onExit(Player player, PlayerMovementContext context) {
+
+    }
 
     /**
      * 每tick调用，返回下一个状态（返回this表示不切换）
