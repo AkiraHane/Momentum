@@ -32,21 +32,12 @@ public abstract class State extends BaseState {
     // ==================== 状态转换检查 ====================
 
     /**
-     * 检查父类层级的转换条件。
-     * 如果当前状态不再满足父类的维持条件，返回父类期望的目标状态。
-     * 返回 null 或 this 表示不需要跳转。
-     */
-    @Override
-    protected State checkParentTransition(Player player, PlayerMovementContext context) {
-        return super.checkParentTransition(player, context);
-    }
-
-    /**
      * 检查是否应该转换到更具体的子状态。
      * 会递归调用目标状态的 checkChildTransition，一次性跳转到最终目标。
      * 返回 null 表示没有子分支需要进入。
      */
     public static State checkChildTransition(Player player, PlayerMovementContext context) {
+        LOGGER.debug("[State] Speed: {}", player.getDeltaMovement().horizontalDistance() * 20);
         return OriginalState.checkChildTransition(player, context);
     }
 

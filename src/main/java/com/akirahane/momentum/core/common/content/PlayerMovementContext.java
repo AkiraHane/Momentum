@@ -7,14 +7,13 @@ import lombok.Getter;
 import lombok.Setter;
 import net.minecraft.world.entity.player.Player;
 
-import java.util.Map;
+import java.util.*;
 
 @Getter
 @Setter
 public class PlayerMovementContext {
     private boolean lowerCenter;     // 是否降低重心
     private boolean noMoveInput;     // 是否不接受移动输入
-    // 摩擦力倍率
     private int slopeHeight;         // 坡面高度差
     private int coyoteTimer;         // 离开地面/墙面后的宽容tick
     private boolean hasJetBooster;   // 是否装备喷射器
@@ -27,28 +26,32 @@ public class PlayerMovementContext {
     public class TempData {
         // 数值
         private float value;
-        // 每Tick衰减数值
-        private float decayValue;
+        // 每Tick变化数值
+        private float modifyValue;
         // 倍率
         private float multiplier;
-        // 每Tick衰减倍率
-        private float decayMultiplier;
+        // 每Tick变化倍率
+        private float modifyMultiplier;
         // 持续Tick
         private int duration;
 
         public TempData() {
+            this.init();
+        }
+
+        public void init() {
             this.value = 0;
-            this.decayValue = 0;
+            this.modifyValue = 0;
             this.multiplier = 1;
-            this.decayMultiplier = 0;
+            this.modifyMultiplier = 0;
             this.duration = 0;
         }
 
-        public TempData(float value, float decayValue, float multiplier, float decayMultiplier, int duration) {
+        public TempData(float value, float modifyValue, float multiplier, float modifyMultiplier, int duration) {
             this.value = value;
-            this.decayValue = decayValue;
+            this.modifyValue = modifyValue;
             this.multiplier = multiplier;
-            this.decayMultiplier = decayMultiplier;
+            this.modifyMultiplier = modifyMultiplier;
             this.duration = duration;
         }
 
@@ -63,10 +66,16 @@ public class PlayerMovementContext {
     public enum TempDataType {
         // 临时加速
         TEMP_ACCELERATION,
+        // 临时摩擦力
+        TEMP_FRICTION,
+        // 滑铲冷却
+        TEMP_SLIDE_COOLDOWN,
     }
 
-    public Map<TempDataType, TempData> tempData = Map.of(
-            TempDataType.TEMP_ACCELERATION, new TempData()
+    public Map<TempDataType, TempData> tempMap = Map.of(
+            TempDataType.TEMP_ACCELERATION, new TempData(),
+            TempDataType.TEMP_FRICTION, new TempData(),
+            TempDataType.TEMP_SLIDE_COOLDOWN, new TempData()
     );
 
     public PlayerMovementContext() {
@@ -83,17 +92,16 @@ public class PlayerMovementContext {
      */
     public void syncFromPlayer(Player player) {
         // 临时变量处理
-        for (Map.Entry<TempDataType, TempData> entry : tempData.entrySet()) {
+        for (Map.Entry<TempDataType, TempData> entry : tempMap.entrySet()) {
             TempData tempData = entry.getValue();
-            tempData.duration--;
-            if (tempData.duration <= 0) {
-                tempData.value = 0;
-                tempData.decayValue = 0;
-                tempData.multiplier = 0;
-                tempData.decayMultiplier = 0;
+            if (tempData.duration > 0) {
+                tempData.duration--;
             }
-            tempData.value -= tempData.decayValue;
-            tempData.multiplier -= tempData.decayMultiplier;
+            tempData.value -= tempData.multiplier;
+            tempData.multiplier -= tempData.modifyValue;
+            if (tempData.duration == 0) {
+                tempData.init();
+            }
         }
 
         this.hasJetBooster = checkBoosterEquipped(player);

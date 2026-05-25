@@ -1,24 +1,23 @@
 package com.akirahane.momentum.core.mixin;
 
+import com.akirahane.momentum.core.common.content.PlayerMovementContext;
 import com.akirahane.momentum.core.common.state.MovementStateMachine;
-import com.akirahane.momentum.core.common.state.StateType;
 import com.akirahane.momentum.core.init.InitAttachments;
+import com.akirahane.momentum.server.config.ServerConfig;
+import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.world.entity.Attackable;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.waypoints.WaypointTransmitter;
 import net.neoforged.neoforge.common.extensions.ILivingEntityExtension;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.ModifyArg;
+import org.spongepowered.asm.mixin.injection.Constant;
+import org.spongepowered.asm.mixin.injection.ModifyConstant;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(LivingEntity.class)
 public abstract class LivingEntityMixin extends Entity implements Attackable, WaypointTransmitter, ILivingEntityExtension {
@@ -28,7 +27,6 @@ public abstract class LivingEntityMixin extends Entity implements Attackable, Wa
         super(type, level);
     }
 
-
     @ModifyVariable(
             method = "travelInAir",
             at = @At("HEAD"),       // 方法最开头，在所有代码之前
@@ -36,81 +34,50 @@ public abstract class LivingEntityMixin extends Entity implements Attackable, Wa
             // 第一个Vec3参数
             name = "input")
     private Vec3 modifyTravelInput(Vec3 original) {
-        if (!((Object) this instanceof Player player)) {
+        if (!((Object) this instanceof LocalPlayer player)) {
             return original;
         }
 
-        MovementStateMachine stateMachine = this.getData(InitAttachments.MOVEMENT_STATE);
+        MovementStateMachine stateMachine = player.getData(InitAttachments.MOVEMENT_STATE);
         if (stateMachine == null) return original;
 
-
-
-//        // 示例：跑墙状态下重定向输入
-//        if (model.getCurrentStateType() == MovementStateType.WALL_RUN) {
-//            return new Vec3(0, 0, original.z); // 只保留前后输入
-//        }
-//
-//        // 示例：喷射器空中操控力增强
-//        if (!player.onGround() && model.isHasJetBooster()) {
-//            return original.scale(model.getAirControlMultiplier());
-//        }
+        if (stateMachine.getContext().isNoMoveInput()) {
+            return Vec3.ZERO;
+        }
 
         return original;
     }
 
     @ModifyVariable(method = "travelInAir", at = @At("STORE"), name = "friction")
     private float friction(float input) {
-        if (!((Object) this instanceof Player player)) {
+        if (!((Object) this instanceof LocalPlayer player)) {
             return input;
         }
 
-        MovementStateMachine stateMachine = this.getData(InitAttachments.MOVEMENT_STATE);
+        MovementStateMachine stateMachine = player.getData(InitAttachments.MOVEMENT_STATE);
         if (stateMachine == null) return input;
 
         // 示例：滑铲状态下清空输入，防止玩家主动加速
-        if (stateMachine.getCurrentState().getStateType() == StateType.SLIDE) {
-            return input + ((1F - input) / 2);
+        if (stateMachine.getContext().getTempMap()
+                .get(PlayerMovementContext.TempDataType.TEMP_FRICTION).getDuration() != 0) {
+            input = 1F - (1F - input) * stateMachine.getContext().getTempMap()
+                    .get(PlayerMovementContext.TempDataType.TEMP_FRICTION).getMultiplier();
         }
         return input;
     }
 
-    @ModifyVariable(method = "travelInAir", at = @At("STORE"), name = "blockFriction")
-    private float blockFriction(float input) {
-        if (!((Object) this instanceof Player player)) {
-            return input;
+    @ModifyConstant(
+            method = "travelInAir",
+            constant = @Constant(floatValue = 0.91F)
+    )
+    private float modifyAirFriction(float original) {
+        LivingEntity self = (LivingEntity) (Object) this;
+        if (!(self instanceof LocalPlayer player)) {
+            return original;
         }
-
-        MovementStateMachine stateMachine = this.getData(InitAttachments.MOVEMENT_STATE);
-        if (stateMachine == null) return input;
-
-        // 示例：滑铲状态下清空输入，防止玩家主动加速
-        if (stateMachine.getCurrentState().getStateType() == StateType.SLIDE) {
-            return input + ((1F - input) / 2);
+        if (player.getData(InitAttachments.MOMENTUM_ENABLED)) {
+            return ServerConfig.AIR_FRICTION.get().floatValue();  // 机动模式下减少空气阻力
         }
-        return input;
-    }
-
-    @ModifyVariable(method = "travelInAir", at = @At("STORE"), name = "movement")
-    private Vec3 blockFriction(Vec3 movement) {
-        if (!((Object) this instanceof Player player)) {
-            return movement;
-        }
-//        System.out.println(speed);
-
-//        MovementStateMachine stateMachine = this.getData(InitAttachments.MOVEMENT_STATE);
-//        if (stateMachine == null) return input;
-//
-//        // 示例：滑铲状态下清空输入，防止玩家主动加速
-//        if (stateMachine.getCurrentState().getStateType() == MovementStateType.SLIDE) {
-//            return input + ((1F - input) / 2);
-//        }
-        return movement;
-    }
-
-    @Inject(method = "travelInAir", at = @At("HEAD"))
-    private void travelInAir(Vec3 input, CallbackInfo ci) {
-        if (!((Object) this instanceof Player player)) {
-            return;
-        }
+        return original;
     }
 }

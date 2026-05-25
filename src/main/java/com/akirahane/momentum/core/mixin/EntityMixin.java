@@ -1,7 +1,6 @@
 package com.akirahane.momentum.core.mixin;
 
 import com.llamalad7.mixinextras.sugar.Local;
-import it.unimi.dsi.fastutil.doubles.DoubleListIterator;
 import it.unimi.dsi.fastutil.floats.FloatArraySet;
 import it.unimi.dsi.fastutil.floats.FloatArrays;
 import it.unimi.dsi.fastutil.floats.FloatSet;
@@ -9,7 +8,7 @@ import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.Direction;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
@@ -77,11 +76,19 @@ public abstract class EntityMixin {
             @Local(name = "movementStep") Vec3 movementStep,
             @Local(name = "onGroundAfterCollision") boolean onGroundAfterCollision
     ) {
+        if (!((Object) this instanceof LocalPlayer player)) {
+            return;
+        }
         // 已经上坡则不需要下坡
         if (!cir.getReturnValue().equals(movementStep)) {
             return;
         }
-        if (!((Object) this instanceof LocalPlayer player)) {
+        // 上升时不需要下坡
+        if (movement.y >= 0) {
+            return;
+        }
+        // 下落速度超过重力则不下坡
+        if (movement.y < -player.getAttributeValue(Attributes.GRAVITY)) {
             return;
         }
         Entity thisE = (Entity) (Object) this;
@@ -91,7 +98,7 @@ public abstract class EntityMixin {
                 aabb.expandTowards(movement.subtract(0, this.maxUpStep(), 0))
         );
         // 正常行走无法落地才考虑要不要下坡
-        if (this.maxUpStep() > 0.0F && !onGroundAfterCollision) {
+        if (this.maxUpStep() > 0.0F && (!onGroundAfterCollision)) {
             AABB stepDownAABB = aabb.expandTowards(movement.x, (double) -this.maxUpStep(), movement.z);
             // 似乎是原版修复浮点精度的, 但是不太理解, 目前不知道去掉会有什么bug, 推测是落地判定相关, 所以先保留
             if (!onGroundAfterCollision) {

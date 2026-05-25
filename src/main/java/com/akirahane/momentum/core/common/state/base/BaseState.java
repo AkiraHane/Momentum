@@ -44,13 +44,7 @@ public abstract class BaseState {
             serverTick(serverPlayer, context);
         }
 
-        // 先检查父类层级是否要求跳转（向上）
-        State parentTarget = checkParentTransition(player, context);
-        if (parentTarget != null && parentTarget.getClass() != this.getClass()) {
-            return parentTarget;
-        }
-
-        // 再检查子分支是否有更具体的目标（向下）
+        // 检查子分支是否有更具体的目标（向下）
         State childTarget = checkChildTransition(player, context);
         if (childTarget != null && childTarget.getClass() != this.getClass()) {
             return childTarget;
@@ -65,15 +59,6 @@ public abstract class BaseState {
     public void serverTick(ServerPlayer player, PlayerMovementContext context) {
     }
     // ==================== 状态转换检查 ====================
-
-    /**
-     * 检查父类层级的转换条件。
-     * 如果当前状态不再满足父类的维持条件，返回父类期望的目标状态。
-     * 返回 null 或 this 表示不需要跳转。
-     */
-    protected State checkParentTransition(Player player, PlayerMovementContext context) {
-        return null;
-    }
 
     /**
      * 检查是否应该转换到更具体的子状态。

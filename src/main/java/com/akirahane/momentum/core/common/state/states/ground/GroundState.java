@@ -1,8 +1,11 @@
 package com.akirahane.momentum.core.common.state.states.ground;
 
 import com.akirahane.momentum.core.common.state.State;
+import com.akirahane.momentum.core.common.state.states.ground.action.ProneState;
+import com.akirahane.momentum.core.common.state.states.ground.action.SlideState;
 import com.akirahane.momentum.core.common.state.states.ground.action.WalkState;
 import com.akirahane.momentum.core.common.content.PlayerMovementContext;
+import com.akirahane.momentum.server.config.ServerConfig;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
@@ -17,6 +20,15 @@ public abstract class GroundState extends State {
     public static Identifier SLIDE_STEP_HEIGHT_ID = Identifier.fromNamespaceAndPath(MODID, "slide_step_height");
 
     public static State checkChildTransition(Player player, PlayerMovementContext context) {
+        // 输出速度
+        if (context.isLowerCenter() &&
+                player.getDeltaMovement().horizontalDistance() * 20 > ServerConfig.MIN_SLIDE_SPEED.get()
+        ) {
+            return SlideState.checkChildTransition(player, context);
+        }
+        if (context.isLowerCenter()) {
+            return ProneState.checkChildTransition(player, context);
+        }
         return WalkState.checkChildTransition(player, context);
     }
 
