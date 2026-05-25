@@ -2,6 +2,7 @@ package com.akirahane.momentum.core.mixin;
 
 import com.akirahane.momentum.core.common.content.PlayerMovementContext;
 import com.akirahane.momentum.core.common.state.MovementStateMachine;
+import com.akirahane.momentum.core.common.state.StateType;
 import com.akirahane.momentum.core.init.InitAttachments;
 import com.akirahane.momentum.server.config.ServerConfig;
 import net.minecraft.client.player.LocalPlayer;
@@ -39,10 +40,23 @@ public abstract class LivingEntityMixin extends Entity implements Attackable, Wa
         }
 
         MovementStateMachine stateMachine = player.getData(InitAttachments.MOVEMENT_STATE);
+        PlayerMovementContext.TempData tempData;
         if (stateMachine == null) return original;
 
         if (stateMachine.getContext().isNoMoveInput()) {
             return Vec3.ZERO;
+        }
+        tempData = stateMachine.getContext().tempMap.get(
+                PlayerMovementContext.TempDataType.TEMP_ACCELERATION_LIMIT_SPEED
+        );
+        if (tempData.getDuration() != 0 && tempData.getValue() <= player.getDeltaMovement().horizontalDistance()) {
+            return Vec3.ZERO;
+        }
+        tempData = stateMachine.getContext().tempMap.get(
+                PlayerMovementContext.TempDataType.TEMP_ACCELERATION
+        );
+        if (tempData.getDuration() != 0) {
+            original = original.multiply(tempData.getMultiplier(), 1, tempData.getMultiplier());
         }
 
         return original;
@@ -75,8 +89,8 @@ public abstract class LivingEntityMixin extends Entity implements Attackable, Wa
         if (!(self instanceof LocalPlayer player)) {
             return original;
         }
-        if (player.getData(InitAttachments.MOMENTUM_ENABLED)) {
-            return ServerConfig.AIR_FRICTION.get().floatValue();  // 机动模式下减少空气阻力
+        if (!player.getData(InitAttachments.MOVEMENT_STATE).getCurrentState().getStateType().equals(StateType.ORIGINAL)) {
+            return ServerConfig.AIR_FRICTION.get().floatValue();  // 非原版模式下减少空气阻力
         }
         return original;
     }

@@ -70,13 +70,11 @@ public class PlayerMovementContext {
         TEMP_FRICTION,
         // 滑铲冷却
         TEMP_SLIDE_COOLDOWN,
+        // 加速限速
+        TEMP_ACCELERATION_LIMIT_SPEED
     }
 
-    public Map<TempDataType, TempData> tempMap = Map.of(
-            TempDataType.TEMP_ACCELERATION, new TempData(),
-            TempDataType.TEMP_FRICTION, new TempData(),
-            TempDataType.TEMP_SLIDE_COOLDOWN, new TempData()
-    );
+    public Map<TempDataType, TempData> tempMap;
 
     public PlayerMovementContext() {
         this.slopeHeight = 0;
@@ -84,6 +82,10 @@ public class PlayerMovementContext {
         this.coyoteTimer = 0;
         this.hasJetBooster = false;
         this.canMomentum = true;
+        tempMap = new HashMap<>();
+        for (TempDataType type : TempDataType.values()) {
+            tempMap.put(type, new TempData());
+        }
     }
     // ==================== 每tick从Player同步 ====================
 

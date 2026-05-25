@@ -4,9 +4,9 @@ import com.akirahane.momentum.core.common.state.State;
 import com.akirahane.momentum.core.common.state.StateType;
 import com.akirahane.momentum.core.common.state.states.ground.GroundState;
 import com.akirahane.momentum.core.common.content.PlayerMovementContext;
+import com.akirahane.momentum.core.mixin.LivingEntityAccessor;
 import com.akirahane.momentum.server.config.ServerConfig;
 import net.minecraft.world.entity.Pose;
-import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
 
@@ -25,8 +25,8 @@ public class SlideState extends GroundState {
 
         if (context.getTempMap().get(PlayerMovementContext.TempDataType.TEMP_SLIDE_COOLDOWN).getDuration() == 0) {
             Vec3 velocity = player.getDeltaMovement();
-            float jumpPower = ((float) player.getAttributeValue(Attributes.JUMP_STRENGTH) - 0.2F + player.getJumpBoostPower()) * 5;
-            LOGGER.debug("player.getJumpPower() {}", jumpPower);
+            float jumpPower = ((LivingEntityAccessor) player).invokeGetJumpPower() * 4;
+            LOGGER.debug("player.getJumpPower() * 4 {}", jumpPower);
             player.setDeltaMovement(velocity.x * jumpPower, velocity.y, velocity.z * jumpPower);
             context.getTempMap().get(PlayerMovementContext.TempDataType.TEMP_SLIDE_COOLDOWN).setDuration(
                     ServerConfig.SLIDE_ACCELERATION_COOLDOWN.get()
