@@ -1,4 +1,5 @@
-
+模组正在开发中，以下是NeoForge模板内容
+---
 Installation information
 =======
 
