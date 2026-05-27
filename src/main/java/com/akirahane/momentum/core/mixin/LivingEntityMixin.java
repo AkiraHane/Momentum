@@ -34,28 +34,6 @@ public abstract class LivingEntityMixin extends Entity implements Attackable, Wa
         super(type, level);
     }
 
-    @ModifyVariable(
-            method = "travelInAir",
-            at = @At("HEAD"),       // 方法最开头，在所有代码之前
-            argsOnly = true,        // 只匹配方法参数，不匹配局部变量
-            // 第一个Vec3参数
-            name = "input")
-    private Vec3 modifyTravelInput(Vec3 original) {
-        LivingEntity self = (LivingEntity) (Object) this;
-        if (!(self instanceof Player player)) {
-            return original;
-        }
-        MovementStateMachine stateMachine = player.getData(InitAttachments.MOVEMENT_STATE);
-        if (stateMachine.getCurrentState().getStateType().equals(StateType.ORIGINAL)) {
-            return original;
-        }
-        // =================== 内容 ===================
-        if (stateMachine.getContext().isNoMoveInput()) {
-            return Vec3.ZERO;
-        }
-        return original;
-    }
-
     @ModifyVariable(method = "travelInAir", at = @At("STORE"), name = "blockFriction")
     private float blockFriction(float original) {
         LivingEntity self = (LivingEntity) (Object) this;

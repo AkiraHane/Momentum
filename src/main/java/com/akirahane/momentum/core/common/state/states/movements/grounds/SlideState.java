@@ -36,7 +36,6 @@ public class SlideState extends GroundState {
 
     public static void onEnter(Player player, PlayerMovementContext context) {
         player.setForcedPose(Pose.SWIMMING);
-        context.setNoMoveInput(true);
         context.getPendingEffectPool().get(MomentumEffectType.FRICTION).add(TEMP_FRICTION);
         SlideState.TEMP_BLOCK_FRICTION_MULTIPLIER.setDuration(5);
         SlideState.TEMP_BLOCK_FRICTION_MULTIPLIER.setMultiplier(0);
@@ -60,7 +59,6 @@ public class SlideState extends GroundState {
 
     public static void onExit(Player player, PlayerMovementContext context) {
         player.setForcedPose(null);
-        context.setNoMoveInput(false);
         context.getPendingEffectPool().get(MomentumEffectType.FRICTION).remove(TEMP_FRICTION);
         context.getPendingEffectPool().get(MomentumEffectType.FRICTION).remove(TEMP_ACCELERATION);
         context.getPendingEffectPool().get(MomentumEffectType.BLOCK_FRICTION_MULTIPLIER)

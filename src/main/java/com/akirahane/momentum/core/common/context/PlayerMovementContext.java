@@ -23,7 +23,6 @@ public class PlayerMovementContext {
     protected static final Logger LOGGER = LogUtils.getLogger();
 
     private boolean lowerCenter;     // 是否降低重心
-    private boolean noMoveInput;     // 是否不接受移动输入
     private Vec3 speed;              // 移动速度
     private boolean hasJetBooster;   // 是否装备喷射器
     private boolean canMomentum;     // 是否能进行机动
