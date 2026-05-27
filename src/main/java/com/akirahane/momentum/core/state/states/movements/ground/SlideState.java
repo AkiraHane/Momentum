@@ -76,7 +76,7 @@ public class SlideState extends GroundState {
     @Override
     public void clientTick(LocalPlayer player, PlayerMovementContext context) {
         super.clientTick(player, context);
-        if (context.getBlockStep() != 0) {
+        if (context.getBlockStep() != 0 && !player.onGround()) {
             Vec3 velocity = context.getSpeed();
             player.setDeltaMovement(
                     new Vec3(
