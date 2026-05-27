@@ -42,7 +42,7 @@ public class LowerCenterKey {
     ));
 
     // 每tick检测
-    @SubscribeEvent(priority = EventPriority.NORMAL)
+    @SubscribeEvent
     public static void onClientTick(ClientTickEvent.Pre event) {
         LocalPlayer player = Minecraft.getInstance().player;
         if (player == null) return;

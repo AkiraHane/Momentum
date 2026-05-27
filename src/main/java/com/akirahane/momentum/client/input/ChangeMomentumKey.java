@@ -33,7 +33,7 @@ public class ChangeMomentumKey {
     ));
 
     // 每tick检测
-    @SubscribeEvent(priority = EventPriority.NORMAL)
+    @SubscribeEvent
     public static void onClientTick(ClientTickEvent.Post event) {
         // 动量模式切换 - 单次触发
         boolean isDown = CHANGE_MOMENTUM_KEY_MAPPING.get().isDown();

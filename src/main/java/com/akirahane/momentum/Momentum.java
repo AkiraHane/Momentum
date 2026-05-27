@@ -33,7 +33,7 @@ public class Momentum {
     }
 
     // 状态机处理放在原版逻辑之前, 但是要晚于玩家输入处理
-    @SubscribeEvent(priority = EventPriority.LOWEST)
+    @SubscribeEvent
     public static void onPlayerTick(PlayerTickEvent.Pre event) {
         if (event.getEntity() instanceof ServerPlayer player) {
             MovementStateMachine sm = player.getData(InitAttachments.MOVEMENT_STATE);
