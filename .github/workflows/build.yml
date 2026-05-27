@@ -2,9 +2,7 @@ name: Build
 
 on:
   push:
-    branches: [neoforge-26.1.2]
-  pull_request:
-    branches: [neoforge-26.1.2]
+    tags: ['v*']
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
