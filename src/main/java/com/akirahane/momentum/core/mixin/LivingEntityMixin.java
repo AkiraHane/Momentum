@@ -130,11 +130,13 @@ public abstract class LivingEntityMixin extends Entity implements Attackable, Wa
                 MomentumEffectType.ACCELERATION_LIMIT_SPEED
         );
         if (momentumEffect.getValue() != 0 && momentumEffect.getValue() <= player.getDeltaMovement().horizontalDistance()) {
+            double limitX = player.getDeltaMovement().x * momentumEffect.getValue() / player.getDeltaMovement().horizontalDistance();
+            double limitZ = player.getDeltaMovement().z * momentumEffect.getValue() / player.getDeltaMovement().horizontalDistance();
             original = new Vec3(
                     // 这里存了上一tick的速度
-                    stateMachine.getContext().getSpeed().x,
+                    Math.abs(original.x) > limitX ? stateMachine.getContext().getSpeed().x : original.x,
                     original.y,
-                    stateMachine.getContext().getSpeed().z
+                    Math.abs(original.z) > limitZ ? stateMachine.getContext().getSpeed().z : original.z
             );
         }
         original = original.multiply(momentumEffect.getMultiplier(), 1, momentumEffect.getMultiplier());
