@@ -22,25 +22,23 @@ public class PlayerMovementContext {
     // 日志
     protected static final Logger LOGGER = LogUtils.getLogger();
 
-    private boolean lowerCenter;     // 是否降低重心
-    private Vec3 speed;              // 移动速度
-    private boolean hasJetBooster;   // 是否装备喷射器
-    private boolean canMomentum;     // 是否能进行机动
-    private double blockStep;        // 滑行上下升单位高度
+    private boolean lowerCenter = false;     // 是否降低重心
+    private boolean noMoveInput = false;     // 是否不接受移动输入
+    private Vec3 speed = Vec3.ZERO;              // 移动速度
+    private boolean hasJetBooster = false;   // 是否装备喷射器
+    private boolean canMomentum = true;     // 是否能进行机动
+    private double blockStep = 0;        // 滑行上下升单位高度
+    private Vec3 slopeUnitVector = Vec3.ZERO;    // 坡度加速向量
 
-    // 从 mixin 中获取的数据
-    float mixinVerticalFriction;     // 垂直光滑度
-    double mixinGravity;
+    // 从 mixin 中获取或计算的数据
+    private float mixinVerticalFriction;     // 垂直光滑度
+    private double mixinGravity;
 
     private Map<MomentumEffectType, MomentumEffect> effectMap;
 
     private Map<MomentumEffectType, Set<MomentumEffect>> pendingEffectPool;
 
     public PlayerMovementContext() {
-        this.lowerCenter = false;
-        this.hasJetBooster = false;
-        this.canMomentum = true;
-        this.blockStep = 0;
         this.resetMixinData();
         effectMap = new HashMap<>();
         pendingEffectPool = new HashMap<>();

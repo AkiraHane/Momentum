@@ -60,7 +60,6 @@ public class LowerCenterKey {
         wasToggleDown = LOWER_CENTER_TOGGLE_KEY.get().isDown();
         if (lower_center != machine.getContext().isLowerCenter()){
             machine.getContext().setLowerCenter(lower_center);
-            player.setData(InitAttachments.MOVEMENT_STATE, machine);
         }
     }
 }

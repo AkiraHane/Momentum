@@ -36,8 +36,8 @@ public abstract class State extends BaseState {
      * 会递归调用目标状态的 checkChildTransition，一次性跳转到最终目标。
      * 返回 null 表示没有子分支需要进入。
      */
-    public static State checkChildTransition(Player player, PlayerMovementContext context) {
-        return OriginalState.checkChildTransition(player, context);
+    public static State checkChildTransition(Player player, PlayerMovementContext context, BaseState nowState) {
+        return OriginalState.checkChildTransition(player, context, nowState);
     }
 
     public StateType getStateType() {

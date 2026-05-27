@@ -34,6 +34,28 @@ public abstract class LivingEntityMixin extends Entity implements Attackable, Wa
         super(type, level);
     }
 
+    @ModifyVariable(
+            method = "travelInAir",
+            at = @At("HEAD"),       // 方法最开头，在所有代码之前
+            argsOnly = true,        // 只匹配方法参数，不匹配局部变量
+            // 第一个Vec3参数
+            name = "input")
+    private Vec3 modifyTravelInput(Vec3 original) {
+        LivingEntity self = (LivingEntity) (Object) this;
+        if (!(self instanceof Player player)) {
+            return original;
+        }
+        MovementStateMachine stateMachine = player.getData(InitAttachments.MOVEMENT_STATE);
+        if (stateMachine.getCurrentState().getStateType().equals(StateType.ORIGINAL)) {
+            return original;
+        }
+        // =================== 内容 ===================
+        if (stateMachine.getContext().isNoMoveInput()) {
+            return Vec3.ZERO;
+        }
+        return original;
+    }
+
     @ModifyVariable(method = "travelInAir", at = @At("STORE"), name = "blockFriction")
     private float blockFriction(float original) {
         LivingEntity self = (LivingEntity) (Object) this;
@@ -98,11 +120,24 @@ public abstract class LivingEntityMixin extends Entity implements Attackable, Wa
         );
         // 向量数值需要增加 tempData.getValue() 分解到垂直分向量
         if (original.horizontalDistance() > 0 && momentumEffect.getValue() != 0) {
-            original = original.add(
-                    (original.x * momentumEffect.getValue()) / original.length(),
-                    (original.y * momentumEffect.getValue()) / original.length(),
-                    (original.z * momentumEffect.getValue()) / original.length()
-            );
+            Vec3 slopeDir = stateMachine.getContext().getSlopeUnitVector();
+
+            if (slopeDir.lengthSqr() > 0) {
+                // 只沿坡面方向加速
+                double accel = momentumEffect.getValue();
+                original = original.add(
+                        slopeDir.x * accel,
+                        0,
+                        slopeDir.z * accel
+                );
+            } else {
+                // 没有坡面信息，保持原逻辑
+                original = original.add(
+                        (original.x * momentumEffect.getValue()) / original.length(),
+                        (original.y * momentumEffect.getValue()) / original.length(),
+                        (original.z * momentumEffect.getValue()) / original.length()
+                );
+            }
         }
         momentumEffect = stateMachine.getContext().getEffectMap().get(
                 MomentumEffectType.ACCELERATION_LIMIT_SPEED

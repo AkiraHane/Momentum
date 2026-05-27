@@ -46,15 +46,12 @@ public class MomentumUtils {
         stateMachine.getContext().setBlockStep(movementStepY);
 
         // === 核心参数 ===
-        // 滑行最大速度上限（格/tick），约等于 sprint 速度的 1.5 倍
-        // Minecraft sprint ≈ 0.28 blocks/tick, 上限设为 0.42
+        // 滑行最大速度上限（格/tick）
         final double MAX_SLIDE_SPEED = 0.98;
         // 下坡基础加速系数
         final float DOWNHILL_ACCEL_FACTOR = 0.08F;
         // 上坡减速系数
         final float UPHILL_DECEL_FACTOR = 0.12F;
-        // 下坡摩擦力降低的最小值（不会低于此值，防止无摩擦滑行）
-        final float MIN_FRICTION_MULTIPLIER = 0F;
 
         // duration 固定为 1 tick，因为每次阶梯变化都会重新调用
         // 避免低速时 duration 过长导致效果堆积
@@ -74,18 +71,6 @@ public class MomentumUtils {
             // dropHeight 通过 tanh 软限制，防止大落差产生过大加速
             float acceleration = (float) (DOWNHILL_ACCEL_FACTOR * Math.tanh(dropHeight * 2.0) * headroom);
 
-            // 摩擦力倍率：下坡时略微降低摩擦（更滑），但有下限
-            float frictionMultiplier = (float) Math.max(
-                    MIN_FRICTION_MULTIPLIER,
-                    1.0 - (1.0 - MIN_FRICTION_MULTIPLIER) * dropHeight * 2.0
-            );
-
-            SlideState.TEMP_BLOCK_FRICTION_MULTIPLIER.setDuration(duration);
-            SlideState.TEMP_BLOCK_FRICTION_MULTIPLIER.setMultiplier(frictionMultiplier);
-            stateMachine.getContext().getPendingEffectPool().get(BLOCK_FRICTION_MULTIPLIER).add(
-                    SlideState.TEMP_BLOCK_FRICTION_MULTIPLIER
-            );
-
             SlideState.TEMP_ACCELERATION.setDuration(duration);
             SlideState.TEMP_ACCELERATION.setValue(acceleration);
             stateMachine.getContext().getPendingEffectPool().get(ACCELERATION).add(
@@ -99,16 +84,6 @@ public class MomentumUtils {
             // 上坡减速：与坡度成正比，但用 sqrt 软化手感
             // 不会一步减到 0，保留滑行惯性感
             float deceleration = (float) (-UPHILL_DECEL_FACTOR * Math.min(riseHeight * riseHeight, 1.0));
-
-            // 上坡时增加摩擦（加速衰减）
-            float frictionMultiplier = (float) (1.0 + 0.15 * Math.sqrt(riseHeight));
-            frictionMultiplier = Math.min(frictionMultiplier, 1.3F);
-
-            SlideState.TEMP_BLOCK_FRICTION_MULTIPLIER.setDuration(duration);
-            SlideState.TEMP_BLOCK_FRICTION_MULTIPLIER.setMultiplier(frictionMultiplier);
-            stateMachine.getContext().getPendingEffectPool().get(BLOCK_FRICTION_MULTIPLIER).add(
-                    SlideState.TEMP_BLOCK_FRICTION_MULTIPLIER
-            );
 
             SlideState.TEMP_ACCELERATION.setDuration(duration);
             SlideState.TEMP_ACCELERATION.setValue(deceleration);

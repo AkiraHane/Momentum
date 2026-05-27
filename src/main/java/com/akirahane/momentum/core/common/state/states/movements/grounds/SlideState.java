@@ -4,6 +4,7 @@ import com.akirahane.momentum.core.common.effect.MomentumEffect;
 import com.akirahane.momentum.core.common.effect.MomentumEffectType;
 import com.akirahane.momentum.core.common.state.State;
 import com.akirahane.momentum.core.common.state.StateType;
+import com.akirahane.momentum.core.common.state.base.BaseState;
 import com.akirahane.momentum.core.common.state.states.movements.GroundState;
 import com.akirahane.momentum.core.common.context.PlayerMovementContext;
 import com.akirahane.momentum.core.mixin.LivingEntityAccessor;
@@ -30,14 +31,15 @@ public class SlideState extends GroundState {
     );
 
 
-    public static State checkChildTransition(Player player, PlayerMovementContext context) {
+    public static State checkChildTransition(Player player, PlayerMovementContext context, BaseState nowState) {
         return StateType.SLIDE.getState();
     }
 
     public static void onEnter(Player player, PlayerMovementContext context) {
         player.setForcedPose(Pose.SWIMMING);
+        context.setNoMoveInput(true);
         context.getPendingEffectPool().get(MomentumEffectType.FRICTION).add(TEMP_FRICTION);
-        SlideState.TEMP_BLOCK_FRICTION_MULTIPLIER.setDuration(5);
+        SlideState.TEMP_BLOCK_FRICTION_MULTIPLIER.setDuration(2);
         SlideState.TEMP_BLOCK_FRICTION_MULTIPLIER.setMultiplier(0);
         context.getPendingEffectPool().get(BLOCK_FRICTION_MULTIPLIER).add(
                 SlideState.TEMP_BLOCK_FRICTION_MULTIPLIER
@@ -45,12 +47,14 @@ public class SlideState extends GroundState {
 
         if (TEMP_SLIDE_COOLDOWN.getDuration() == 0) {
             Vec3 velocity = player.getDeltaMovement();
-            float jumpPower = ((LivingEntityAccessor) player).invokeGetJumpPower() * 1.2F;
+            float jumpPower = ((LivingEntityAccessor) player).invokeGetJumpPower();
             LOGGER.debug("player.getJumpPower() {}", jumpPower);
-            player.setDeltaMovement(
-                    velocity.x * jumpPower / velocity.horizontalDistance(),
-                    velocity.y,
-                    velocity.z * jumpPower / velocity.horizontalDistance()
+            player.addDeltaMovement(
+                    new Vec3(
+                            velocity.x * jumpPower / velocity.horizontalDistance(),
+                            0,
+                            velocity.z * jumpPower / velocity.horizontalDistance()
+                    )
             );
             TEMP_SLIDE_COOLDOWN.setDuration(ServerConfig.SLIDE_ACCELERATION_COOLDOWN.get());
             context.getPendingEffectPool().get(MomentumEffectType.SLIDE_COOLDOWN).add(TEMP_SLIDE_COOLDOWN);
@@ -59,10 +63,12 @@ public class SlideState extends GroundState {
 
     public static void onExit(Player player, PlayerMovementContext context) {
         player.setForcedPose(null);
+        context.setNoMoveInput(false);
         context.getPendingEffectPool().get(MomentumEffectType.FRICTION).remove(TEMP_FRICTION);
         context.getPendingEffectPool().get(MomentumEffectType.FRICTION).remove(TEMP_ACCELERATION);
         context.getPendingEffectPool().get(MomentumEffectType.BLOCK_FRICTION_MULTIPLIER)
                 .remove(TEMP_BLOCK_FRICTION_MULTIPLIER);
         player.setSprinting(false);
+        context.setSlopeUnitVector(Vec3.ZERO);
     }
 }

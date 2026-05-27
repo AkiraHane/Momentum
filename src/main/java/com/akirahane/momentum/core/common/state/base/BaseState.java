@@ -45,7 +45,7 @@ public abstract class BaseState {
         }
 
         // 检查子分支是否有更具体的目标（向下）
-        State childTarget = checkChildTransition(player, context);
+        State childTarget = checkChildTransition(player, context, this);
         if (childTarget != null && childTarget.getClass() != this.getClass()) {
             return childTarget;
         }
@@ -65,8 +65,8 @@ public abstract class BaseState {
      * 会递归调用目标状态的 checkChildTransition，一次性跳转到最终目标。
      * 返回 null 表示没有子分支需要进入。
      */
-    public static State checkChildTransition(Player player, PlayerMovementContext context) {
-        return State.checkChildTransition(player, context);
+    public static State checkChildTransition(Player player, PlayerMovementContext context, BaseState nowState) {
+        return State.checkChildTransition(player, context, nowState);
     }
 
     public abstract StateType getStateType();

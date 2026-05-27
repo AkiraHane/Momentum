@@ -1,6 +1,7 @@
 package com.akirahane.momentum.core.common.state.states;
 
 import com.akirahane.momentum.core.common.state.State;
+import com.akirahane.momentum.core.common.state.base.BaseState;
 import com.akirahane.momentum.core.common.state.states.movements.AirborneState;
 import com.akirahane.momentum.core.common.state.states.movements.GroundState;
 import com.akirahane.momentum.core.common.context.PlayerMovementContext;
@@ -16,11 +17,11 @@ import static com.akirahane.momentum.Momentum.MODID;
 public abstract class MovementState extends State {
 
     public static Identifier SLIDE_STEP_HEIGHT_ID = Identifier.fromNamespaceAndPath(MODID, "slide_step_height");
-    public static State checkChildTransition(Player player, PlayerMovementContext context) {
+    public static State checkChildTransition(Player player, PlayerMovementContext context, BaseState nowState) {
         if (player.onGround()) {
-            return GroundState.checkChildTransition(player, context);
+            return GroundState.checkChildTransition(player, context, nowState);
         } else {
-            return AirborneState.checkChildTransition(player, context);
+            return AirborneState.checkChildTransition(player, context, nowState);
         }
 
     }

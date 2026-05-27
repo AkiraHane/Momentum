@@ -7,11 +7,13 @@ import com.llamalad7.mixinextras.sugar.Local;
 import it.unimi.dsi.fastutil.floats.FloatArraySet;
 import it.unimi.dsi.fastutil.floats.FloatArrays;
 import it.unimi.dsi.fastutil.floats.FloatSet;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
@@ -29,7 +31,7 @@ import java.util.List;
 import static com.akirahane.momentum.core.common.MomentumUtils.setSlideAcceleration;
 
 @Mixin(Entity.class)
-public abstract class EntityMixin {
+public abstract class EntityMixin{
 
     @Shadow
     private Level level;
@@ -104,7 +106,9 @@ public abstract class EntityMixin {
             // 似乎是原版修复浮点精度的, 但是不太理解, 目前不知道去掉会有什么bug, 推测是落地判定相关, 所以先保留
             // 为了能碰撞地面, 所以特地往下拉了一个玩家的身位
             if (!onGroundAfterCollision) {
-                stepDownAABB = stepDownAABB.expandTowards(0.0F, -1.5F - 1.0E-5F, 0.0F);
+                stepDownAABB = stepDownAABB.expandTowards(
+                        0.0F, -player.getBoundingBox().getYsize() - 1.0E-5F, 0.0F
+                );
             }
             // 获取所有碰撞
             List<VoxelShape> colliders = collectColliders(self, this.level, entityColliders, stepDownAABB);
@@ -114,7 +118,18 @@ public abstract class EntityMixin {
             for (float candidateStepDHeight : candidateStepDownHeights) {
                 Vec3 stepFromGround = collideWithShapes(new Vec3(movement.x, candidateStepDHeight, movement.z), aabb, colliders);
                 if (stepFromGround.horizontalDistanceSqr() > 0) {
+                    player.addDeltaMovement(
+                            new Vec3(
+                                    0,
+                                    candidateStepDHeight,
+                                    0
+                            )
+                    );
                     cir.setReturnValue(stepFromGround);
+                    if (!stateMachine.getCurrentState().getStateType().equals(StateType.SLIDE)) {
+                        return;
+                    }
+                    stateMachine.getContext().setSlopeUnitVector(momentum$getSlopeDirection(player, colliders.getFirst()));
                     setSlideAcceleration(movement, stepFromGround.y, stateMachine);
                     return;
                 }
@@ -141,5 +156,74 @@ public abstract class EntityMixin {
         float[] sortedCandidates = candidates.toFloatArray();
         FloatArrays.unstableSort(sortedCandidates);
         return sortedCandidates;
+    }
+
+    // 计算坡面单位
+    @Unique
+    public Vec3 momentum$getSlopeDirection(Player player, VoxelShape collider) {
+        AABB bounds = collider.bounds();
+        BlockPos feet = BlockPos.containing(
+                (bounds.minX + bounds.maxX) / 2,
+                bounds.maxY,
+                (bounds.minZ + bounds.maxZ) / 2
+        );
+        BlockGetter level = player.level();
+        System.out.println("feet: " + feet);
+        System.out.println("player.blockPosition(): " + player.blockPosition());
+
+        float countX = 0;
+        float countZ = 0;
+
+        // 先检查四个正方向（2468）
+        // 北(2): z-1, 南(8): z+1, 西(4): x-1, 东(6): x+1
+        boolean north = momentum$isHigher(level, feet, 0, -1);
+        boolean south = momentum$isHigher(level, feet, 0, 1);
+        boolean west = momentum$isHigher(level, feet, -1, 0);
+        boolean east = momentum$isHigher(level, feet, 1, 0);
+
+        if (north) countZ += 1;  // 北边高，往南推
+        if (south) countZ -= 1;  // 南边高，往北推
+        if (west) countX += 1;  // 西边高，往东推
+        if (east) countX -= 1;  // 东边高，往西推
+
+        // 正方向抵消了才看对角线（1379）
+        if (countX == 0 && countZ == 0) {
+            boolean nw = momentum$isHigher(level, feet, -1, -1); // 1
+            boolean ne = momentum$isHigher(level, feet, 1, -1);  // 3
+            boolean sw = momentum$isHigher(level, feet, -1, 1);  // 7
+            boolean se = momentum$isHigher(level, feet, 1, 1);   // 9
+
+            // 对角线权重用 0.707 (1/√2)
+            float diag = 0.707f;
+            if (nw) {
+                countX += diag;
+                countZ += diag;
+            }
+            if (ne) {
+                countX -= diag;
+                countZ += diag;
+            }
+            if (sw) {
+                countX += diag;
+                countZ -= diag;
+            }
+            if (se) {
+                countX -= diag;
+                countZ -= diag;
+            }
+        }
+
+        if (countX == 0 && countZ == 0) {
+            return Vec3.ZERO;
+        }
+
+        return new Vec3(countX, 0, countZ).normalize();
+    }
+
+    @Unique
+    private boolean momentum$isHigher(BlockGetter level, BlockPos feet, int dx, int dz) {
+        BlockPos check = feet.offset(dx, 0, dz);
+        // 同层有实心碰撞 = 那边比脚底高
+        return !level.getBlockState(check).getCollisionShape(level, check).isEmpty();
     }
 }

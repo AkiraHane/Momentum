@@ -5,6 +5,7 @@ import com.akirahane.momentum.core.common.effect.MomentumEffectType;
 import com.akirahane.momentum.core.common.state.State;
 import com.akirahane.momentum.core.common.state.StateType;
 import com.akirahane.momentum.core.common.context.PlayerMovementContext;
+import com.akirahane.momentum.core.common.state.base.BaseState;
 import com.akirahane.momentum.core.common.state.states.MovementState;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
@@ -18,7 +19,7 @@ public class AirborneState extends MovementState {
             0.03F, 0, 1.0F, 0, -1
     );
 
-    public static State checkChildTransition(Player player, PlayerMovementContext context) {
+    public static State checkChildTransition(Player player, PlayerMovementContext context, BaseState nowState) {
         return StateType.AIR.getState();
     }
 
