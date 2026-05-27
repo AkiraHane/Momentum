@@ -37,8 +37,10 @@ jobs:
         run: |
           MOD_ID=$(grep -m1 '^mod_id' gradle.properties | sed 's/.*=\s*//')
           MOD_VERSION=$(grep -m1 '^mod_version' gradle.properties | sed 's/.*=\s*//')
+          MOD_BUILD=$(grep -m1 '^mod_build' gradle.properties | sed 's/.*=\s*//')
+          MOD_PRERELEASE=$(grep -m1 '^mod_prerelease' gradle.properties | sed 's/.*=\s*//')
           echo "mod_id=$MOD_ID" >> "$GITHUB_OUTPUT"
-          echo "mod_version=$MOD_VERSION" >> "$GITHUB_OUTPUT"
+          echo "mod_version=${MOD_VERSION}.${MOD_BUILD}-${MOD_PRERELEASE}" >> "$GITHUB_OUTPUT"
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
