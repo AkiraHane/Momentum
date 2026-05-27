@@ -42,7 +42,6 @@ public class MovementStateMachine {
     public void clientTick(LocalPlayer player) {
         State next = currentState.tick(player, context);
         boolean needSend = transition(next, player);
-        handleTempCacheMap(context);
         if (needSend) {
             ClientPacketDistributor.sendToServer(new StateTransitionPacket(next.getStateType()));
         }
@@ -51,7 +50,6 @@ public class MovementStateMachine {
     public void serverTick(ServerPlayer player) {
         if (currentState == null) return;
         currentState.serverTick(player, context);
-        handleTempCacheMap(context);
     }
 
 
@@ -62,35 +60,6 @@ public class MovementStateMachine {
             if (chainB.contains(a)) return a;
         }
         return State.class;
-    }
-
-    // 处理 tempCacheMap 附加到 tempCacheMap 中
-    public void handleTempCacheMap(PlayerMovementContext context) {
-        for (Map.Entry<MomentumEffectType, Set<MomentumEffect>> entry :
-                context.getPendingEffectPool().entrySet()) {
-            MomentumEffect target = context.getEffectMap().get(entry.getKey());
-            target.init();
-
-            Iterator<MomentumEffect> iterator = entry.getValue().iterator();
-            // 因为可能涉及到清除自己, 用迭代
-            while (iterator.hasNext()) {
-                MomentumEffect momentumEffect = iterator.next();
-                // -1 代表永久 需要添加的地方使用引用移除
-                if (momentumEffect.getDuration() == 0) {
-                    iterator.remove();
-                    continue;
-                }
-                // 累加
-                target.setValue(target.getValue() + momentumEffect.getValue());
-                target.setMultiplier(target.getMultiplier() * momentumEffect.getMultiplier());
-                // 自身衰减/变化
-                momentumEffect.setValue(momentumEffect.getValue() + momentumEffect.getModifyValue());
-                momentumEffect.setMultiplier(momentumEffect.getMultiplier() + momentumEffect.getModifyMultiplier());
-                if (momentumEffect.getDuration() > 0) {
-                    momentumEffect.setDuration(momentumEffect.getDuration() - 1);
-                }
-            }
-        }
     }
 
     // ==================== 状态转换 ====================

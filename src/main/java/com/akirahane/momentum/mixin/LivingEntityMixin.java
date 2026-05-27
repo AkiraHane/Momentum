@@ -127,7 +127,7 @@ public abstract class LivingEntityMixin extends Entity implements Attackable, Wa
                 double accel = momentumEffect.getValue();
                 original = original.add(
                         slopeDir.x * accel,
-                        0,
+                        stateMachine.getContext().getSpeed().y,
                         slopeDir.z * accel
                 );
             } else {
@@ -147,9 +147,9 @@ public abstract class LivingEntityMixin extends Entity implements Attackable, Wa
             double limitZ = player.getDeltaMovement().z * momentumEffect.getValue() / player.getDeltaMovement().horizontalDistance();
             original = new Vec3(
                     // 这里存了上一tick的速度
-                    Math.abs(original.x) > limitX ? stateMachine.getContext().getSpeed().x : original.x,
+                    Math.abs(original.x) > limitX ? stateMachine.getContext().getDSpeed().x : original.x,
                     original.y,
-                    Math.abs(original.z) > limitZ ? stateMachine.getContext().getSpeed().z : original.z
+                    Math.abs(original.z) > limitZ ? stateMachine.getContext().getDSpeed().z : original.z
             );
         }
         original = original.multiply(momentumEffect.getMultiplier(), 1, momentumEffect.getMultiplier());

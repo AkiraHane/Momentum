@@ -17,12 +17,17 @@ public abstract class GroundState extends MovementState {
             0.03F, 0, 1.0F, 0, -1
     );
 
+    // 临时的减速
+    public static MomentumEffect LOWER_CENTER_DECELERATION = new MomentumEffect(
+            0, 0, 1.0F, 0, 0
+    );
+
     public static State checkChildTransition(Player player, PlayerMovementContext context, BaseState nowState) {
         // 输出速度
         if (context.isLowerCenter() &&
                 context.getSpeed().horizontalDistance() * 20 > ServerConfig.MIN_SLIDE_SPEED.get() &&
-                2 * context.getSpeed().horizontalDistance() > Math.abs(context.getSpeed().y) &&
-                nowState.getStateType() != StateType.PRONE
+                nowState.getStateType() != StateType.PRONE &&
+                (player.onGround() || !player.onGround() && 2 * context.getSpeed().horizontalDistance() > Math.abs(context.getSpeed().y))
         ) {
             return SlideState.checkChildTransition(player, context, nowState);
         }
@@ -33,6 +38,18 @@ public abstract class GroundState extends MovementState {
     }
 
     public static void onEnter(Player player, PlayerMovementContext context) {
+        double verticalSpeed = context.getSpeedBuffer().average();           // 垂直分量
+        if (verticalSpeed > -0.02) {
+            return;
+        }
+        verticalSpeed = Math.abs(verticalSpeed);
+        double horizontalSpeed = context.getSpeed().horizontalDistance();    // 水平分量
+        if (horizontalSpeed > verticalSpeed) {
+            return;
+        }
+        LOGGER.debug("掉落惩罚垂直速度测试: {}", verticalSpeed);
+        LOGGER.debug("掉落惩罚横向速度测试: {}", horizontalSpeed);
+        LOGGER.debug("掉落惩罚减速比例测试: {}", Math.pow(horizontalSpeed / verticalSpeed, 2));
     }
 
     public static void onExit(Player player, PlayerMovementContext context) {

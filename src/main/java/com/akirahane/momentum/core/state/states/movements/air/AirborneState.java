@@ -26,14 +26,6 @@ public class AirborneState extends AirState {
     public static void onEnter(Player player, PlayerMovementContext context) {
         context.getPendingEffectPool().get(MomentumEffectType.ACCELERATION_LIMIT_SPEED).add(TEMP_ACCELERATION_LIMIT_SPEED);
         context.getPendingEffectPool().get(MomentumEffectType.ACCELERATION).add(TEMP_ACCELERATION);
-
-        if (context.getBlockStep() != 0) {
-            Vec3 velocity = player.getDeltaMovement();
-            player.setDeltaMovement(
-                    velocity.add(0, velocity.horizontalDistance() * context.getBlockStep(), 0)
-            );
-            context.setBlockStep(0);
-        }
     }
 
     public static void onExit(Player player, PlayerMovementContext context) {

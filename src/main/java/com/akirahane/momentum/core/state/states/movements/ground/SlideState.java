@@ -9,6 +9,7 @@ import com.akirahane.momentum.core.state.states.movements.GroundState;
 import com.akirahane.momentum.core.context.PlayerMovementContext;
 import com.akirahane.momentum.mixin.LivingEntityAccessor;
 import com.akirahane.momentum.config.ServerConfig;
+import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.world.entity.Pose;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
@@ -39,7 +40,7 @@ public class SlideState extends GroundState {
         player.setForcedPose(Pose.SWIMMING);
         context.setNoMoveInput(true);
         context.getPendingEffectPool().get(MomentumEffectType.FRICTION).add(TEMP_FRICTION);
-        SlideState.TEMP_BLOCK_FRICTION_MULTIPLIER.setDuration(2);
+        SlideState.TEMP_BLOCK_FRICTION_MULTIPLIER.setDuration(4);
         SlideState.TEMP_BLOCK_FRICTION_MULTIPLIER.setMultiplier(0);
         context.getPendingEffectPool().get(BLOCK_FRICTION_MULTIPLIER).add(
                 SlideState.TEMP_BLOCK_FRICTION_MULTIPLIER
@@ -47,7 +48,7 @@ public class SlideState extends GroundState {
 
         if (TEMP_SLIDE_COOLDOWN.getDuration() == 0) {
             Vec3 velocity = player.getDeltaMovement();
-            float jumpPower = ((LivingEntityAccessor) player).invokeGetJumpPower();
+            float jumpPower = ((LivingEntityAccessor) player).invokeGetJumpPower() * 1.2F;
             LOGGER.debug("player.getJumpPower() {}", jumpPower);
             player.addDeltaMovement(
                     new Vec3(
@@ -70,5 +71,21 @@ public class SlideState extends GroundState {
                 .remove(TEMP_BLOCK_FRICTION_MULTIPLIER);
         player.setSprinting(false);
         context.setSlopeUnitVector(Vec3.ZERO);
+    }
+
+    @Override
+    public void clientTick(LocalPlayer player, PlayerMovementContext context) {
+        super.clientTick(player, context);
+        if (context.getBlockStep() != 0) {
+            Vec3 velocity = context.getSpeed();
+            player.setDeltaMovement(
+                    new Vec3(
+                            velocity.x,
+                            velocity.y,
+                            velocity.z
+                    )
+            );
+            context.setBlockStep(0);
+        }
     }
 }

@@ -24,7 +24,7 @@ public abstract class MovementState extends State {
         if (player.isSwimming() || (player.isInWater() && nowState.getStateType() != StateType.SLIDE && context.isLowerCenter())) {
             return WaterState.checkChildTransition(player, context, nowState);
         }
-        if (player.onGround() || nowState.getStateType() == StateType.SLIDE) {
+        if (player.onGround()) {
             return GroundState.checkChildTransition(player, context, nowState);
         }
         return AirState.checkChildTransition(player, context, nowState);

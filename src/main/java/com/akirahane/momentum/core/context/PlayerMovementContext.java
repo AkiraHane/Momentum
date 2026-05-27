@@ -1,5 +1,6 @@
 package com.akirahane.momentum.core.context;
 
+import com.akirahane.momentum.core.MomentumUtils;
 import com.akirahane.momentum.core.effect.MomentumEffect;
 import com.akirahane.momentum.core.effect.MomentumEffectType;
 import com.akirahane.momentum.compat.curios.CuriosCompat;
@@ -23,7 +24,7 @@ public class PlayerMovementContext {
     private boolean lowerCenter = false;     // 是否降低重心
     private boolean noMoveInput = false;     // 是否不接受移动输入
     private Vec3 speed = Vec3.ZERO;          // 移动速度
-    private Vec3 moveVector = Vec3.ZERO;     // 位移向量
+    private Vec3 dSpeed = Vec3.ZERO;     // 位移向量
     private boolean hasJetBooster = false;   // 是否装备喷射器
     private boolean canMomentum = true;     // 是否能进行机动
     private double blockStep = 0;        // 滑行上下升单位高度
@@ -33,9 +34,12 @@ public class PlayerMovementContext {
     private float mixinVerticalFriction;     // 垂直光滑度
     private double mixinGravity;
 
-    private Map<MomentumEffectType, MomentumEffect> effectMap;
+    // 速度缓存
+    private MomentumUtils.DoubleRingBuffer speedBuffer = new MomentumUtils.DoubleRingBuffer();
 
-    private Map<MomentumEffectType, Set<MomentumEffect>> pendingEffectPool;
+    private final Map<MomentumEffectType, MomentumEffect> effectMap;
+
+    private final Map<MomentumEffectType, Set<MomentumEffect>> pendingEffectPool;
 
     public PlayerMovementContext() {
         this.resetMixinData();
@@ -51,11 +55,13 @@ public class PlayerMovementContext {
     public void syncFromPlayer(Player player) {
         this.hasJetBooster = checkBoosterEquipped(player);
         this.canMomentum = checkMomentum(this.hasJetBooster);
+        speedBuffer.push(speed.y);
+        this.dSpeed = player.getDeltaMovement();
 
         // 每tick要从Mixin中获取, 还有可能不会更新, 所以要每tick重置
         this.resetMixinData();
         LOGGER.debug("[State] SpeedXYZ: ({}, {} ,{} )", speed.x, speed.y, speed.z);
-        LOGGER.debug("[State] 20 * Speed: {}", speed.horizontalDistance() * 20);
+        LOGGER.debug("[State] 20 * HSpeed: {}", speed.horizontalDistance() * 20);
     }
 
     private void resetMixinData() {

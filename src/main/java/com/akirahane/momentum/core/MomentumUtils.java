@@ -16,6 +16,7 @@ import static com.akirahane.momentum.core.effect.MomentumEffectType.ACCELERATION
 public class MomentumUtils {
     // 日志
     protected static final Logger LOGGER = LogUtils.getLogger();
+
     public static float getAirFriction(Player player) {
         MovementStateMachine stateMachine = player.getData(InitAttachments.MOVEMENT_STATE);
         if (stateMachine.getCurrentState().getStateType().equals(StateType.ORIGINAL)) {
@@ -23,14 +24,6 @@ public class MomentumUtils {
         }
         // =================== 内容 ===================
         return ServerConfig.AIR_FRICTION.get().floatValue();
-    }
-
-    public static Vec3 getClearVec3(Vec3 original) {
-        return new Vec3(
-                Mth.equal(original.x, 0.0) ? 0.0 : original.x,
-                Mth.equal(original.y, 0.0) ? 0.0 : original.y,
-                Mth.equal(original.z, 0.0) ? 0.0 : original.z
-        );
     }
 
     // 滑行上下坡加速和减速
@@ -91,4 +84,37 @@ public class MomentumUtils {
             );
         }
     }
+
+    public static class DoubleRingBuffer {
+        private static final int SIZE = 3;
+        private final double[] buf = new double[SIZE];
+        private int head = 0;
+        private int size = 0;
+        private double sum = 0;
+
+        public void push(double value) {
+            if (size == SIZE) {
+                sum -= buf[head];
+            }
+            sum += value;
+            buf[head] = value;
+            head = (head + 1) % SIZE;
+            if (size < SIZE) size++;
+        }
+
+        public double average() {
+            return size == 0 ? 0 : sum / size;
+        }
+
+        public double get(int index) {
+            // 0 = 最旧, size-1 = 最新
+            if (index < 0 || index >= size) throw new IndexOutOfBoundsException();
+            return buf[(head - size + index + SIZE) % SIZE];
+        }
+
+        public int size() {
+            return size;
+        }
+    }
+
 }
