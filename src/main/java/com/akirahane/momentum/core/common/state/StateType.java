@@ -1,11 +1,10 @@
 package com.akirahane.momentum.core.common.state;
 
-import com.akirahane.momentum.core.common.state.base.BaseState;
 import com.akirahane.momentum.core.common.state.states.OriginalState;
-import com.akirahane.momentum.core.common.state.states.air.AirborneState;
-import com.akirahane.momentum.core.common.state.states.ground.action.ProneState;
-import com.akirahane.momentum.core.common.state.states.ground.action.SlideState;
-import com.akirahane.momentum.core.common.state.states.ground.action.WalkState;
+import com.akirahane.momentum.core.common.state.states.movements.AirborneState;
+import com.akirahane.momentum.core.common.state.states.movements.grounds.ProneState;
+import com.akirahane.momentum.core.common.state.states.movements.grounds.SlideState;
+import com.akirahane.momentum.core.common.state.states.movements.grounds.WalkState;
 import com.mojang.logging.LogUtils;
 import lombok.Getter;
 import org.slf4j.Logger;

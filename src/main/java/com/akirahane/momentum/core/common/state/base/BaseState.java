@@ -2,7 +2,7 @@ package com.akirahane.momentum.core.common.state.base;
 
 import com.akirahane.momentum.core.common.state.State;
 import com.akirahane.momentum.core.common.state.StateType;
-import com.akirahane.momentum.core.common.content.PlayerMovementContext;
+import com.akirahane.momentum.core.common.context.PlayerMovementContext;
 import com.mojang.logging.LogUtils;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.server.level.ServerPlayer;

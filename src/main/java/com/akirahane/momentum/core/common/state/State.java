@@ -2,7 +2,7 @@ package com.akirahane.momentum.core.common.state;
 
 import com.akirahane.momentum.core.common.state.base.BaseState;
 import com.akirahane.momentum.core.common.state.states.OriginalState;
-import com.akirahane.momentum.core.common.content.PlayerMovementContext;
+import com.akirahane.momentum.core.common.context.PlayerMovementContext;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
@@ -37,7 +37,6 @@ public abstract class State extends BaseState {
      * 返回 null 表示没有子分支需要进入。
      */
     public static State checkChildTransition(Player player, PlayerMovementContext context) {
-        LOGGER.debug("[State] Speed: {}", player.getDeltaMovement().horizontalDistance() * 20);
         return OriginalState.checkChildTransition(player, context);
     }
 

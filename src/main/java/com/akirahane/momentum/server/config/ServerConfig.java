@@ -49,11 +49,11 @@ public class ServerConfig {
     // 滑铲加速冷却
     public static final ModConfigSpec.IntValue SLIDE_ACCELERATION_COOLDOWN = BUILDER
             .comment("滑铲加速冷却（tick）", "默认值: 40")
-            .defineInRange("slideAccelerationCooldown", 40, 0, 200);
+            .defineInRange("slideAccelerationCooldown", 30, 0, 200);
 
     // 空气阻力
     public static final ModConfigSpec.DoubleValue AIR_FRICTION = BUILDER
-            .comment("空气阻力（0.0 - 1.0）", "默认值: 0.99, 原版: 0.91")
-            .defineInRange("airFriction", 0.99, 0.0, 1.0);
+            .comment("空气阻力（0.0 - 1.0）", "默认值: 0.998, 原版: 0.91")
+            .defineInRange("airFriction", 0.998, 0.0, 1.0);
     public static final ModConfigSpec SPEC = BUILDER.build();
 }

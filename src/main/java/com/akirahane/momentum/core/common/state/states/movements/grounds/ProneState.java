@@ -1,9 +1,9 @@
-package com.akirahane.momentum.core.common.state.states.ground.action;
+package com.akirahane.momentum.core.common.state.states.movements.grounds;
 
 import com.akirahane.momentum.core.common.state.State;
 import com.akirahane.momentum.core.common.state.StateType;
-import com.akirahane.momentum.core.common.state.states.ground.GroundState;
-import com.akirahane.momentum.core.common.content.PlayerMovementContext;
+import com.akirahane.momentum.core.common.state.states.movements.GroundState;
+import com.akirahane.momentum.core.common.context.PlayerMovementContext;
 import net.minecraft.world.entity.Pose;
 import net.minecraft.world.entity.player.Player;
 

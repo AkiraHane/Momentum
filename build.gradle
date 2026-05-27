@@ -14,7 +14,7 @@ tasks.named('wrapper', Wrapper).configure {
     distributionType = Wrapper.DistributionType.BIN
 }
 
-version = mod_version
+version = "${mod_version}.${mod_build}-${mod_prerelease}"
 group = mod_group_id
 
 sourceSets.main.resources {
@@ -53,6 +53,7 @@ neoForge {
     runs {
         client {
             client()
+            devLogin = true
 
             // Comma-separated list of namespaces to load gametests from. Empty = all namespaces.
             systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id

@@ -7,11 +7,11 @@ import com.llamalad7.mixinextras.sugar.Local;
 import it.unimi.dsi.fastutil.floats.FloatArraySet;
 import it.unimi.dsi.fastutil.floats.FloatArrays;
 import it.unimi.dsi.fastutil.floats.FloatSet;
-import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.Direction;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
@@ -26,6 +26,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.List;
 
+import static com.akirahane.momentum.core.common.MomentumUtils.setSlideAcceleration;
+
 @Mixin(Entity.class)
 public abstract class EntityMixin {
 
@@ -34,11 +36,6 @@ public abstract class EntityMixin {
 
     @Shadow
     private static List<VoxelShape> collectColliders(@Nullable Entity source, Level level, List<VoxelShape> entityColliders, AABB boundingBox) {
-        throw new UnsupportedOperationException("Implemented via mixin");
-    }
-
-    @Shadow
-    private static float[] collectCandidateStepUpHeights(AABB boundingBox, List<VoxelShape> colliders, float maxStepHeight, float stepHeightToSkip) {
         throw new UnsupportedOperationException("Implemented via mixin");
     }
 
@@ -52,9 +49,6 @@ public abstract class EntityMixin {
     private static Vec3 collideWithShapes(Vec3 movement, AABB boundingBox, List<VoxelShape> shapes) {
         throw new UnsupportedOperationException("Implemented via mixin");
     }
-
-    @Shadow
-    public abstract Level level();
 
     protected EntityMixin(EntityType<?> type, Level level) {
     }
@@ -73,7 +67,7 @@ public abstract class EntityMixin {
             @Local(name = "onGroundAfterCollision") boolean onGroundAfterCollision
     ) {
         Entity self = (Entity) (Object) this;
-        if (!(self instanceof LocalPlayer player)) {
+        if (!(self instanceof Player player)) {
             return;
         }
         MovementStateMachine stateMachine = player.getData(InitAttachments.MOVEMENT_STATE);
@@ -84,6 +78,7 @@ public abstract class EntityMixin {
 
         // 已经上坡则不需要下坡
         if (!cir.getReturnValue().equals(movementStep)) {
+            setSlideAcceleration(movement, cir.getReturnValue().y, stateMachine);
             return;
         }
         // 上升时不需要下坡
@@ -95,26 +90,32 @@ public abstract class EntityMixin {
             return;
         }
 
+        float maxDownStep = (float) (this.maxUpStep() * Math.ceil(Math.max(Math.abs(movement.x), Math.abs(movement.z))));
+
         List<VoxelShape> entityColliders = this.level.getEntityCollisions(
                 self,
-                aabb.expandTowards(movement.subtract(0, this.maxUpStep(), 0))
+                aabb.expandTowards(movement.subtract(0, maxDownStep, 0))
         );
         // 正常行走无法落地才考虑要不要下坡
-        if (this.maxUpStep() > 0.0F && (!onGroundAfterCollision)) {
-            AABB stepDownAABB = aabb.expandTowards(movement.x, (double) -this.maxUpStep(), movement.z);
+        if (maxDownStep > 0.0F && (!onGroundAfterCollision) && this.onGround()) {
+            AABB stepDownAABB = aabb.expandTowards(
+                    movement.x, -maxDownStep, movement.z
+            );
             // 似乎是原版修复浮点精度的, 但是不太理解, 目前不知道去掉会有什么bug, 推测是落地判定相关, 所以先保留
+            // 为了能碰撞地面, 所以特地往下拉了一个玩家的身位
             if (!onGroundAfterCollision) {
-                stepDownAABB = stepDownAABB.expandTowards(0.0F, -1.0E-5F, 0.0F);
+                stepDownAABB = stepDownAABB.expandTowards(0.0F, -1.5F - 1.0E-5F, 0.0F);
             }
             // 获取所有碰撞
             List<VoxelShape> colliders = collectColliders(self, this.level, entityColliders, stepDownAABB);
             float stepHeightToSkip = (float) movementStep.y;
-            float[] candidateStepDownHeights = momentum$collectCandidateStepDownHeights(aabb, colliders, -this.maxUpStep(), stepHeightToSkip);
+            float[] candidateStepDownHeights = momentum$collectCandidateStepDownHeights(aabb, colliders, -maxDownStep, stepHeightToSkip);
 
             for (float candidateStepDHeight : candidateStepDownHeights) {
                 Vec3 stepFromGround = collideWithShapes(new Vec3(movement.x, candidateStepDHeight, movement.z), aabb, colliders);
                 if (stepFromGround.horizontalDistanceSqr() > 0) {
                     cir.setReturnValue(stepFromGround);
+                    setSlideAcceleration(movement, stepFromGround.y, stateMachine);
                     return;
                 }
             }

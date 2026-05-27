@@ -1,6 +1,8 @@
 package com.akirahane.momentum.core.common.state;
 
-import com.akirahane.momentum.core.common.content.PlayerMovementContext;
+import com.akirahane.momentum.core.common.context.PlayerMovementContext;
+import com.akirahane.momentum.core.common.effect.MomentumEffect;
+import com.akirahane.momentum.core.common.effect.MomentumEffectType;
 import com.akirahane.momentum.core.network.StateTransitionPacket;
 import com.mojang.logging.LogUtils;
 import lombok.Getter;
@@ -39,14 +41,17 @@ public class MovementStateMachine {
 
     public void clientTick(LocalPlayer player) {
         State next = currentState.tick(player, context);
-        if (next == null || next.getClass() == currentState.getClass()) return;
-        transition(next, player);
-        ClientPacketDistributor.sendToServer(new StateTransitionPacket(next.getStateType()));
+        boolean needSend = transition(next, player);
+        handleTempCacheMap(context);
+        if (needSend) {
+            ClientPacketDistributor.sendToServer(new StateTransitionPacket(next.getStateType()));
+        }
     }
 
     public void serverTick(ServerPlayer player) {
         if (currentState == null) return;
         currentState.serverTick(player, context);
+        handleTempCacheMap(context);
     }
 
 
@@ -58,9 +63,40 @@ public class MovementStateMachine {
         }
         return State.class;
     }
+
+    // 处理 tempCacheMap 附加到 tempCacheMap 中
+    public void handleTempCacheMap(PlayerMovementContext context) {
+        for (Map.Entry<MomentumEffectType, Set<MomentumEffect>> entry :
+                context.getPendingEffectPool().entrySet()) {
+            MomentumEffect target = context.getEffectMap().get(entry.getKey());
+            target.init();
+
+            Iterator<MomentumEffect> iterator = entry.getValue().iterator();
+            // 因为可能涉及到清除自己, 用迭代
+            while (iterator.hasNext()) {
+                MomentumEffect momentumEffect = iterator.next();
+                // -1 代表永久 需要添加的地方使用引用移除
+                if (momentumEffect.getDuration() == 0) {
+                    iterator.remove();
+                    continue;
+                }
+                // 累加
+                target.setValue(target.getValue() + momentumEffect.getValue());
+                target.setMultiplier(target.getMultiplier() * momentumEffect.getMultiplier());
+                // 自身衰减/变化
+                momentumEffect.setValue(momentumEffect.getValue() + momentumEffect.getModifyValue());
+                momentumEffect.setMultiplier(momentumEffect.getMultiplier() + momentumEffect.getModifyMultiplier());
+                if (momentumEffect.getDuration() > 0) {
+                    momentumEffect.setDuration(momentumEffect.getDuration() - 1);
+                }
+            }
+        }
+    }
+
     // ==================== 状态转换 ====================
 
-    private void transition(State next, Player player) {
+    private boolean transition(State next, Player player) {
+        if (next == null || next.getClass() == currentState.getClass()) return false;
         // 找到公共祖先
         List<Class<? extends State>> fromChain = currentState.getStateType().getAncestorChain();
         List<Class<? extends State>> toChain = next.getStateType().getAncestorChain();
@@ -101,14 +137,15 @@ public class MovementStateMachine {
                 LOGGER.debug("[{}] onEnter", clazz.getSimpleName());
                 method.invoke(null, player, context);
             } catch (InvocationTargetException | IllegalAccessException e) {
+                // 如果报错, 看看是不是有子类没有覆盖父类的静态方法
                 throw new RuntimeException(e);
             }
         }
         currentState = next;
+        return true;
     }
 
     public void setStateFromClient(StateType newStateType, Player player) {
-        if (newStateType.getState() == null || newStateType.getState().getClass() == currentState.getClass()) return;
         transition(newStateType.getState(), player);
     }
 
