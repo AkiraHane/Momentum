@@ -1,8 +1,8 @@
 package com.akirahane.momentum.client.input;
 
 import com.akirahane.momentum.Momentum;
-import com.akirahane.momentum.core.common.state.MovementStateMachine;
-import com.akirahane.momentum.core.init.InitAttachments;
+import com.akirahane.momentum.core.state.MovementStateMachine;
+import com.akirahane.momentum.init.InitAttachments;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;

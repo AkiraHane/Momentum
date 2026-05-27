@@ -1,6 +1,6 @@
 {
   "required": true,
-  "package": "com.akirahane.momentum.core.mixin",
+  "package": "com.akirahane.momentum.mixin",
   "compatibilityLevel": "JAVA_25",
   "mixins": [
     "EntityMixin",

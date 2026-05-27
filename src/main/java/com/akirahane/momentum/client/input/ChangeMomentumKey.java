@@ -1,7 +1,7 @@
 package com.akirahane.momentum.client.input;
 
 import com.akirahane.momentum.Momentum;
-import com.akirahane.momentum.core.network.ToggleMomentumPacket;
+import com.akirahane.momentum.network.ToggleMomentumPacket;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.KeyMapping;
 import net.neoforged.api.distmarker.Dist;
