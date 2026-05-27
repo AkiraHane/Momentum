@@ -21,7 +21,7 @@ public abstract class GroundState extends MovementState {
         // 输出速度
         if (context.isLowerCenter() &&
                 context.getSpeed().horizontalDistance() * 20 > ServerConfig.MIN_SLIDE_SPEED.get() &&
-                context.getSpeed().horizontalDistance() > Math.abs(context.getSpeed().y) &&
+                2 * context.getSpeed().horizontalDistance() > Math.abs(context.getSpeed().y) &&
                 nowState.getStateType() != StateType.PRONE
         ) {
             return SlideState.checkChildTransition(player, context, nowState);

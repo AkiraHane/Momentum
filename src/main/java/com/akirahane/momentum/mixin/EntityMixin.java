@@ -118,13 +118,6 @@ public abstract class EntityMixin{
             for (float candidateStepDHeight : candidateStepDownHeights) {
                 Vec3 stepFromGround = collideWithShapes(new Vec3(movement.x, candidateStepDHeight, movement.z), aabb, colliders);
                 if (stepFromGround.horizontalDistanceSqr() > 0) {
-                    player.addDeltaMovement(
-                            new Vec3(
-                                    0,
-                                    candidateStepDHeight,
-                                    0
-                            )
-                    );
                     cir.setReturnValue(stepFromGround);
                     if (!stateMachine.getCurrentState().getStateType().equals(StateType.SLIDE)) {
                         return;
@@ -168,8 +161,6 @@ public abstract class EntityMixin{
                 (bounds.minZ + bounds.maxZ) / 2
         );
         BlockGetter level = player.level();
-        System.out.println("feet: " + feet);
-        System.out.println("player.blockPosition(): " + player.blockPosition());
 
         float countX = 0;
         float countZ = 0;

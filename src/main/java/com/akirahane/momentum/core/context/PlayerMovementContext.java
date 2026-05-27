@@ -14,8 +14,6 @@ import org.slf4j.Logger;
 
 import java.util.*;
 
-import static com.akirahane.momentum.core.MomentumUtils.getClearVec3;
-
 @Getter
 @Setter
 public class PlayerMovementContext {
@@ -24,7 +22,8 @@ public class PlayerMovementContext {
 
     private boolean lowerCenter = false;     // 是否降低重心
     private boolean noMoveInput = false;     // 是否不接受移动输入
-    private Vec3 speed = Vec3.ZERO;              // 移动速度
+    private Vec3 speed = Vec3.ZERO;          // 移动速度
+    private Vec3 moveVector = Vec3.ZERO;     // 位移向量
     private boolean hasJetBooster = false;   // 是否装备喷射器
     private boolean canMomentum = true;     // 是否能进行机动
     private double blockStep = 0;        // 滑行上下升单位高度
@@ -52,16 +51,11 @@ public class PlayerMovementContext {
     public void syncFromPlayer(Player player) {
         this.hasJetBooster = checkBoosterEquipped(player);
         this.canMomentum = checkMomentum(this.hasJetBooster);
-        this.speed = getClearVec3(player.getDeltaMovement().add(
-                0,
-                player.onGround() ? this.mixinGravity * this.mixinVerticalFriction : 0,
-                0
-        ));
 
         // 每tick要从Mixin中获取, 还有可能不会更新, 所以要每tick重置
         this.resetMixinData();
-//        LOGGER.debug("[State] 20 * SpeedXYZ: ({}, {} ,{} )", speed.x * 20, speed.y * 20, speed.z * 20);
-//        LOGGER.debug("[State] 20 * Speed: {}", speed.horizontalDistance() * 20);
+        LOGGER.debug("[State] SpeedXYZ: ({}, {} ,{} )", speed.x, speed.y, speed.z);
+        LOGGER.debug("[State] 20 * Speed: {}", speed.horizontalDistance() * 20);
     }
 
     private void resetMixinData() {
