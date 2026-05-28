@@ -19,9 +19,10 @@ public class ServerConfig {
             .comment("装备助推器时体力消耗的减免幅度", "0.0 = 无减免，1.0 = 完全减免")
             .defineInRange("boosterStaminaReduction", 1.0, 0.0, 1.0);
 
-    public static final ModConfigSpec.BooleanValue AUTO_CLIMB = BUILDER
-            .comment("是否开启自动上坡", "默认值: true")
-            .define("autoClimb", true);
+    // 自动上坡高度
+    public static final ModConfigSpec.DoubleValue ADD_AUTO_CLIMB_HEIGHT = BUILDER
+            .comment("机动模式下增加的自动上坡高度（米），设为0则为不额外增加自动上坡高度，修改需要重启服务", "默认值: 0.5")
+            .defineInRange("autoClimbHeight", 0.5, 0.0, 0.6);
 
     // ========== 体力系统配置 ==========
 

@@ -1,5 +1,6 @@
 package com.akirahane.momentum.core.state.states;
 
+import com.akirahane.momentum.config.ServerConfig;
 import com.akirahane.momentum.core.state.State;
 import com.akirahane.momentum.core.state.StateType;
 import com.akirahane.momentum.core.state.base.BaseState;
@@ -18,7 +19,11 @@ import static com.akirahane.momentum.Momentum.MODID;
 
 public abstract class MovementState extends State {
 
-    public static Identifier SLIDE_STEP_HEIGHT_ID = Identifier.fromNamespaceAndPath(MODID, "slide_step_height");
+    public static final AttributeModifier SLIDE_STEP_HEIGHT = new AttributeModifier(
+            Identifier.fromNamespaceAndPath(MODID, "slide_step_height"),
+            ServerConfig.ADD_AUTO_CLIMB_HEIGHT.get(),
+            AttributeModifier.Operation.ADD_VALUE
+    );
 
     public static State checkChildTransition(Player player, PlayerMovementContext context, BaseState nowState) {
         if (player.isSwimming() || (player.isInWater() && nowState.getStateType() != StateType.SLIDE && context.isLowerCenter())) {
@@ -37,11 +42,9 @@ public abstract class MovementState extends State {
         if (player instanceof ServerPlayer) {
             AttributeInstance attr = player.getAttribute(Attributes.STEP_HEIGHT);
             if (attr != null) {
-                attr.addTransientModifier(new AttributeModifier(
-                        SLIDE_STEP_HEIGHT_ID,
-                        0.5,
-                        AttributeModifier.Operation.ADD_VALUE
-                ));
+                // TODO 正式版本改为使用addOrUpdateTransientModifier, 测试和开发要验证状态机和防止BUG, 不对可能的错误进行处理
+//                attr.addOrUpdateTransientModifier(SLIDE_STEP_HEIGHT);
+                attr.addTransientModifier(SLIDE_STEP_HEIGHT);
             }
         }
     }
@@ -50,7 +53,7 @@ public abstract class MovementState extends State {
         if (player instanceof ServerPlayer) {
             AttributeInstance attr = player.getAttribute(Attributes.STEP_HEIGHT);
             if (attr != null) {
-                attr.removeModifier(SLIDE_STEP_HEIGHT_ID);
+                attr.removeModifier(SLIDE_STEP_HEIGHT);
             }
         }
     }
