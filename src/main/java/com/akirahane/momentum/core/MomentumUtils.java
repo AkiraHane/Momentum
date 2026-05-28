@@ -6,7 +6,6 @@ import com.akirahane.momentum.core.state.states.movements.ground.SlideState;
 import com.akirahane.momentum.init.InitAttachments;
 import com.akirahane.momentum.config.ServerConfig;
 import com.mojang.logging.LogUtils;
-import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
 import org.slf4j.Logger;
@@ -63,10 +62,10 @@ public class MomentumUtils {
             // dropHeight 通过 tanh 软限制，防止大落差产生过大加速
             float acceleration = (float) (DOWNHILL_ACCEL_FACTOR * Math.tanh(dropHeight * 2.0) * headroom);
 
-            SlideState.TEMP_ACCELERATION.setDuration(duration);
-            SlideState.TEMP_ACCELERATION.setValue(acceleration);
+            SlideState.SLIDE_ACCELERATION.setDuration(duration);
+            SlideState.SLIDE_ACCELERATION.setValue(acceleration);
             stateMachine.getContext().getPendingEffectPool().get(ACCELERATION).add(
-                    SlideState.TEMP_ACCELERATION
+                    SlideState.SLIDE_ACCELERATION
             );
 
             // === 上坡（movementStepY > 0）===
@@ -77,10 +76,10 @@ public class MomentumUtils {
             // 不会一步减到 0，保留滑行惯性感
             float deceleration = (float) (-UPHILL_DECEL_FACTOR * Math.min(riseHeight * riseHeight, 1.0));
 
-            SlideState.TEMP_ACCELERATION.setDuration(duration);
-            SlideState.TEMP_ACCELERATION.setValue(deceleration);
+            SlideState.SLIDE_ACCELERATION.setDuration(duration);
+            SlideState.SLIDE_ACCELERATION.setValue(deceleration);
             stateMachine.getContext().getPendingEffectPool().get(ACCELERATION).add(
-                    SlideState.TEMP_ACCELERATION
+                    SlideState.SLIDE_ACCELERATION
             );
         }
     }
