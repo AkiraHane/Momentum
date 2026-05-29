@@ -17,8 +17,11 @@ public class SlideState extends BaseState {
     public static boolean canSlide(Player player, PlayerMovementContext context) {
         return player.onGround() &&
                 context.isLowerCenter() &&
-                context.getSpeed().horizontalDistance() * 20 > ServerConfig.MIN_SLIDE_SPEED.get();
+                player.isSprinting() &&
+                context.getSpeed().horizontalDistance() * 20 > ServerConfig.MIN_SLIDE_SPEED.get() &&
+                context.getOldSpeed().horizontalDistance() > -context.getOldSpeed().y;
     }
+
     @Override
     public void onEnter(Player player, PlayerMovementContext context) {
         player.setForcedPose(Pose.SWIMMING);
@@ -41,8 +44,8 @@ public class SlideState extends BaseState {
                             velocity.z * jumpPower / velocity.horizontalDistance()
                     )
             );
-            context.setSlideCooldown(ServerConfig.SLIDE_ACCELERATION_COOLDOWN.get());
         }
+        context.setSlideCooldown(ServerConfig.SLIDE_ACCELERATION_COOLDOWN.get());
     }
 
     public void onExit(Player player, PlayerMovementContext context) {

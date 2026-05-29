@@ -6,6 +6,7 @@ import com.akirahane.momentum.core.enumerate.MomentumEffectType;
 import com.akirahane.momentum.core.enumerate.StateType;
 import com.akirahane.momentum.core.state.base.BaseState;
 import com.akirahane.momentum.core.state.states.ground.SlideState;
+import com.akirahane.momentum.core.state.states.special.BreakFallState;
 import com.akirahane.momentum.core.state.states.water.SwimState;
 import net.minecraft.world.entity.player.Player;
 
@@ -30,9 +31,12 @@ public class AirborneState extends BaseState {
         if (SlideState.canSlide(player, context)) {
             return StateType.SLIDE.getState();
         }
-        if (player.onGround() && context.isLowerCenter()) {
-            return StateType.PRONE.getState();
+        if (BreakFallState.canBreakFall(player, context)) {
+            return StateType.BREAKFALL.getState();
         }
+//        if (player.onGround() && context.isLowerCenter()) {
+//            return StateType.PRONE.getState();
+//        }
         if (player.onGround() && !context.isLowerCenter()) {
             return StateType.WALK.getState();
         }

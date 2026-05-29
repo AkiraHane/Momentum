@@ -24,7 +24,7 @@ public class LowerCenterKey {
     private static boolean wasToggleDown = false;
 
     // 按住生效
-    public static final Lazy<@NotNull KeyMapping> LOWER_CENTER_HOLD_KEY = Lazy.of(() -> new KeyMapping(
+    public static final Lazy<@NotNull KeyMapping> LOWER_CENTER_HOLD = Lazy.of(() -> new KeyMapping(
             "key.momentum.lower_center_hold", // 将使用此翻译密钥进行本地化处理
             KeyConflictContext.IN_GAME, // 游戏中
             InputConstants.Type.KEYSYM, // 默认键盘键位
@@ -32,33 +32,14 @@ public class LowerCenterKey {
             MOMENTUM_CATEGORY // 移动类别
     ));
 
-    // 切换开关，默认未绑定
-    public static final Lazy<@NotNull KeyMapping> LOWER_CENTER_TOGGLE_KEY = Lazy.of(() -> new KeyMapping(
-            "key.momentum.lower_center_toggle",
-            KeyConflictContext.IN_GAME,
-            InputConstants.UNKNOWN, // 默认不设置
-            MOMENTUM_CATEGORY
-    ));
-
     // 每tick检测
     @SubscribeEvent
     public static void onClientTick(ClientTickEvent.Pre event) {
         Player player = Minecraft.getInstance().player;
         if (player == null) return;
-        boolean holdBound = LOWER_CENTER_HOLD_KEY.get().getKey() != InputConstants.UNKNOWN;
-        boolean toggleBound = LOWER_CENTER_TOGGLE_KEY.get().getKey() != InputConstants.UNKNOWN;
-        if (!holdBound && !toggleBound) return;
+        boolean bound = LOWER_CENTER_HOLD.get().getKey() != InputConstants.UNKNOWN;
+        if (!bound) return;
         MovementStateMachine machine = player.getData(InitAttachments.MOVEMENT_STATE);
-        boolean lower_center = machine.getContext().isLowerCenter();
-        if (holdBound) {
-            // hold 优先
-            lower_center = LOWER_CENTER_HOLD_KEY.get().isDown();
-        } else if (LOWER_CENTER_TOGGLE_KEY.get().isDown() && !wasToggleDown) {
-            lower_center = !lower_center;
-        }
-        wasToggleDown = LOWER_CENTER_TOGGLE_KEY.get().isDown();
-        if (lower_center != machine.getContext().isLowerCenter()){
-            machine.getContext().setLowerCenter(lower_center);
-        }
+        machine.getContext().setLowerCenter(LOWER_CENTER_HOLD.get().isDown());
     }
 }

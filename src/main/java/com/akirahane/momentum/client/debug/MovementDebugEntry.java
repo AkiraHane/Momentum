@@ -35,5 +35,7 @@ public class MovementDebugEntry implements DebugScreenEntry {
         float xRot = mc.player.getXRot(); // 垂直角度 (pitch), -90 到 90
         displayer.addToGroup(group, String.format("[Momentum] yRot: %.4f", yRot));
         displayer.addToGroup(group, String.format("[Momentum] xRot: %.4f", xRot));
+        double fallDistance = mc.player.fallDistance;
+        displayer.addToGroup(group, String.format("[Momentum] Fall Distance: %.4f", fallDistance));
     }
 }

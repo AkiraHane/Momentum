@@ -35,6 +35,10 @@ public class PlayerMovementContext {
     private Vec3 slopeUnitVector = Vec3.ZERO;
     // 是否不接受移动输入
     private boolean noMoveInput = false;
+    // 是否禁止跳跃
+    private boolean noJump = false;
+    // 上次掉落的数据
+    private double lastFallDistance = 0;
     // 效果合计
     private final Map<MomentumEffectType, MomentumEffect> effectMap;
     // 待处理效果
@@ -45,7 +49,8 @@ public class PlayerMovementContext {
     private int jumpBuffer = 0;
     // 滑铲冷却
     private int slideCooldown = 0;
-    // 是否按下了向前
+    // 是否处于受身
+    private int breakFallBuffer = 0;
 
     public PendingEffect SLIDE_FRICTION = new PendingEffect(
             0, 0, 0.1F, 0, -1
@@ -77,8 +82,10 @@ public class PlayerMovementContext {
     public void tick(Player player) {
         if (this.jumpBuffer > 0) this.jumpBuffer--;
         if (this.slideCooldown > 0) this.slideCooldown--;
+        if (this.breakFallBuffer > 0) this.breakFallBuffer--;
         this.hasJetBooster = checkBoosterEquipped(player);
         this.canMomentum = checkMomentum(this.hasJetBooster);
+        if (player.fallDistance > 0) this.lastFallDistance = player.fallDistance;
     }
 
     // 喷气助推器判断

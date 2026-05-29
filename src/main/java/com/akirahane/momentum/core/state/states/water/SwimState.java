@@ -13,13 +13,12 @@ public class SwimState extends BaseState {
 
     public static boolean canSwim(Player player, PlayerMovementContext context) {
         Minecraft mc = Minecraft.getInstance();
-        KeyMapping keyUp = null;
+        KeyMapping keyUp = mc.options.keyUp;
         Float xRot = null;
         if (mc.player != null) {
-            keyUp = mc.options.keyUp;
             xRot = mc.player.getXRot(); // 垂直角度 (pitch), -90 到 90
         }
-        return context.isLowerCenter() && player.isInWater() && keyUp != null && keyUp.isDown() && xRot > 0;
+        return context.isLowerCenter() && player.isInWater() && keyUp.isDown() && xRot != null && xRot > 0;
     }
 
     public void onEnter(Player player, PlayerMovementContext context) {

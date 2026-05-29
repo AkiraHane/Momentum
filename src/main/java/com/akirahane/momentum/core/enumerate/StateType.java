@@ -6,6 +6,7 @@ import com.akirahane.momentum.core.state.states.air.AirborneState;
 import com.akirahane.momentum.core.state.states.ground.ProneState;
 import com.akirahane.momentum.core.state.states.ground.SlideState;
 import com.akirahane.momentum.core.state.states.ground.WalkState;
+import com.akirahane.momentum.core.state.states.special.BreakFallState;
 import com.akirahane.momentum.core.state.states.water.SwimState;
 import com.mojang.logging.LogUtils;
 import lombok.Getter;
@@ -19,7 +20,8 @@ public enum StateType {
     PRONE(new ProneState()),
     SLIDE(new SlideState()),
     AIRBORNE(new AirborneState()),
-    SWIM(new SwimState());
+    SWIM(new SwimState()),
+    BREAKFALL(new BreakFallState());
     // 日志
     static final Logger LOGGER = LogUtils.getLogger();
 

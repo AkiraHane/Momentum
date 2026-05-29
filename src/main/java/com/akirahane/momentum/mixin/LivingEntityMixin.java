@@ -21,6 +21,7 @@ import net.neoforged.neoforge.common.extensions.ILivingEntityExtension;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.*;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import static com.akirahane.momentum.core.enumerate.MomentumEffectType.BLOCK_FRICTION;
 
@@ -191,4 +192,20 @@ public abstract class LivingEntityMixin extends Entity implements Attackable, Wa
         }
         // 已超速则不调用
     }
+
+    @Inject(method = "jumpFromGround", at = @At("HEAD"), cancellable = true)
+    private void onJumpFromGround(CallbackInfo ci) {
+        LivingEntity self = (LivingEntity) (Object) this;
+        if (!(self instanceof Player player)) {
+            return;
+        }
+        MovementStateMachine stateMachine = player.getData(InitAttachments.MOVEMENT_STATE);
+        if (stateMachine.getCurrentState().getStateType().equals(StateType.ORIGINAL)) {
+            return;
+        }
+        if (stateMachine.getContext().isNoJump()) {
+            ci.cancel();
+        }
+    }
+
 }
