@@ -32,7 +32,7 @@ public class AirborneState extends BaseState {
             return StateType.SLIDE.getState();
         }
         if (BreakFallState.canBreakFall(player, context)) {
-            return StateType.BREAKFALL.getState();
+            return StateType.BREAK_FALL.getState();
         }
 //        if (player.onGround() && context.isLowerCenter()) {
 //            return StateType.PRONE.getState();

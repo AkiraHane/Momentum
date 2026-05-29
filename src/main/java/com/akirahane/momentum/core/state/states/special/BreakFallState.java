@@ -17,7 +17,7 @@ public class BreakFallState extends BaseState {
 
     @Override
     public void onEnter(Player player, PlayerMovementContext context) {
-        context.setBreakFallBuffer(10);
+        context.setBreakFallTimer(10);
         context.setNoJump(true);
     }
 
@@ -35,17 +35,17 @@ public class BreakFallState extends BaseState {
         if (AirborneState.canAirborne(player, context)) {
             return StateType.AIRBORNE.getState();
         }
-        if (context.getBreakFallBuffer() > 0) {
-            return StateType.BREAKFALL.getState();
+        if (context.getBreakFallTimer() > 0) {
+            return StateType.BREAK_FALL.getState();
         }
         if (WalkState.canWalk(player, context)){
             return StateType.WALK.getState();
         }
-        return StateType.BREAKFALL.getState();
+        return StateType.BREAK_FALL.getState();
     }
 
     @Override
     public StateType getStateType() {
-        return StateType.BREAKFALL;
+        return StateType.BREAK_FALL;
     }
 }

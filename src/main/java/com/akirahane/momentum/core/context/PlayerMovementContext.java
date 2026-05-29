@@ -39,18 +39,28 @@ public class PlayerMovementContext {
     private boolean noJump = false;
     // 上次掉落的数据
     private double lastFallDistance = 0;
+    // 闪避无敌时间
+    private final int dodgeInvincible = 20;
     // 效果合计
     private final Map<MomentumEffectType, MomentumEffect> effectMap;
     // 待处理效果
     private final Map<MomentumEffectType, Set<PendingEffect>> pendingEffectPool;
+    // 输入缓冲
+    private final Map<String, boolean[]> inputBuffer;
+    // 输入缓冲长度
+    private final int inputBufferLength = 10;
 
     // 每tick要变动的效果
     // 跳跃计数 用于跳跃限速
-    private int jumpBuffer = 0;
+    private int jumpTimer = 0;
     // 滑铲冷却
     private int slideCooldown = 0;
-    // 是否处于受身
-    private int breakFallBuffer = 0;
+    // 受身计时器
+    private int breakFallTimer = 0;
+    // 闪避计时器
+    private int dodgeTimer = 0;
+    // 输入缓冲角标
+    private int inputBufferIndex = 0;
 
     public PendingEffect SLIDE_FRICTION = new PendingEffect(
             0, 0, 0.1F, 0, -1
@@ -65,10 +75,16 @@ public class PlayerMovementContext {
     public PlayerMovementContext() {
         effectMap = new HashMap<>();
         pendingEffectPool = new HashMap<>();
+        inputBuffer = new HashMap<>();
         for (MomentumEffectType type : MomentumEffectType.values()) {
             effectMap.put(type, new MomentumEffect());
             pendingEffectPool.put(type, new HashSet<>());
         }
+        inputBuffer.put("left", new boolean[inputBufferLength]);
+        inputBuffer.put("right", new boolean[inputBufferLength]);
+        inputBuffer.put("up", new boolean[inputBufferLength]);
+        inputBuffer.put("down", new boolean[inputBufferLength]);
+        inputBuffer.put("jump", new boolean[inputBufferLength]);
     }
 
     public void resetEffect() {
@@ -80,12 +96,36 @@ public class PlayerMovementContext {
 
     // 在状态机tick之前调用，从Player读取最新数据
     public void tick(Player player) {
-        if (this.jumpBuffer > 0) this.jumpBuffer--;
+        if (this.jumpTimer > 0) this.jumpTimer--;
         if (this.slideCooldown > 0) this.slideCooldown--;
-        if (this.breakFallBuffer > 0) this.breakFallBuffer--;
+        if (this.breakFallTimer > 0) this.breakFallTimer--;
         this.hasJetBooster = checkBoosterEquipped(player);
         this.canMomentum = checkMomentum(this.hasJetBooster);
         if (player.fallDistance > 0) this.lastFallDistance = player.fallDistance;
+        inputBufferIndex = (inputBufferIndex + 1) % inputBufferLength;
+    }
+
+    // 是否双击了某个键(两个true中至少隔一个false)
+    public boolean isDoubleClick(String key) {
+        boolean[] buffer = inputBuffer.get(key);
+        if (buffer == null) return false;
+
+        int len = buffer.length;
+        int current = inputBufferIndex;
+
+        // 当前必须是 true
+        if (!buffer[current]) return false;
+
+        boolean foundGap = false;
+        for (int i = 1; i < len; i++) {
+            int idx = (current - i + len) % len; // 往回找
+            if (!buffer[idx]) {
+                foundGap = true;
+            } else if (foundGap) {
+                return true;
+            }
+        }
+        return false;
     }
 
     // 喷气助推器判断

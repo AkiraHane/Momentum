@@ -19,6 +19,8 @@ public class MovementDebugEntry implements DebugScreenEntry {
     private static final Identifier group =
             Identifier.fromNamespaceAndPath(MODID, "movement");
 
+    private int count = 0;
+
     @Override
     public void display(@NotNull DebugScreenDisplayer displayer, @Nullable Level level, @Nullable LevelChunk clientChunk, @Nullable LevelChunk serverChunk) {
         Minecraft mc = Minecraft.getInstance();
@@ -37,5 +39,13 @@ public class MovementDebugEntry implements DebugScreenEntry {
         displayer.addToGroup(group, String.format("[Momentum] xRot: %.4f", xRot));
         double fallDistance = mc.player.fallDistance;
         displayer.addToGroup(group, String.format("[Momentum] Fall Distance: %.4f", fallDistance));
+        int tick = mc.player.tickCount;
+        displayer.addToGroup(group, String.format("[Momentum] Tick: %d", tick));
+        boolean isLowerCenter = mc.options.keyUp.consumeClick();
+        if (isLowerCenter){
+            count ++;
+        }
+        displayer.addToGroup(group, String.format("[Momentum] Lower Center: %s", isLowerCenter));
+        displayer.addToGroup(group, String.format("[Momentum] Lower Center Count: %d", count));
     }
 }

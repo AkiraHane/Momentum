@@ -21,11 +21,9 @@ import static com.akirahane.momentum.client.init.InitKeyMappings.MOMENTUM_CATEGO
 @EventBusSubscriber(modid = Momentum.MODID, value = Dist.CLIENT)
 public class LowerCenterKey {
 
-    private static boolean wasToggleDown = false;
-
     // 按住生效
-    public static final Lazy<@NotNull KeyMapping> LOWER_CENTER_HOLD = Lazy.of(() -> new KeyMapping(
-            "key.momentum.lower_center_hold", // 将使用此翻译密钥进行本地化处理
+    public static final Lazy<@NotNull KeyMapping> LOWER_CENTER = Lazy.of(() -> new KeyMapping(
+            "key.momentum.lower_center", // 将使用此翻译密钥进行本地化处理
             KeyConflictContext.IN_GAME, // 游戏中
             InputConstants.Type.KEYSYM, // 默认键盘键位
             GLFW.GLFW_KEY_C, // 按下C
@@ -37,9 +35,9 @@ public class LowerCenterKey {
     public static void onClientTick(ClientTickEvent.Pre event) {
         Player player = Minecraft.getInstance().player;
         if (player == null) return;
-        boolean bound = LOWER_CENTER_HOLD.get().getKey() != InputConstants.UNKNOWN;
+        boolean bound = LOWER_CENTER.get().getKey() != InputConstants.UNKNOWN;
         if (!bound) return;
         MovementStateMachine machine = player.getData(InitAttachments.MOVEMENT_STATE);
-        machine.getContext().setLowerCenter(LOWER_CENTER_HOLD.get().isDown());
+        machine.getContext().setLowerCenter(LOWER_CENTER.get().isDown());
     }
 }
