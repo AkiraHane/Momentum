@@ -1,11 +1,9 @@
 package com.akirahane.momentum.core.state.base;
 
-import com.akirahane.momentum.core.state.State;
-import com.akirahane.momentum.core.state.StateType;
+import com.akirahane.momentum.core.enumerate.StateType;
 import com.akirahane.momentum.core.context.PlayerMovementContext;
+import com.akirahane.momentum.init.InitAttachments;
 import com.mojang.logging.LogUtils;
-import net.minecraft.client.player.LocalPlayer;
-import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import org.slf4j.Logger;
 
@@ -15,58 +13,37 @@ public abstract class BaseState {
 
     // ==================== 生命周期 ====================
 
-    /**
-     * 进入状态时调用一次。
-     * 如果目标状态与当前状态的父类层级不同，会沿层级依次调用差异父类的 onEnter。
-     */
-    public static void onEnter(Player player, PlayerMovementContext context) {
-
+    // 进入状态时调用一次。
+    public void onEnter(Player player, PlayerMovementContext context) {
     }
 
-    /**
-     * 离开状态时调用一次。
-     * 如果目标状态与当前状态的父类层级不同，会沿层级依次调用差异父类的 onExit。
-     */
-    public static void onExit(Player player, PlayerMovementContext context) {
-
+    // 服务器和客户端都支持的功能
+    public void serverTick(Player player, PlayerMovementContext context) {
     }
 
-    /**
-     * 每tick调用，返回下一个状态（返回this表示不切换）
-     */
-    public State tick(Player player, PlayerMovementContext context) {
-        context.syncFromPlayer(player);
+    // 觉效果和移动、状态转换相关内容
+    public void clientTick(Player player, PlayerMovementContext context) {
+    }
 
-        if (player instanceof LocalPlayer localPlayer) {
-            clientTick(localPlayer, context);
-        }
-        if (player instanceof ServerPlayer serverPlayer) {
-            serverTick(serverPlayer, context);
-        }
+    // 离开状态时调用一次。
+    public void onExit(Player player, PlayerMovementContext context) {
+    }
 
-        // 检查子分支是否有更具体的目标（向下）
-        State childTarget = checkChildTransition(player, context, this);
-        if (childTarget != null && childTarget.getClass() != this.getClass()) {
-            return childTarget;
+    // 状态转换检查
+    public BaseState evaluate(Player player, PlayerMovementContext context) {
+        if (!(player.getData(InitAttachments.MOMENTUM_ENABLED) && context.isCanMomentum())
+                || player.getAbilities().flying    // 飞行
+                || player.isFallFlying()           // 鞘翅
+                || player.isPassenger()            // 骑乘
+                || player.onClimbable()            // 爬梯子
+                || player.isSleeping()             // 睡觉
+                || player.isSpectator()            // 旁观者
+                || player.isAutoSpinAttack()       // 旋转攻击(三叉戟)
+                || player.isDeadOrDying()          // 死亡
+        ) {
+            return StateType.ORIGINAL.getState();
         }
-
         return null;
-    }
-
-    public void clientTick(LocalPlayer player, PlayerMovementContext context) {
-    }
-
-    public void serverTick(ServerPlayer player, PlayerMovementContext context) {
-    }
-    // ==================== 状态转换检查 ====================
-
-    /**
-     * 检查是否应该转换到更具体的子状态。
-     * 会递归调用目标状态的 checkChildTransition，一次性跳转到最终目标。
-     * 返回 null 表示没有子分支需要进入。
-     */
-    public static State checkChildTransition(Player player, PlayerMovementContext context, BaseState nowState) {
-        return State.checkChildTransition(player, context, nowState);
     }
 
     public abstract StateType getStateType();

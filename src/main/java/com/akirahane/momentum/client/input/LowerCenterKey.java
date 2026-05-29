@@ -6,9 +6,8 @@ import com.akirahane.momentum.init.InitAttachments;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.world.entity.player.Player;
 import net.neoforged.api.distmarker.Dist;
-import net.neoforged.bus.api.EventPriority;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
@@ -44,7 +43,7 @@ public class LowerCenterKey {
     // 每tick检测
     @SubscribeEvent
     public static void onClientTick(ClientTickEvent.Pre event) {
-        LocalPlayer player = Minecraft.getInstance().player;
+        Player player = Minecraft.getInstance().player;
         if (player == null) return;
         boolean holdBound = LOWER_CENTER_HOLD_KEY.get().getKey() != InputConstants.UNKNOWN;
         boolean toggleBound = LOWER_CENTER_TOGGLE_KEY.get().getKey() != InputConstants.UNKNOWN;

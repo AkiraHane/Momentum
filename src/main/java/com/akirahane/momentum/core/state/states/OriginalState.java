@@ -1,26 +1,35 @@
 package com.akirahane.momentum.core.state.states;
 
-import com.akirahane.momentum.core.state.State;
-import com.akirahane.momentum.core.state.StateType;
+import com.akirahane.momentum.core.enumerate.StateType;
 import com.akirahane.momentum.core.context.PlayerMovementContext;
 import com.akirahane.momentum.core.state.base.BaseState;
-import com.akirahane.momentum.init.InitAttachments;
+import com.akirahane.momentum.core.state.states.ground.WalkState;
+import com.akirahane.momentum.core.state.states.water.SwimState;
 import net.minecraft.world.entity.player.Player;
 
-public class OriginalState extends State {
-    public static State checkChildTransition(Player player, PlayerMovementContext context, BaseState nowState) {
-        if (player.getData(InitAttachments.MOMENTUM_ENABLED)
-                && !player.getAbilities().flying    // 飞行
-                && !player.isFallFlying()           // 鞘翅
-                && !player.isPassenger()            // 骑乘
-                && !player.onClimbable()            // 爬梯子
-                && !player.isSleeping()             // 睡觉
-                && !player.isSpectator()            // 旁观者
-                && !player.isAutoSpinAttack()       // 旋转攻击(三叉戟)
-                && !player.isDeadOrDying()          // 死亡
-        ) {
-            return MovementState.checkChildTransition(player, context, nowState);
+public class OriginalState extends BaseState {
+    @Override
+    public BaseState evaluate(Player player, PlayerMovementContext context) {
+        BaseState baseEvaluate = super.evaluate(player, context);
+        if (baseEvaluate != null) {
+            return baseEvaluate;
         }
-        return StateType.ORIGINAL.getState();
+        if (SwimState.canSwim(player, context)) {
+            return StateType.SWIM.getState();
+        }
+        if (WalkState.canWalk(player, context)) {
+            return StateType.WALK.getState();
+        }
+        return StateType.AIRBORNE.getState();
+    }
+
+    @Override
+    public void onEnter(Player player, PlayerMovementContext context) {
+        context.resetEffect();
+    }
+
+    @Override
+    public StateType getStateType() {
+        return StateType.ORIGINAL;
     }
 }

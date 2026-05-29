@@ -2,14 +2,17 @@ package com.akirahane.momentum.mixin;
 
 import com.akirahane.momentum.core.MomentumUtils;
 import com.akirahane.momentum.core.effect.MomentumEffect;
-import com.akirahane.momentum.core.effect.MomentumEffectType;
+import com.akirahane.momentum.core.enumerate.MomentumEffectType;
 import com.akirahane.momentum.core.state.MovementStateMachine;
-import com.akirahane.momentum.core.state.StateType;
+import com.akirahane.momentum.core.enumerate.StateType;
 import com.akirahane.momentum.init.InitAttachments;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import net.minecraft.world.entity.Attackable;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
@@ -18,10 +21,8 @@ import net.neoforged.neoforge.common.extensions.ILivingEntityExtension;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.*;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import static com.akirahane.momentum.core.effect.MomentumEffectType.BLOCK_FRICTION_MULTIPLIER;
-import static com.akirahane.momentum.core.state.states.movements.GroundState.JUMP_ACCELERATION_LIMIT_SPEED;
+import static com.akirahane.momentum.core.enumerate.MomentumEffectType.BLOCK_FRICTION;
 
 @Mixin(LivingEntity.class)
 public abstract class LivingEntityMixin extends Entity implements Attackable, WaypointTransmitter, ILivingEntityExtension {
@@ -68,7 +69,7 @@ public abstract class LivingEntityMixin extends Entity implements Attackable, Wa
         }
         // =================== 内容 ===================
         original = Math.min(1F, 1F - (1F - Math.max(0, original)) * stateMachine.getContext().getEffectMap()
-                .get(BLOCK_FRICTION_MULTIPLIER).getMultiplier());
+                .get(BLOCK_FRICTION).getMultiplier());
         return original;
     }
 
@@ -83,6 +84,7 @@ public abstract class LivingEntityMixin extends Entity implements Attackable, Wa
             return original;
         }
         // =================== 内容 ===================
+
         MomentumEffect momentumEffect;
         momentumEffect = stateMachine.getContext().getEffectMap().get(
                 MomentumEffectType.FRICTION
@@ -157,47 +159,36 @@ public abstract class LivingEntityMixin extends Entity implements Attackable, Wa
         return original;
     }
 
-    @Inject(method = "travelInAir", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;getEffectiveGravity()D"))
-    private void beforeGravity(Vec3 input, CallbackInfo ci) {
-        LivingEntity self = (LivingEntity) (Object) this;
+    // https://github.com/LlamaLad7/MixinExtras/wiki/WrapOperation
+    @WrapOperation(method = "jumpFromGround",
+            at = @At(value = "INVOKE",
+                    target = "Lnet/minecraft/world/entity/LivingEntity;addDeltaMovement(Lnet/minecraft/world/phys/Vec3;)V"))
+    private void wrapSprintBoost(LivingEntity self, Vec3 originalBoost, Operation<Void> original) {
         if (!(self instanceof Player player)) {
+            original.call(self, originalBoost);
             return;
         }
-        double gravity = this.getEffectiveGravity();
-        MovementStateMachine stateMachine = player.getData(InitAttachments.MOVEMENT_STATE);
-        stateMachine.getContext().setMixinGravity(gravity);
-    }
-
-    @ModifyVariable(method = "travelInAir", at = @At("STORE"), name = "verticalFriction")
-    private float verticalFriction(float verticalFriction) {
-        LivingEntity self = (LivingEntity) (Object) this;
-        if (!(self instanceof Player player)) {
-            return verticalFriction;
-        }
         MovementStateMachine stateMachine = player.getData(InitAttachments.MOVEMENT_STATE);
         if (stateMachine.getCurrentState().getStateType().equals(StateType.ORIGINAL)) {
-            return verticalFriction;
+            original.call(self, originalBoost);
+            return;
         }
-        stateMachine.getContext().setMixinVerticalFriction(verticalFriction);
-        return verticalFriction;
-    }
+        double moveSpeed = self.getAttributeValue(Attributes.MOVEMENT_SPEED);
+        double jumpStrength = self.getAttributeValue(Attributes.JUMP_STRENGTH);
+        // TODO 完善公式, 添加连跳惩罚
+        double jumpLimitSpeed = moveSpeed * (1 + jumpStrength);
+        Vec3 current = self.getDeltaMovement();
+        Vec3 boosted = current.add(originalBoost);
+        double currentH = current.horizontalDistance();
+        double boostedH = boosted.horizontalDistance();
 
-    @ModifyConstant(method = "jumpFromGround", constant = @Constant(doubleValue = 0.2))
-    private double modifySprintJumpBoost(double original) {
-        LivingEntity self = (LivingEntity) (Object) this;
-        if (!(self instanceof Player player)) {
-            return original;
+        if (boostedH > jumpLimitSpeed && currentH < jumpLimitSpeed) {
+            Vec3 clamped = new Vec3(boosted.x * jumpLimitSpeed / boostedH, 0, boosted.z * jumpLimitSpeed / boostedH);
+            Vec3 diff = clamped.subtract(current.x, 0, current.z);
+            original.call(self, new Vec3(diff.x, 0, diff.z));
+        } else if (currentH < jumpLimitSpeed) {
+            original.call(self, originalBoost);
         }
-        MovementStateMachine stateMachine = player.getData(InitAttachments.MOVEMENT_STATE);
-        if (stateMachine.getCurrentState().getStateType().equals(StateType.ORIGINAL)) {
-            return original;
-        }
-        // =================== 内容 ===================
-        if (JUMP_ACCELERATION_LIMIT_SPEED.getValue() != 0 &&
-                JUMP_ACCELERATION_LIMIT_SPEED.getValue() <= player.getDeltaMovement().horizontalDistance()
-        ) {
-            return 0;
-        }
-        return original;
+        // 已超速则不调用
     }
 }
