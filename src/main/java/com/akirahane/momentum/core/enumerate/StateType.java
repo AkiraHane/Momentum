@@ -8,8 +8,7 @@ import com.akirahane.momentum.core.state.states.ground.SlideState;
 import com.akirahane.momentum.core.state.states.ground.WalkState;
 import com.akirahane.momentum.core.state.states.special.BreakFallState;
 import com.akirahane.momentum.core.state.states.special.DodgeState;
-import com.akirahane.momentum.core.state.states.wall.WallClimbState;
-import com.akirahane.momentum.core.state.states.wall.WallSlideState;
+import com.akirahane.momentum.core.state.states.wall.*;
 import com.akirahane.momentum.core.state.states.water.SwimState;
 import com.mojang.logging.LogUtils;
 import lombok.Getter;
@@ -27,7 +26,10 @@ public enum StateType {
     BREAK_FALL(new BreakFallState()),
     DODGE(new DodgeState()),
     WALL_CLIMB(new WallClimbState()),
-    WALL_SLIDE(new WallSlideState());
+    WALL_SLIDE(new WallSlideState()),
+    WALL_RUN(new WallRunState()),
+    WALL_HANG(new WallHangState()),
+    VAULT(new VaultState());
     // 日志
     static final Logger LOGGER = LogUtils.getLogger();
 
