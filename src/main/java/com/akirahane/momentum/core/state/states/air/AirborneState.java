@@ -1,10 +1,10 @@
 package com.akirahane.momentum.core.state.states.air;
 
 import com.akirahane.momentum.core.context.PlayerMovementContext;
-import com.akirahane.momentum.core.effect.PendingEffect;
-import com.akirahane.momentum.core.enumerate.MomentumEffectType;
-import com.akirahane.momentum.core.enumerate.StateType;
-import com.akirahane.momentum.core.state.base.BaseState;
+import com.akirahane.momentum.core.effect.MomentumEffect;
+import com.akirahane.momentum.core.effect.MomentumEffectType;
+import com.akirahane.momentum.core.state.StateType;
+import com.akirahane.momentum.core.state.BaseState;
 import com.akirahane.momentum.core.state.states.ground.SlideState;
 import com.akirahane.momentum.core.state.states.special.BreakFallState;
 import com.akirahane.momentum.core.state.states.special.DodgeState;
@@ -14,15 +14,15 @@ import com.akirahane.momentum.core.state.states.wall.WallSlideState;
 import com.akirahane.momentum.core.state.states.water.SwimState;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.phys.Vec3;
+
+import static com.akirahane.momentum.core.context.PlayerMovementContext.AIR_ACCELERATION;
+import static com.akirahane.momentum.core.context.PlayerMovementContext.AIR_LIMIT_ACCELERATION;
 
 public class AirborneState extends BaseState {
     public static boolean canAirborne(LocalPlayer player, PlayerMovementContext context) {
         return !player.onGround();
     }
-
-    public static PendingEffect AIR_ACCELERATION = new PendingEffect(
-            0, 0, 0.1F, 0, -1
-    );
 
     @Override
     public BaseState evaluate(LocalPlayer player, PlayerMovementContext context) {
@@ -33,13 +33,13 @@ public class AirborneState extends BaseState {
         if (DodgeState.canDodge(player, context)) {
             return StateType.DODGE.getState();
         }
-        if (WallRunState.canWallRun(player, context)){
+        if (WallRunState.canWallRun(player, context)) {
             return StateType.WALL_RUN.getState();
         }
-        if (WallClimbState.canWallClimb(player, context)){
+        if (WallClimbState.canWallClimb(player, context)) {
             return StateType.WALL_CLIMB.getState();
         }
-        if (WallSlideState.canWallSlide(player, context)){
+        if (WallSlideState.canWallSlide(player, context)) {
             return StateType.WALL_SLIDE.getState();
         }
         if (SwimState.canSwim(player, context)) {
@@ -62,12 +62,14 @@ public class AirborneState extends BaseState {
 
     @Override
     public void onEnter(Player player, PlayerMovementContext context) {
-        context.getPendingEffectPool().get(MomentumEffectType.ACCELERATION).add(AIR_ACCELERATION);
+//        context.getPendingEffectPool().get(MomentumEffectType.ACCELERATION).add(AIR_ACCELERATION);
+        context.getPendingEffectPool().get(MomentumEffectType.LIMIT_ACCELERATION_SPEED).add(AIR_LIMIT_ACCELERATION);
     }
 
     @Override
     public void onExit(Player player, PlayerMovementContext context) {
-        context.getPendingEffectPool().get(MomentumEffectType.ACCELERATION).remove(AIR_ACCELERATION);
+//        context.getPendingEffectPool().get(MomentumEffectType.ACCELERATION).remove(AIR_ACCELERATION);
+        context.getPendingEffectPool().get(MomentumEffectType.LIMIT_ACCELERATION_SPEED).remove(AIR_LIMIT_ACCELERATION);
     }
 
     @Override

@@ -1,18 +1,17 @@
 package com.akirahane.momentum.core.state.states.wall;
 
 import com.akirahane.momentum.core.context.PlayerMovementContext;
-import com.akirahane.momentum.core.enumerate.StateType;
-import com.akirahane.momentum.core.state.base.BaseState;
+import com.akirahane.momentum.core.state.StateType;
+import com.akirahane.momentum.core.state.BaseState;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.world.entity.player.Player;
 
 import static com.akirahane.momentum.core.context.PlayerMovementContext.JUMP;
-import static com.akirahane.momentum.core.context.PlayerMovementContext.KEYS;
 
 public class VaultState extends BaseState {
 
     public static boolean canVault(LocalPlayer player, PlayerMovementContext context) {
-        return context.getInputBuffer()[context.getInputBufferIndex()].contains(KEYS[JUMP]);
+        return context.getInputBuffer()[context.getInputBufferIndex()].contains(JUMP);
     }
 
     @Override

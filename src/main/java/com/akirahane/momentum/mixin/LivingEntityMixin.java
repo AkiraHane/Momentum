@@ -1,13 +1,12 @@
 package com.akirahane.momentum.mixin;
 
 import com.akirahane.momentum.core.MomentumUtils;
-import com.akirahane.momentum.core.effect.MomentumEffect;
-import com.akirahane.momentum.core.enumerate.MomentumEffectType;
 import com.akirahane.momentum.core.state.MovementStateMachine;
-import com.akirahane.momentum.core.enumerate.StateType;
+import com.akirahane.momentum.core.state.StateType;
 import com.akirahane.momentum.init.InitAttachments;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
+import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.world.entity.Attackable;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
@@ -23,7 +22,7 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.*;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import static com.akirahane.momentum.core.enumerate.MomentumEffectType.BLOCK_FRICTION;
+import static com.akirahane.momentum.core.effect.MomentumEffectType.*;
 
 @Mixin(LivingEntity.class)
 public abstract class LivingEntityMixin extends Entity implements Attackable, WaypointTransmitter, ILivingEntityExtension {
@@ -44,7 +43,7 @@ public abstract class LivingEntityMixin extends Entity implements Attackable, Wa
             name = "input")
     private Vec3 modifyTravelInput(Vec3 original) {
         LivingEntity self = (LivingEntity) (Object) this;
-        if (!(self instanceof Player player)) {
+        if (!(self instanceof LocalPlayer player)) {
             return original;
         }
         MovementStateMachine stateMachine = player.getData(InitAttachments.MOVEMENT_STATE);
@@ -61,7 +60,7 @@ public abstract class LivingEntityMixin extends Entity implements Attackable, Wa
     @ModifyVariable(method = "travelInAir", at = @At("STORE"), name = "blockFriction")
     private float blockFriction(float original) {
         LivingEntity self = (LivingEntity) (Object) this;
-        if (!(self instanceof Player player)) {
+        if (!(self instanceof LocalPlayer player)) {
             return original;
         }
         MovementStateMachine stateMachine = player.getData(InitAttachments.MOVEMENT_STATE);
@@ -69,15 +68,14 @@ public abstract class LivingEntityMixin extends Entity implements Attackable, Wa
             return original;
         }
         // =================== 内容 ===================
-        original = Math.min(1F, 1F - (1F - Math.max(0, original)) * stateMachine.getContext().getEffectMap()
-                .get(BLOCK_FRICTION).getMultiplier());
+        original = Math.clamp(0F, 1F - (float) stateMachine.applyEffect(1F - Math.max(0, original), BLOCK_FRICTION), 1F);
         return original;
     }
 
     @ModifyVariable(method = "travelInAir", at = @At("STORE"), name = "friction")
     private float friction(float original) {
         LivingEntity self = (LivingEntity) (Object) this;
-        if (!(self instanceof Player player)) {
+        if (!(self instanceof LocalPlayer player)) {
             return original;
         }
         MovementStateMachine stateMachine = player.getData(InitAttachments.MOVEMENT_STATE);
@@ -85,12 +83,7 @@ public abstract class LivingEntityMixin extends Entity implements Attackable, Wa
             return original;
         }
         // =================== 内容 ===================
-
-        MomentumEffect momentumEffect;
-        momentumEffect = stateMachine.getContext().getEffectMap().get(
-                MomentumEffectType.FRICTION
-        );
-        original = 1F - (1F - original) * momentumEffect.getMultiplier();
+        original = Math.clamp(0F, 1F - (float) stateMachine.applyEffect(1F - Math.max(0, original), FRICTION), 1F);
         return original;
     }
 
@@ -100,7 +93,7 @@ public abstract class LivingEntityMixin extends Entity implements Attackable, Wa
     )
     public float modifyAirFriction(float original) {
         LivingEntity self = (LivingEntity) (Object) this;
-        if (!(self instanceof Player player)) {
+        if (!(self instanceof LocalPlayer player)) {
             return original;
         }
         return MomentumUtils.getAirFriction(player);
@@ -109,7 +102,7 @@ public abstract class LivingEntityMixin extends Entity implements Attackable, Wa
     @ModifyVariable(method = "travelInAir", at = @At("STORE"), name = "movement")
     private Vec3 movement(Vec3 original) {
         LivingEntity self = (LivingEntity) (Object) this;
-        if (!(self instanceof Player player)) {
+        if (!(self instanceof LocalPlayer player)) {
             return original;
         }
         MovementStateMachine stateMachine = player.getData(InitAttachments.MOVEMENT_STATE);
@@ -117,50 +110,41 @@ public abstract class LivingEntityMixin extends Entity implements Attackable, Wa
             return original;
         }
         // =================== 内容 ===================
-        MomentumEffect momentumEffect;
-        momentumEffect = stateMachine.getContext().getEffectMap().get(
-                MomentumEffectType.ACCELERATION
-        );
-        // 向量数值需要增加 tempData.getValue() 分解到垂直分向量
-        if (original.horizontalDistance() > 0 && momentumEffect.getValue() != 0) {
-            Vec3 slopeDir = stateMachine.getContext().getSlopeUnitVector();
-
-            if (slopeDir.lengthSqr() > 0) {
-                // 只沿坡面方向加速
-                double accel = momentumEffect.getValue();
-                original = original.add(
-                        slopeDir.x * accel,
-                        0,
-                        slopeDir.z * accel
-                );
-            } else {
-                // 没有坡面信息，保持原逻辑
-                original = original.add(
-                        (original.x * momentumEffect.getValue()) / original.length(),
-                        (original.y * momentumEffect.getValue()) / original.length(),
-                        (original.z * momentumEffect.getValue()) / original.length()
-                );
-            }
-        }
-        momentumEffect = stateMachine.getContext().getEffectMap().get(
-                MomentumEffectType.ACCELERATION_LIMIT_SPEED
-        );
-        if (momentumEffect.getValue() != 0 && momentumEffect.getValue() <= player.getDeltaMovement().horizontalDistance()) {
-            double limitX = player.getDeltaMovement().x * momentumEffect.getValue() / player.getDeltaMovement().horizontalDistance();
-            double limitZ = player.getDeltaMovement().z * momentumEffect.getValue() / player.getDeltaMovement().horizontalDistance();
+        original = stateMachine.applyEffect(
+                original.subtract(stateMachine.getContext().getDeltaMovement()),
+                player.getYRot(),
+                ACCELERATION
+        ).add(stateMachine.getContext().getDeltaMovement());
+        Vec3 limitSpeed = stateMachine.applyEffect(Vec3.ZERO, player.getYRot(), LIMIT_ACCELERATION_SPEED);
+        if (limitSpeed.length() != 0) {
             original = new Vec3(
                     // 这里存了上一tick的速度
-                    Math.abs(original.x) > limitX ? stateMachine.getContext().getSpeed().x : original.x,
-                    original.y,
-                    Math.abs(original.z) > limitZ ? stateMachine.getContext().getSpeed().z : original.z
+                    Math.abs(original.x) > Math.abs(limitSpeed.x)
+                            ? (
+                            Math.abs(original.x) < Math.abs(stateMachine.getContext().getDeltaMovement().x)
+                                    ? original.x
+                                    : stateMachine.getContext().getDeltaMovement().x)
+                            : original.x,
+                    Math.abs(original.y) > Math.abs(limitSpeed.y)
+                            ? (
+                            Math.abs(original.y) < Math.abs(stateMachine.getContext().getDeltaMovement().y)
+                                    ? original.y
+                                    : stateMachine.getContext().getDeltaMovement().y)
+                            : original.y,
+                    Math.abs(original.z) > Math.abs(limitSpeed.z)
+                            ? (
+                            Math.abs(original.z) < Math.abs(stateMachine.getContext().getDeltaMovement().z)
+                                    ? original.z
+                                    : stateMachine.getContext().getDeltaMovement().z)
+                            : original.z
             );
         }
-        original = original.multiply(momentumEffect.getMultiplier(), 1, momentumEffect.getMultiplier());
 
         return original;
     }
 
-    // https://github.com/LlamaLad7/MixinExtras/wiki/WrapOperation
+//
+//    // https://github.com/LlamaLad7/MixinExtras/wiki/WrapOperation
     @WrapOperation(method = "jumpFromGround",
             at = @At(value = "INVOKE",
                     target = "Lnet/minecraft/world/entity/LivingEntity;addDeltaMovement(Lnet/minecraft/world/phys/Vec3;)V"))
@@ -177,7 +161,7 @@ public abstract class LivingEntityMixin extends Entity implements Attackable, Wa
         double moveSpeed = self.getAttributeValue(Attributes.MOVEMENT_SPEED);
         double jumpStrength = self.getAttributeValue(Attributes.JUMP_STRENGTH);
         // TODO 完善公式, 添加连跳惩罚
-        double jumpLimitSpeed = moveSpeed * (1 + jumpStrength);
+        double jumpLimitSpeed = moveSpeed * (1 + jumpStrength) * 2;
         Vec3 current = self.getDeltaMovement();
         Vec3 boosted = current.add(originalBoost);
         double currentH = current.horizontalDistance();

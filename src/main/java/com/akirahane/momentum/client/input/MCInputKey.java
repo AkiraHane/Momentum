@@ -34,29 +34,29 @@ public class MCInputKey {
         LocalPlayer player = mc.player;
         if (player == null) return;
         MovementStateMachine machine = player.getData(InitAttachments.MOVEMENT_STATE);
-        HashSet<String>[] list = machine.getContext().getInputBuffer();
+        HashSet<Integer>[] list = machine.getContext().getInputBuffer();
         machine.getContext().setInputBufferIndex(
-                (machine.getContext().getInputBufferIndex() + 1) % KEYS.length
+                (machine.getContext().getInputBufferIndex() + 1) % machine.getContext().getInputBufferSize()
         );
         list[machine.getContext().getInputBufferIndex()].clear();
         if (mc.options.keyUp.isDown() && !wasUp) {
-            list[machine.getContext().getInputBufferIndex()].add(KEYS[UP]);
+            list[machine.getContext().getInputBufferIndex()].add(UP);
         }
         wasUp = mc.options.keyUp.isDown();
         if (mc.options.keyDown.isDown() && !wasDown) {
-            list[machine.getContext().getInputBufferIndex()].add(KEYS[DOWN]);
+            list[machine.getContext().getInputBufferIndex()].add(DOWN);
         }
         wasDown = mc.options.keyDown.isDown();
         if (mc.options.keyLeft.isDown() && !wasLeft) {
-            list[machine.getContext().getInputBufferIndex()].add(KEYS[LEFT]);
+            list[machine.getContext().getInputBufferIndex()].add(LEFT);
         }
         wasLeft = mc.options.keyLeft.isDown();
         if (mc.options.keyRight.isDown() && !wasRight) {
-            list[machine.getContext().getInputBufferIndex()].add(KEYS[RIGHT]);
+            list[machine.getContext().getInputBufferIndex()].add(RIGHT);
         }
         wasRight = mc.options.keyRight.isDown();
         if (mc.options.keyJump.isDown() && !wasJump) {
-            list[machine.getContext().getInputBufferIndex()].add(KEYS[JUMP]);
+            list[machine.getContext().getInputBufferIndex()].add(JUMP);
         }
         wasJump = mc.options.keyJump.isDown();
     }

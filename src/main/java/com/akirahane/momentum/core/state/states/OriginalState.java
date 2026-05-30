@@ -1,8 +1,8 @@
 package com.akirahane.momentum.core.state.states;
 
-import com.akirahane.momentum.core.enumerate.StateType;
+import com.akirahane.momentum.core.state.StateType;
 import com.akirahane.momentum.core.context.PlayerMovementContext;
-import com.akirahane.momentum.core.state.base.BaseState;
+import com.akirahane.momentum.core.state.BaseState;
 import com.akirahane.momentum.core.state.states.ground.WalkState;
 import com.akirahane.momentum.core.state.states.water.SwimState;
 import net.minecraft.client.player.LocalPlayer;

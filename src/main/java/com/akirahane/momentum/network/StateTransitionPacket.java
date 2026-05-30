@@ -1,6 +1,6 @@
 package com.akirahane.momentum.network;
 
-import com.akirahane.momentum.core.enumerate.StateType;
+import com.akirahane.momentum.core.state.StateType;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;

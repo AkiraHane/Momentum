@@ -1,6 +1,5 @@
-package com.akirahane.momentum.core.enumerate;
+package com.akirahane.momentum.core.state;
 
-import com.akirahane.momentum.core.state.base.BaseState;
 import com.akirahane.momentum.core.state.states.OriginalState;
 import com.akirahane.momentum.core.state.states.air.AirborneState;
 import com.akirahane.momentum.core.state.states.ground.ProneState;

@@ -1,8 +1,8 @@
 package com.akirahane.momentum.core.state.states.wall;
 
 import com.akirahane.momentum.core.context.PlayerMovementContext;
-import com.akirahane.momentum.core.enumerate.StateType;
-import com.akirahane.momentum.core.state.base.BaseState;
+import com.akirahane.momentum.core.state.StateType;
+import com.akirahane.momentum.core.state.BaseState;
 import com.akirahane.momentum.core.state.states.air.AirborneState;
 import com.akirahane.momentum.core.state.states.ground.WalkState;
 import net.minecraft.client.player.LocalPlayer;
@@ -10,7 +10,8 @@ import net.minecraft.client.player.LocalPlayer;
 public class WallClimbState extends BaseState {
     public static boolean canWallClimb(LocalPlayer player, PlayerMovementContext context) {
         return player.onClimbable() || (
-                context.getInputWallAngle() < 90 &&
+                context.getWallDirection() != null &&
+                        context.getInputWallAngle() < 90 &&
                         context.getLookWallAngle() < 45 &&
                         context.getSpeed().y > 0
         );
@@ -23,16 +24,16 @@ public class WallClimbState extends BaseState {
         if (baseEvaluate != null) {
             return baseEvaluate;
         }
-        if (WallHangState.canWallHang(player, context)){
+        if (WallHangState.canWallHang(player, context)) {
             return StateType.WALL_HANG.getState();
         }
-        if (WallRunState.canWallRun(player, context)){
+        if (WallRunState.canWallRun(player, context)) {
             return StateType.WALL_RUN.getState();
         }
-        if (WallClimbState.canWallClimb(player, context)){
+        if (WallClimbState.canWallClimb(player, context)) {
             return StateType.WALL_CLIMB.getState();
         }
-        if (WallSlideState.canWallSlide(player, context)){
+        if (WallSlideState.canWallSlide(player, context)) {
             return StateType.WALL_SLIDE.getState();
         }
         if (AirborneState.canAirborne(player, context)) {

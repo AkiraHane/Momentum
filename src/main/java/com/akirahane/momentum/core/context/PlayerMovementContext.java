@@ -1,8 +1,7 @@
 package com.akirahane.momentum.core.context;
 
 import com.akirahane.momentum.core.effect.MomentumEffect;
-import com.akirahane.momentum.core.effect.PendingEffect;
-import com.akirahane.momentum.core.enumerate.MomentumEffectType;
+import com.akirahane.momentum.core.effect.MomentumEffectType;
 import com.akirahane.momentum.compat.curios.CuriosCompat;
 import com.akirahane.momentum.config.ServerConfig;
 import com.akirahane.momentum.compat.curios.handler.CuriosHandler;
@@ -20,6 +19,8 @@ import org.slf4j.Logger;
 
 import java.util.*;
 
+import static com.akirahane.momentum.core.effect.MomentumEffect.EffectType.*;
+
 @Getter
 @Setter
 public class PlayerMovementContext {
@@ -28,8 +29,6 @@ public class PlayerMovementContext {
     protected static final Logger LOGGER = LogUtils.getLogger();
     // 键位
     public static final int UP = 0, DOWN = 1, LEFT = 2, RIGHT = 3, JUMP = 4;
-    // 键位名称
-    public static final String[] KEYS = {"up", "down", "left", "right", "jump"};
     // 墙面检测方向
     private static final Direction[] HORIZONTALS = {
             Direction.NORTH, Direction.SOUTH, Direction.EAST, Direction.WEST
@@ -60,6 +59,8 @@ public class PlayerMovementContext {
     private Vec3 speed = Vec3.ZERO;
     // 上一Tick移动速度
     private Vec3 oldSpeed = Vec3.ZERO;
+    // 上一Tick的DeltaMovement
+    private Vec3 deltaMovement = Vec3.ZERO;
     // 滑行上下单位高度
     private double blockStep = 0;
     // 坡度加速向量
@@ -81,15 +82,14 @@ public class PlayerMovementContext {
 
 
     // 效果合计
-    private final Map<MomentumEffectType, MomentumEffect> effectMap = new HashMap<>();
     // 输入缓冲角标
     private int inputBufferIndex = 0;
     // 输入缓冲大小
     private final int inputBufferSize = 10;
     // 输入缓冲
-    private final Map<MomentumEffectType, Set<PendingEffect>> pendingEffectPool = new HashMap<>();
+    private final Map<MomentumEffectType, Set<MomentumEffect>> pendingEffectPool = new HashMap<>();
     @SuppressWarnings("unchecked")
-    private final HashSet<String>[] inputBuffer = new HashSet[inputBufferSize];
+    private final HashSet<Integer>[] inputBuffer = new HashSet[inputBufferSize];
 
     // 每tick要变动的效果
     // 跳跃计数 用于跳跃限速
@@ -103,19 +103,37 @@ public class PlayerMovementContext {
     // 翻越计时器
     private int vaultTimer = 0;
 
-    public PendingEffect SLIDE_FRICTION = new PendingEffect(
-            0, 0, 0.1F, 0, -1
+    // 滑铲总阻力
+    public MomentumEffect SLIDE_FRICTION = new MomentumEffect(
+            new Vec3(0.1, 0, 0),
+            Vec3.ZERO,
+            MULTIPLIER,
+            -1
     );
-    public PendingEffect SLIDE_ACCELERATION = new PendingEffect(
-            0, 0, 1.0F, 0, 0
+    // 滑铲方块阻力
+    public MomentumEffect SLIDE_BLOCK_FRICTION = new MomentumEffect(
+            Vec3.ZERO,
+            Vec3.ZERO,
+            MULTIPLIER,
+            0
     );
-    public PendingEffect SLIDE_BLOCK_FRICTION = new PendingEffect(
-            0, 0, 1.0F, 0, 0
+
+    public static MomentumEffect AIR_ACCELERATION = new MomentumEffect(
+            new Vec3(0.06, 1, 0.06),
+            Vec3.ZERO,
+            MULTIPLIER,
+            -1
+    );
+
+    public static MomentumEffect AIR_LIMIT_ACCELERATION = new MomentumEffect(
+            new Vec3(0.3, Float.MAX_VALUE, 0.3),
+            Vec3.ZERO,
+            COMPOSE,
+            -1
     );
 
     public PlayerMovementContext() {
         for (MomentumEffectType type : MomentumEffectType.values()) {
-            effectMap.put(type, new MomentumEffect());
             pendingEffectPool.put(type, new HashSet<>());
         }
         for (int i = 0; i < inputBufferSize; i++) {
@@ -125,7 +143,6 @@ public class PlayerMovementContext {
 
     public void resetEffect() {
         for (MomentumEffectType type : MomentumEffectType.values()) {
-            effectMap.get(type).init();
             pendingEffectPool.get(type).clear();
         }
     }
@@ -143,17 +160,17 @@ public class PlayerMovementContext {
 
     public void clientTick(Player player) {
         this.serverTick(player);
-        this.doubleClickUp = isDoubleClick(KEYS[UP]);
-        this.doubleClickDown = isDoubleClick(KEYS[DOWN]);
-        this.doubleClickLeft = isDoubleClick(KEYS[LEFT]);
-        this.doubleClickRight = isDoubleClick(KEYS[RIGHT]);
-        this.doubleClickJump = isDoubleClick(KEYS[JUMP]);
+        this.doubleClickUp = isDoubleClick(UP);
+        this.doubleClickDown = isDoubleClick(DOWN);
+        this.doubleClickLeft = isDoubleClick(LEFT);
+        this.doubleClickRight = isDoubleClick(RIGHT);
+        this.doubleClickJump = isDoubleClick(JUMP);
         this.setWorldInputVec(player);
         this.detectWall(player);
     }
 
     // 是否双击了某个键(两个true中至少隔一个false)
-    public boolean isDoubleClick(String key) {
+    public boolean isDoubleClick(int key) {
         int len = inputBuffer.length;
         int current = inputBufferIndex;
 
@@ -170,10 +187,10 @@ public class PlayerMovementContext {
                 continue;
             }
             if (foundFirst) {
-                for (String clickKey : inputBuffer[idx]) {
+                for (int clickKey : inputBuffer[idx]) {
                     if (!inputBuffer[lastIdx].contains(clickKey)) {
                         // clickKey 是 这次 多出来的, 按下了其他键, 忽略判断和跳跃
-                        if (!clickKey.equals("jump") && !clickKey.equals(key)) foundFirst = false;
+                        if (clickKey != JUMP && clickKey != key) foundFirst = false;
                     }
                 }
             }

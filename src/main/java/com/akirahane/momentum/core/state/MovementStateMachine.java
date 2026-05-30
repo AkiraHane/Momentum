@@ -2,20 +2,18 @@ package com.akirahane.momentum.core.state;
 
 import com.akirahane.momentum.core.context.PlayerMovementContext;
 import com.akirahane.momentum.core.effect.MomentumEffect;
-import com.akirahane.momentum.core.effect.PendingEffect;
-import com.akirahane.momentum.core.enumerate.MomentumEffectType;
-import com.akirahane.momentum.core.enumerate.StateType;
-import com.akirahane.momentum.core.state.base.BaseState;
+import com.akirahane.momentum.core.effect.MomentumEffectType;
 import com.mojang.logging.LogUtils;
 import lombok.Getter;
 import lombok.Setter;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.phys.Vec3;
 import org.slf4j.Logger;
 
 import java.util.*;
 
-import static com.akirahane.momentum.core.enumerate.StateType.ORIGINAL;
+import static com.akirahane.momentum.core.state.StateType.ORIGINAL;
 
 @Getter
 @Setter
@@ -70,31 +68,52 @@ public class MovementStateMachine {
 
     // 效果处理
     public void handleEffect() {
-        for (Map.Entry<MomentumEffectType, Set<PendingEffect>> entry :
+        for (Map.Entry<MomentumEffectType, Set<MomentumEffect>> entry :
                 context.getPendingEffectPool().entrySet()) {
-            MomentumEffect target = context.getEffectMap().get(entry.getKey());
-            target.init();
-
-            Iterator<PendingEffect> iterator = entry.getValue().iterator();
+            Iterator<MomentumEffect> iterator = entry.getValue().iterator();
             // 因为可能涉及到清除自己, 用迭代
             while (iterator.hasNext()) {
-                PendingEffect pendingEffect = iterator.next();
+                MomentumEffect momentumEffect = iterator.next();
                 // -1 代表永久 需要添加的地方使用引用移除
-                if (pendingEffect.getDuration() == 0) {
+                if (momentumEffect.getDuration() >= 0 &&
+                        momentumEffect.getElapsedDuration() >= momentumEffect.getDuration()) {
                     iterator.remove();
                     continue;
                 }
-                // 累加
-                target.setValue(target.getValue() + pendingEffect.getValue());
-                target.setMultiplier(target.getMultiplier() * pendingEffect.getMultiplier());
                 // 自身衰减/变化
-                pendingEffect.setValue(pendingEffect.getValue() + pendingEffect.getModifyValue());
-                pendingEffect.setMultiplier(pendingEffect.getMultiplier() + pendingEffect.getModifyMultiplier());
-                if (pendingEffect.getDuration() > 0) {
-                    pendingEffect.setDuration(pendingEffect.getDuration() - 1);
-                }
+                momentumEffect.tick();
             }
         }
+    }
+
+    // 对数值进行生效
+    public double applyEffect(double number, MomentumEffectType type) {
+        Set<MomentumEffect> effects = context.getPendingEffectPool().get(type);
+        if (effects == null || effects.isEmpty()) return number;
+
+        // 排序：按照 EffectType 的优先级
+        List<MomentumEffect> sorted = effects.stream()
+                .sorted(Comparator.comparingInt(e -> e.getType().getPriority()))
+                .toList();
+
+        for (MomentumEffect effect : sorted) {
+            number = effect.applyTo(number);
+        }
+        return number;
+    }
+
+    public Vec3 applyEffect(Vec3 vec, float yRot, MomentumEffectType type) {
+        Set<MomentumEffect> effects = context.getPendingEffectPool().get(type);
+        if (effects == null || effects.isEmpty()) return vec;
+
+        List<MomentumEffect> sorted = effects.stream()
+                .sorted(Comparator.comparingInt(e -> e.getType().getPriority()))
+                .toList();
+
+        for (MomentumEffect effect : sorted) {
+            vec = effect.applyTo(vec, yRot);
+        }
+        return vec;
     }
 
 }

@@ -6,6 +6,8 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.debug.DebugScreenDisplayer;
 import net.minecraft.client.gui.components.debug.DebugScreenEntry;
 import net.minecraft.resources.Identifier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.phys.Vec3;
@@ -46,5 +48,11 @@ public class MovementDebugEntry implements DebugScreenEntry {
         displayer.addToGroup(group, String.format("[Momentum] LookAngleToWall: %.4f", lookAngleToWall));
         boolean hasLedge = context.isHasLedge();
         displayer.addToGroup(group, String.format("[Momentum] HasLedge: %s", hasLedge));
+        Player player = mc.player;
+        double moveSpeed = player.getAttributeValue(Attributes.MOVEMENT_SPEED);
+        double jumpStrength = player.getAttributeValue(Attributes.JUMP_STRENGTH);
+        double jumpLimitSpeed = moveSpeed * (1 + jumpStrength) * 2;
+        displayer.addToGroup(group, String.format("[Momentum] JumpLimitSpeed: %.4f", jumpLimitSpeed * 20));
+
     }
 }

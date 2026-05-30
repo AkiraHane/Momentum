@@ -1,6 +1,5 @@
-package com.akirahane.momentum.core.state.base;
+package com.akirahane.momentum.core.state;
 
-import com.akirahane.momentum.core.enumerate.StateType;
 import com.akirahane.momentum.core.context.PlayerMovementContext;
 import com.akirahane.momentum.init.InitAttachments;
 import com.mojang.logging.LogUtils;

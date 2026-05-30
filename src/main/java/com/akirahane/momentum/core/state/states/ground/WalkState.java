@@ -1,14 +1,13 @@
 package com.akirahane.momentum.core.state.states.ground;
 
-import com.akirahane.momentum.core.enumerate.StateType;
-import com.akirahane.momentum.core.state.base.BaseState;
+import com.akirahane.momentum.core.state.StateType;
+import com.akirahane.momentum.core.state.BaseState;
 import com.akirahane.momentum.core.context.PlayerMovementContext;
 import com.akirahane.momentum.core.state.states.air.AirborneState;
 import com.akirahane.momentum.core.state.states.special.DodgeState;
 import com.akirahane.momentum.core.state.states.wall.WallRunState;
 import com.akirahane.momentum.core.state.states.water.SwimState;
 import net.minecraft.client.player.LocalPlayer;
-import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.player.Player;
 
 public class WalkState extends BaseState {
@@ -16,8 +15,28 @@ public class WalkState extends BaseState {
         return player.onGround();
     }
 
-    public static final Identifier FALL_SPEED_PENALTY_ID =
-            Identifier.fromNamespaceAndPath("momentum", "fall_speed_penalty");
+    // TODO 掉落移速惩罚
+    // TODO 地面状态处于水中时, 根据水面占比碰撞箱调整减速
+
+    @Override
+    public void onEnter(Player player, PlayerMovementContext context) {
+        super.onEnter(player, context);
+    }
+
+    @Override
+    public void serverTick(Player player, PlayerMovementContext context) {
+        super.serverTick(player, context);
+    }
+
+    @Override
+    public void clientTick(LocalPlayer player, PlayerMovementContext context) {
+        super.clientTick(player, context);
+    }
+
+    @Override
+    public void onExit(Player player, PlayerMovementContext context) {
+        super.onExit(player, context);
+    }
 
     @Override
     public BaseState evaluate(LocalPlayer player, PlayerMovementContext context) {
@@ -31,7 +50,7 @@ public class WalkState extends BaseState {
         if (SwimState.canSwim(player, context)) {
             return StateType.SWIM.getState();
         }
-        if (WallRunState.canWallRun(player, context)){
+        if (WallRunState.canWallRun(player, context)) {
             return StateType.WALL_RUN.getState();
         }
         if (AirborneState.canAirborne(player, context)) {

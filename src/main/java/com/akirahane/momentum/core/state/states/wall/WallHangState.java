@@ -1,8 +1,8 @@
 package com.akirahane.momentum.core.state.states.wall;
 
 import com.akirahane.momentum.core.context.PlayerMovementContext;
-import com.akirahane.momentum.core.enumerate.StateType;
-import com.akirahane.momentum.core.state.base.BaseState;
+import com.akirahane.momentum.core.state.StateType;
+import com.akirahane.momentum.core.state.BaseState;
 import com.akirahane.momentum.core.state.states.air.AirborneState;
 import com.akirahane.momentum.core.state.states.ground.WalkState;
 import net.minecraft.client.Minecraft;

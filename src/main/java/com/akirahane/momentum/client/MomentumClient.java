@@ -4,7 +4,7 @@ import com.akirahane.momentum.Momentum;
 import com.akirahane.momentum.client.config.ClientConfig;
 import com.akirahane.momentum.client.debug.MovementDebugEntry;
 import com.akirahane.momentum.core.state.MovementStateMachine;
-import com.akirahane.momentum.core.state.base.BaseState;
+import com.akirahane.momentum.core.state.BaseState;
 import com.akirahane.momentum.init.InitAttachments;
 import com.akirahane.momentum.network.StateTransitionPacket;
 import com.mojang.logging.LogUtils;
@@ -66,6 +66,7 @@ public class MomentumClient {
                     player.getY() - player.yOld,
                     player.getZ() - player.zOld
             ));
+            sm.getContext().setDeltaMovement(player.getDeltaMovement());
         }
     }
 

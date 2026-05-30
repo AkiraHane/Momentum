@@ -1,4 +1,4 @@
-package com.akirahane.momentum.core.enumerate;
+package com.akirahane.momentum.core.effect;
 
 public enum MomentumEffectType {
     // 加速
@@ -7,6 +7,6 @@ public enum MomentumEffectType {
     FRICTION,
     // 方块摩擦力
     BLOCK_FRICTION,
-    // 加速限速
-    ACCELERATION_LIMIT_SPEED,
+    // 限速
+    LIMIT_ACCELERATION_SPEED,
 }

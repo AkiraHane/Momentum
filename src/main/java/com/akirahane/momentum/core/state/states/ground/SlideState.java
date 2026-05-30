@@ -1,8 +1,8 @@
 package com.akirahane.momentum.core.state.states.ground;
 
-import com.akirahane.momentum.core.enumerate.MomentumEffectType;
-import com.akirahane.momentum.core.enumerate.StateType;
-import com.akirahane.momentum.core.state.base.BaseState;
+import com.akirahane.momentum.core.effect.MomentumEffectType;
+import com.akirahane.momentum.core.state.StateType;
+import com.akirahane.momentum.core.state.BaseState;
 import com.akirahane.momentum.core.context.PlayerMovementContext;
 import com.akirahane.momentum.core.state.states.air.AirborneState;
 import com.akirahane.momentum.core.state.states.special.DodgeState;
@@ -13,7 +13,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.Pose;
 import net.minecraft.world.phys.Vec3;
 
-import static com.akirahane.momentum.core.enumerate.MomentumEffectType.BLOCK_FRICTION;
+import static com.akirahane.momentum.core.effect.MomentumEffectType.BLOCK_FRICTION;
 
 
 public class SlideState extends BaseState {
@@ -31,7 +31,6 @@ public class SlideState extends BaseState {
         context.setNoMoveInput(true);
         context.getPendingEffectPool().get(MomentumEffectType.FRICTION).add(context.SLIDE_FRICTION);
         context.SLIDE_BLOCK_FRICTION.setDuration(4);
-        context.SLIDE_BLOCK_FRICTION.setMultiplier(0);
         context.getPendingEffectPool().get(BLOCK_FRICTION).add(
                 context.SLIDE_BLOCK_FRICTION
         );
@@ -55,7 +54,6 @@ public class SlideState extends BaseState {
         player.setForcedPose(null);
         context.setNoMoveInput(false);
         context.getPendingEffectPool().get(MomentumEffectType.FRICTION).remove(context.SLIDE_FRICTION);
-        context.getPendingEffectPool().get(MomentumEffectType.FRICTION).remove(context.SLIDE_ACCELERATION);
         context.getPendingEffectPool().get(MomentumEffectType.BLOCK_FRICTION)
                 .remove(context.SLIDE_BLOCK_FRICTION);
         player.setSprinting(false);
