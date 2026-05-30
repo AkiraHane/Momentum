@@ -7,6 +7,7 @@ import com.akirahane.momentum.core.enumerate.StateType;
 import com.akirahane.momentum.core.state.base.BaseState;
 import com.akirahane.momentum.core.state.states.ground.SlideState;
 import com.akirahane.momentum.core.state.states.special.BreakFallState;
+import com.akirahane.momentum.core.state.states.special.DodgeState;
 import com.akirahane.momentum.core.state.states.water.SwimState;
 import net.minecraft.world.entity.player.Player;
 
@@ -24,6 +25,9 @@ public class AirborneState extends BaseState {
         BaseState baseEvaluate = super.evaluate(player, context);
         if (baseEvaluate != null) {
             return baseEvaluate;
+        }
+        if (DodgeState.canDodge(player, context)) {
+            return StateType.DODGE.getState();
         }
         if (SwimState.canSwim(player, context)) {
             return StateType.SWIM.getState();

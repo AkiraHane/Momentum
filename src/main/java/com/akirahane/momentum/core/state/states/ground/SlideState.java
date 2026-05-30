@@ -4,6 +4,8 @@ import com.akirahane.momentum.core.enumerate.MomentumEffectType;
 import com.akirahane.momentum.core.enumerate.StateType;
 import com.akirahane.momentum.core.state.base.BaseState;
 import com.akirahane.momentum.core.context.PlayerMovementContext;
+import com.akirahane.momentum.core.state.states.air.AirborneState;
+import com.akirahane.momentum.core.state.states.special.DodgeState;
 import com.akirahane.momentum.mixin.LivingEntityAccessor;
 import com.akirahane.momentum.config.ServerConfig;
 import net.minecraft.world.entity.player.Player;
@@ -65,7 +67,10 @@ public class SlideState extends BaseState {
         if (baseEvaluate != null) {
             return baseEvaluate;
         }
-        if (!player.onGround()) {
+        if (DodgeState.canDodge(player, context)) {
+            return StateType.DODGE.getState();
+        }
+        if (AirborneState.canAirborne(player, context)) {
             return StateType.AIRBORNE.getState();
         }
         if (!context.isLowerCenter()) {

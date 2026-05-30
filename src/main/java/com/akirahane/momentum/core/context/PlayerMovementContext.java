@@ -21,9 +21,24 @@ public class PlayerMovementContext {
     // 日志
     protected static final Logger LOGGER = LogUtils.getLogger();
 
-    private boolean lowerCenter = false;     // 是否降低重心
-    private boolean hasJetBooster = false;   // 是否装备喷射器
-    private boolean canMomentum = true;     // 是否能进行机动
+    // 标志位
+    // 是否降低重心
+    private boolean lowerCenter = false;
+    // 是否装备喷射器
+    private boolean hasJetBooster = false;
+    // 是否能进行机动
+    private boolean canMomentum = true;
+    // 是否不接受移动输入
+    private boolean noMoveInput = false;
+    // 是否禁止跳跃
+    private boolean noJump = false;
+    // 是否双击UP DOWN LEFT RIGHT JUMP
+    private boolean doubleClickUp = false;
+    private boolean doubleClickDown = false;
+    private boolean doubleClickLeft = false;
+    private boolean doubleClickRight = false;
+    private boolean doubleClickJump = false;
+
 
     // 移动速度
     private Vec3 speed = Vec3.ZERO;
@@ -33,22 +48,21 @@ public class PlayerMovementContext {
     private double blockStep = 0;
     // 坡度加速向量
     private Vec3 slopeUnitVector = Vec3.ZERO;
-    // 是否不接受移动输入
-    private boolean noMoveInput = false;
-    // 是否禁止跳跃
-    private boolean noJump = false;
     // 上次掉落的数据
     private double lastFallDistance = 0;
     // 闪避无敌时间
-    private final int dodgeInvincible = 20;
+    private final int dodgeInvincible = 10;
     // 效果合计
-    private final Map<MomentumEffectType, MomentumEffect> effectMap;
+    private final Map<MomentumEffectType, MomentumEffect> effectMap = new HashMap<>();
     // 待处理效果
-    private final Map<MomentumEffectType, Set<PendingEffect>> pendingEffectPool;
-    // 输入缓冲
-    private final Map<String, boolean[]> inputBuffer;
+    private final Map<MomentumEffectType, Set<PendingEffect>> pendingEffectPool = new HashMap<>();
     // 输入缓冲长度
-    private final int inputBufferLength = 10;
+    private final int inputBufferLength = 7;
+    // 输入缓冲角标
+    private int inputBufferIndex = 0;
+    // 输入缓冲
+    @SuppressWarnings("unchecked")
+    private final HashSet<String>[] inputBuffer = new HashSet[inputBufferLength];
 
     // 每tick要变动的效果
     // 跳跃计数 用于跳跃限速
@@ -59,8 +73,6 @@ public class PlayerMovementContext {
     private int breakFallTimer = 0;
     // 闪避计时器
     private int dodgeTimer = 0;
-    // 输入缓冲角标
-    private int inputBufferIndex = 0;
 
     public PendingEffect SLIDE_FRICTION = new PendingEffect(
             0, 0, 0.1F, 0, -1
@@ -73,18 +85,13 @@ public class PlayerMovementContext {
     );
 
     public PlayerMovementContext() {
-        effectMap = new HashMap<>();
-        pendingEffectPool = new HashMap<>();
-        inputBuffer = new HashMap<>();
         for (MomentumEffectType type : MomentumEffectType.values()) {
             effectMap.put(type, new MomentumEffect());
             pendingEffectPool.put(type, new HashSet<>());
         }
-        inputBuffer.put("left", new boolean[inputBufferLength]);
-        inputBuffer.put("right", new boolean[inputBufferLength]);
-        inputBuffer.put("up", new boolean[inputBufferLength]);
-        inputBuffer.put("down", new boolean[inputBufferLength]);
-        inputBuffer.put("jump", new boolean[inputBufferLength]);
+        for (int i = 0; i < inputBufferLength; i++) {
+            inputBuffer[i] = new HashSet<>();
+        }
     }
 
     public void resetEffect() {
@@ -99,33 +106,44 @@ public class PlayerMovementContext {
         if (this.jumpTimer > 0) this.jumpTimer--;
         if (this.slideCooldown > 0) this.slideCooldown--;
         if (this.breakFallTimer > 0) this.breakFallTimer--;
+        if (this.dodgeTimer > 0) this.dodgeTimer--;
         this.hasJetBooster = checkBoosterEquipped(player);
         this.canMomentum = checkMomentum(this.hasJetBooster);
         if (player.fallDistance > 0) this.lastFallDistance = player.fallDistance;
-        inputBufferIndex = (inputBufferIndex + 1) % inputBufferLength;
+        this.doubleClickUp = isDoubleClick("up");
+        this.doubleClickDown = isDoubleClick("down");
+        this.doubleClickLeft = isDoubleClick("left");
+        this.doubleClickRight = isDoubleClick("right");
+        this.doubleClickJump = isDoubleClick("jump");
     }
 
     // 是否双击了某个键(两个true中至少隔一个false)
     public boolean isDoubleClick(String key) {
-        boolean[] buffer = inputBuffer.get(key);
-        if (buffer == null) return false;
-
-        int len = buffer.length;
+        int len = inputBuffer.length;
         int current = inputBufferIndex;
 
         // 当前必须是 true
-        if (!buffer[current]) return false;
+        if (!inputBuffer[current].contains(key)) return false;
 
-        boolean foundGap = false;
+        boolean foundFirst = false;
+        int idx = current;
         for (int i = 1; i < len; i++) {
-            int idx = (current - i + len) % len; // 往回找
-            if (!buffer[idx]) {
-                foundGap = true;
-            } else if (foundGap) {
-                return true;
+            int lastIdx = idx;
+            idx = (current + i) % len; // 从第一个开始找
+            if (inputBuffer[idx].contains(key) && !foundFirst) {
+                foundFirst = true;
+                continue;
+            }
+            if (foundFirst){
+                for (String clickKey : inputBuffer[idx]) {
+                    if (!inputBuffer[lastIdx].contains(clickKey)) {
+                        // clickKey 是 这次 多出来的, 按下了其他键, 忽略判断和跳跃
+                        if (!clickKey.equals("jump") && !clickKey.equals(key)) foundFirst = false;
+                    }
+                }
             }
         }
-        return false;
+        return foundFirst;
     }
 
     // 喷气助推器判断

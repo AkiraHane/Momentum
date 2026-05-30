@@ -1,5 +1,6 @@
 package com.akirahane.momentum.client.debug;
 
+import com.akirahane.momentum.core.context.PlayerMovementContext;
 import com.akirahane.momentum.init.InitAttachments;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.debug.DebugScreenDisplayer;
@@ -25,8 +26,8 @@ public class MovementDebugEntry implements DebugScreenEntry {
     public void display(@NotNull DebugScreenDisplayer displayer, @Nullable Level level, @Nullable LevelChunk clientChunk, @Nullable LevelChunk serverChunk) {
         Minecraft mc = Minecraft.getInstance();
         if (mc.player == null) return;
-
-        Vec3 vel = mc.player.getData(InitAttachments.MOVEMENT_STATE).getContext().getSpeed();
+        PlayerMovementContext context = mc.player.getData(InitAttachments.MOVEMENT_STATE).getContext();
+        Vec3 vel = context.getSpeed();
         displayer.addToGroup(group, String.format("[Momentum] H Speed: %.4f", vel.horizontalDistance()));
         displayer.addToGroup(group, String.format("[Momentum] Y Vel: %.4f", vel.y));
         vel = vel.multiply(20, 20, 20);
@@ -41,11 +42,5 @@ public class MovementDebugEntry implements DebugScreenEntry {
         displayer.addToGroup(group, String.format("[Momentum] Fall Distance: %.4f", fallDistance));
         int tick = mc.player.tickCount;
         displayer.addToGroup(group, String.format("[Momentum] Tick: %d", tick));
-        boolean isLowerCenter = mc.options.keyUp.consumeClick();
-        if (isLowerCenter){
-            count ++;
-        }
-        displayer.addToGroup(group, String.format("[Momentum] Lower Center: %s", isLowerCenter));
-        displayer.addToGroup(group, String.format("[Momentum] Lower Center Count: %d", count));
     }
 }
