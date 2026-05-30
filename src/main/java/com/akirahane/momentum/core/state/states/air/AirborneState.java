@@ -9,10 +9,11 @@ import com.akirahane.momentum.core.state.states.ground.SlideState;
 import com.akirahane.momentum.core.state.states.special.BreakFallState;
 import com.akirahane.momentum.core.state.states.special.DodgeState;
 import com.akirahane.momentum.core.state.states.water.SwimState;
+import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.world.entity.player.Player;
 
 public class AirborneState extends BaseState {
-    public static boolean canAirborne(Player player, PlayerMovementContext context) {
+    public static boolean canAirborne(LocalPlayer player, PlayerMovementContext context) {
         return !player.onGround();
     }
 
@@ -21,7 +22,7 @@ public class AirborneState extends BaseState {
     );
 
     @Override
-    public BaseState evaluate(Player player, PlayerMovementContext context) {
+    public BaseState evaluate(LocalPlayer player, PlayerMovementContext context) {
         BaseState baseEvaluate = super.evaluate(player, context);
         if (baseEvaluate != null) {
             return baseEvaluate;

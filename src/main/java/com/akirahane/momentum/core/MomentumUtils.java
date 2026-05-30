@@ -1,14 +1,22 @@
 package com.akirahane.momentum.core;
 
+import com.akirahane.momentum.core.context.PlayerMovementContext;
 import com.akirahane.momentum.core.state.MovementStateMachine;
 import com.akirahane.momentum.core.enumerate.StateType;
 import com.akirahane.momentum.core.state.states.ground.SlideState;
 import com.akirahane.momentum.init.InitAttachments;
 import com.akirahane.momentum.config.ServerConfig;
 import com.mojang.logging.LogUtils;
+import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.core.Direction;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec2;
 import net.minecraft.world.phys.Vec3;
 import org.slf4j.Logger;
+
+import javax.annotation.Nullable;
 
 import static com.akirahane.momentum.core.enumerate.MomentumEffectType.ACCELERATION;
 
@@ -25,4 +33,14 @@ public class MomentumUtils {
         return ServerConfig.AIR_FRICTION.get().floatValue();
     }
 
+
+//    public static float getLookAngleToWall(LocalPlayer player) {
+//        PlayerMovementContext.WallHit result = detectWall(player);
+//        return result == null ? -1 : result.lookAngle();
+//    }
+//
+//    public static float getInputAngleToWall(LocalPlayer player) {
+//        PlayerMovementContext.WallHit result = detectWall(player);
+//        return result == null ? -1 : result.inputAngle();
+//    }
 }

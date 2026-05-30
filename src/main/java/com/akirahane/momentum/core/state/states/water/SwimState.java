@@ -7,18 +7,15 @@ import com.akirahane.momentum.core.state.states.air.AirborneState;
 import com.akirahane.momentum.core.state.states.ground.WalkState;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.world.entity.player.Player;
 
 public class SwimState extends BaseState {
 
-    public static boolean canSwim(Player player, PlayerMovementContext context) {
+    public static boolean canSwim(LocalPlayer player, PlayerMovementContext context) {
         Minecraft mc = Minecraft.getInstance();
         KeyMapping keyUp = mc.options.keyUp;
-        Float xRot = null;
-        if (mc.player != null) {
-            xRot = mc.player.getXRot(); // 垂直角度 (pitch), -90 到 90
-        }
-        return context.isLowerCenter() && player.isInWater() && keyUp.isDown() && xRot != null && xRot > 0;
+        return context.isLowerCenter() && player.isInWater() && keyUp.isDown() && player.getXRot() > 0;
     }
 
     public void onEnter(Player player, PlayerMovementContext context) {
@@ -33,7 +30,7 @@ public class SwimState extends BaseState {
     }
 
     @Override
-    public BaseState evaluate(Player player, PlayerMovementContext context) {
+    public BaseState evaluate(LocalPlayer player, PlayerMovementContext context) {
         BaseState baseEvaluate = super.evaluate(player, context);
         if (baseEvaluate != null) {
             return baseEvaluate;

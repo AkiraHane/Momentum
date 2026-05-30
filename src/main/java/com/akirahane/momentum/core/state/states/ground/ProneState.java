@@ -5,17 +5,18 @@ import com.akirahane.momentum.core.state.base.BaseState;
 import com.akirahane.momentum.core.context.PlayerMovementContext;
 import com.akirahane.momentum.core.state.states.air.AirborneState;
 import com.akirahane.momentum.core.state.states.special.DodgeState;
+import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.world.entity.Pose;
 import net.minecraft.world.entity.player.Player;
 
 
 public class ProneState extends BaseState {
-    public static boolean canProne(Player player, PlayerMovementContext context) {
+    public static boolean canProne(LocalPlayer player, PlayerMovementContext context) {
         return player.onGround() && context.isLowerCenter();
     }
 
     @Override
-    public BaseState evaluate(Player player, PlayerMovementContext context) {
+    public BaseState evaluate(LocalPlayer player, PlayerMovementContext context) {
         BaseState baseEvaluate = super.evaluate(player, context);
         if (baseEvaluate != null) {
             return baseEvaluate;

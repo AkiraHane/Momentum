@@ -6,11 +6,12 @@ import com.akirahane.momentum.core.context.PlayerMovementContext;
 import com.akirahane.momentum.core.state.states.air.AirborneState;
 import com.akirahane.momentum.core.state.states.special.DodgeState;
 import com.akirahane.momentum.core.state.states.water.SwimState;
+import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.player.Player;
 
 public class WalkState extends BaseState {
-    public static boolean canWalk(Player player, PlayerMovementContext context) {
+    public static boolean canWalk(LocalPlayer player, PlayerMovementContext context) {
         return player.onGround();
     }
 
@@ -18,7 +19,7 @@ public class WalkState extends BaseState {
             Identifier.fromNamespaceAndPath("momentum", "fall_speed_penalty");
 
     @Override
-    public BaseState evaluate(Player player, PlayerMovementContext context) {
+    public BaseState evaluate(LocalPlayer player, PlayerMovementContext context) {
         BaseState baseEvaluate = super.evaluate(player, context);
         if (baseEvaluate != null) {
             return baseEvaluate;

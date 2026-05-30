@@ -9,6 +9,7 @@ import com.akirahane.momentum.core.state.base.BaseState;
 import com.mojang.logging.LogUtils;
 import lombok.Getter;
 import lombok.Setter;
+import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.world.entity.player.Player;
 import org.slf4j.Logger;
 
@@ -36,10 +37,10 @@ public class MovementStateMachine {
     // 客户端 加服务端, 状态转换、实施效果、计算移动和视觉效果
     public BaseState clientTick(Player player) {
         handleEffect();
-        BaseState next = currentState.evaluate(player, context);
+        BaseState next = currentState.evaluate((LocalPlayer) player, context);
         boolean isTurn = transition(next, player);
-        serverTick(player);
-        currentState.clientTick(player, context);
+        context.clientTick(player);
+        currentState.clientTick((LocalPlayer) player, context);
         if (isTurn) {
             return next;
         }
@@ -48,7 +49,7 @@ public class MovementStateMachine {
 
     // 服务端实施效果
     public void serverTick(Player player) {
-        context.tick(player);
+        context.serverTick(player);
         currentState.serverTick(player, context);
     }
 

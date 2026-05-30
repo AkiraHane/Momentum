@@ -1,6 +1,7 @@
 package com.akirahane.momentum.client.input;
 
 import com.akirahane.momentum.Momentum;
+import com.akirahane.momentum.core.context.PlayerMovementContext;
 import com.akirahane.momentum.core.state.MovementStateMachine;
 import com.akirahane.momentum.init.InitAttachments;
 import com.mojang.blaze3d.platform.InputConstants;
@@ -38,7 +39,7 @@ public class MCInputKey {
         MovementStateMachine machine = player.getData(InitAttachments.MOVEMENT_STATE);
         HashSet<String>[] list = machine.getContext().getInputBuffer();
         machine.getContext().setInputBufferIndex(
-                (machine.getContext().getInputBufferIndex() + 1) % machine.getContext().getInputBufferLength()
+                (machine.getContext().getInputBufferIndex() + 1) % PlayerMovementContext.KEYS.length
         );
         list[machine.getContext().getInputBufferIndex()].clear();
         if (mc.options.keyUp.isDown() && !wasUp) {

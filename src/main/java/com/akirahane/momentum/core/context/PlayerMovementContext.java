@@ -9,7 +9,12 @@ import com.akirahane.momentum.compat.curios.handler.CuriosHandler;
 import com.mojang.logging.LogUtils;
 import lombok.Getter;
 import lombok.Setter;
+import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.core.Direction;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec2;
 import net.minecraft.world.phys.Vec3;
 import org.slf4j.Logger;
 
@@ -18,8 +23,17 @@ import java.util.*;
 @Getter
 @Setter
 public class PlayerMovementContext {
+    // 静态量
     // 日志
     protected static final Logger LOGGER = LogUtils.getLogger();
+    // 键位
+    private static final int UP = 0, DOWN = 1, LEFT = 2, RIGHT = 3, JUMP = 4;
+    // 键位名称
+    public static final String[] KEYS = {"up", "down", "left", "right", "jump"};
+    // 墙面检测方向
+    private static final Direction[] HORIZONTALS = {
+            Direction.NORTH, Direction.SOUTH, Direction.EAST, Direction.WEST
+    };
 
     // 标志位
     // 是否降低重心
@@ -52,17 +66,26 @@ public class PlayerMovementContext {
     private double lastFallDistance = 0;
     // 闪避无敌时间
     private final int dodgeInvincible = 10;
+    // 移动向量
+    private Vec3 inputVec = Vec3.ZERO;
+    // 交互的墙面方向
+    Direction wallDirection = null;
+    // 向墙的法向量
+    Vec3 wallNormal = Vec3.ZERO;
+    // 向墙视线角度
+    float lookWallAngle = 0;
+    // 向墙输入角度
+    float inputWallAngle = 0;
+
+
     // 效果合计
     private final Map<MomentumEffectType, MomentumEffect> effectMap = new HashMap<>();
-    // 待处理效果
-    private final Map<MomentumEffectType, Set<PendingEffect>> pendingEffectPool = new HashMap<>();
-    // 输入缓冲长度
-    private final int inputBufferLength = 7;
     // 输入缓冲角标
     private int inputBufferIndex = 0;
     // 输入缓冲
+    private final Map<MomentumEffectType, Set<PendingEffect>> pendingEffectPool = new HashMap<>();
     @SuppressWarnings("unchecked")
-    private final HashSet<String>[] inputBuffer = new HashSet[inputBufferLength];
+    private final HashSet<String>[] inputBuffer = new HashSet[KEYS.length];
 
     // 每tick要变动的效果
     // 跳跃计数 用于跳跃限速
@@ -89,7 +112,7 @@ public class PlayerMovementContext {
             effectMap.put(type, new MomentumEffect());
             pendingEffectPool.put(type, new HashSet<>());
         }
-        for (int i = 0; i < inputBufferLength; i++) {
+        for (int i = 0; i < KEYS.length; i++) {
             inputBuffer[i] = new HashSet<>();
         }
     }
@@ -102,7 +125,7 @@ public class PlayerMovementContext {
     }
 
     // 在状态机tick之前调用，从Player读取最新数据
-    public void tick(Player player) {
+    public void serverTick(Player player) {
         if (this.jumpTimer > 0) this.jumpTimer--;
         if (this.slideCooldown > 0) this.slideCooldown--;
         if (this.breakFallTimer > 0) this.breakFallTimer--;
@@ -110,11 +133,17 @@ public class PlayerMovementContext {
         this.hasJetBooster = checkBoosterEquipped(player);
         this.canMomentum = checkMomentum(this.hasJetBooster);
         if (player.fallDistance > 0) this.lastFallDistance = player.fallDistance;
-        this.doubleClickUp = isDoubleClick("up");
-        this.doubleClickDown = isDoubleClick("down");
-        this.doubleClickLeft = isDoubleClick("left");
-        this.doubleClickRight = isDoubleClick("right");
-        this.doubleClickJump = isDoubleClick("jump");
+    }
+
+    public void clientTick(Player player) {
+        this.serverTick(player);
+        this.doubleClickUp = isDoubleClick(KEYS[UP]);
+        this.doubleClickDown = isDoubleClick(KEYS[DOWN]);
+        this.doubleClickLeft = isDoubleClick(KEYS[LEFT]);
+        this.doubleClickRight = isDoubleClick(KEYS[RIGHT]);
+        this.doubleClickJump = isDoubleClick(KEYS[JUMP]);
+        this.setWorldInputVec(player);
+        this.detectWall(player);
     }
 
     // 是否双击了某个键(两个true中至少隔一个false)
@@ -134,7 +163,7 @@ public class PlayerMovementContext {
                 foundFirst = true;
                 continue;
             }
-            if (foundFirst){
+            if (foundFirst) {
                 for (String clickKey : inputBuffer[idx]) {
                     if (!inputBuffer[lastIdx].contains(clickKey)) {
                         // clickKey 是 这次 多出来的, 按下了其他键, 忽略判断和跳跃
@@ -161,6 +190,78 @@ public class PlayerMovementContext {
         } else {
             return hasJetBooster;
         }
+    }
+
+    // 墙面数据判断
+    public void detectWall(Player player) {
+        AABB box = player.getBoundingBox();
+        @SuppressWarnings("resource")
+        Level level = player.level();
+        double reach = 0.05;
+
+        float yaw = player.getYRot();
+        Vec3 lookVec = new Vec3(
+                -Math.sin(Math.toRadians(yaw)),
+                0,
+                Math.cos(Math.toRadians(yaw))
+        ).normalize();
+
+        Vec3 inputVec = this.inputVec;
+        boolean hasInput = inputVec.lengthSqr() > 0.001;
+        Vec3 inputNorm = hasInput ? inputVec.normalize() : Vec3.ZERO;
+
+        Direction bestDir = null;
+        float bestLookAngle = Float.MAX_VALUE;
+        float bestInputAngle = -1;
+
+        for (Direction dir : HORIZONTALS) {
+            AABB expanded = box.expandTowards(
+                    dir.getStepX() * reach,
+                    0,
+                    dir.getStepZ() * reach
+            );
+
+            if (!level.noCollision(player, expanded)) {
+                Vec3 wallNormal = new Vec3(dir.getStepX(), 0, dir.getStepZ());
+                float lookAngle = (float) Math.toDegrees(Math.acos(lookVec.dot(wallNormal)));
+
+                if (lookAngle < bestLookAngle) {
+                    bestLookAngle = lookAngle;
+                    bestDir = dir;
+                    bestInputAngle = hasInput
+                            ? (float) Math.toDegrees(Math.acos(inputNorm.dot(wallNormal)))
+                            : -1;
+                }
+            }
+        }
+        if (bestDir == null) {
+            this.wallDirection = null;
+            this.wallNormal = Vec3.ZERO;
+            this.lookWallAngle = -1;
+            this.inputWallAngle = -1;
+            return;
+        }
+        this.wallDirection = bestDir;
+        this.wallNormal = new Vec3(bestDir.getStepX(), 0, bestDir.getStepZ());
+        this.lookWallAngle = bestLookAngle;
+        this.inputWallAngle = bestInputAngle;
+    }
+
+
+    public void setWorldInputVec(Player player) {
+        Vec2 moveVec = ((LocalPlayer) player).input.getMoveVector();
+        float forward = moveVec.y;
+        float strafe = moveVec.x;
+
+        float yaw = player.getYRot();
+        double rad = Math.toRadians(yaw);
+        double sin = Math.sin(rad);
+        double cos = Math.cos(rad);
+
+        double x = strafe * cos - forward * sin;
+        double z = forward * cos + strafe * sin;
+
+        this.inputVec = new Vec3(x, 0, z);
     }
 
 

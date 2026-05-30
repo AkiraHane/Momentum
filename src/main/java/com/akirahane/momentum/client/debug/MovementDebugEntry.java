@@ -27,10 +27,7 @@ public class MovementDebugEntry implements DebugScreenEntry {
         Minecraft mc = Minecraft.getInstance();
         if (mc.player == null) return;
         PlayerMovementContext context = mc.player.getData(InitAttachments.MOVEMENT_STATE).getContext();
-        Vec3 vel = context.getSpeed();
-        displayer.addToGroup(group, String.format("[Momentum] H Speed: %.4f", vel.horizontalDistance()));
-        displayer.addToGroup(group, String.format("[Momentum] Y Vel: %.4f", vel.y));
-        vel = vel.multiply(20, 20, 20);
+        Vec3 vel = context.getSpeed().multiply(20, 20, 20);
         displayer.addToGroup(group, String.format("[Momentum] H Speed * 20: %.4f", vel.horizontalDistance()));
         displayer.addToGroup(group, String.format("[Momentum] Y Vel * 20: %.4f", vel.y));
         displayer.addToGroup(group, String.format("[Momentum] OnGround: %s", mc.player.onGround()));
@@ -40,7 +37,14 @@ public class MovementDebugEntry implements DebugScreenEntry {
         displayer.addToGroup(group, String.format("[Momentum] xRot: %.4f", xRot));
         double fallDistance = mc.player.fallDistance;
         displayer.addToGroup(group, String.format("[Momentum] Fall Distance: %.4f", fallDistance));
-        int tick = mc.player.tickCount;
-        displayer.addToGroup(group, String.format("[Momentum] Tick: %d", tick));
+        // getWorldInputVec
+        Vec3 inputVec = context.getInputVec();
+        displayer.addToGroup(group, String.format("[Momentum] InputVec: %s", inputVec));
+        // getInputAngleToWall
+        float inputAngleToWall = context.getInputWallAngle();
+        displayer.addToGroup(group, String.format("[Momentum] InputAngleToWall: %.4f", inputAngleToWall));
+        // getLookAngleToWall
+        float lookAngleToWall = context.getLookWallAngle();
+        displayer.addToGroup(group, String.format("[Momentum] LookAngleToWall: %.4f", lookAngleToWall));
     }
 }

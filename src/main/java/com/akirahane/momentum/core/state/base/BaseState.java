@@ -4,6 +4,7 @@ import com.akirahane.momentum.core.enumerate.StateType;
 import com.akirahane.momentum.core.context.PlayerMovementContext;
 import com.akirahane.momentum.init.InitAttachments;
 import com.mojang.logging.LogUtils;
+import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.world.entity.player.Player;
 import org.slf4j.Logger;
 
@@ -22,7 +23,7 @@ public abstract class BaseState {
     }
 
     // 觉效果和移动、状态转换相关内容
-    public void clientTick(Player player, PlayerMovementContext context) {
+    public void clientTick(LocalPlayer player, PlayerMovementContext context) {
     }
 
     // 离开状态时调用一次。
@@ -30,7 +31,7 @@ public abstract class BaseState {
     }
 
     // 状态转换检查
-    public BaseState evaluate(Player player, PlayerMovementContext context) {
+    public BaseState evaluate(LocalPlayer player, PlayerMovementContext context) {
         if (!(player.getData(InitAttachments.MOMENTUM_ENABLED) && context.isCanMomentum())
                 || player.getAbilities().flying    // 飞行
                 || player.isFallFlying()           // 鞘翅
