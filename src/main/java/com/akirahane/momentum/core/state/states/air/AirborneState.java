@@ -8,6 +8,9 @@ import com.akirahane.momentum.core.state.base.BaseState;
 import com.akirahane.momentum.core.state.states.ground.SlideState;
 import com.akirahane.momentum.core.state.states.special.BreakFallState;
 import com.akirahane.momentum.core.state.states.special.DodgeState;
+import com.akirahane.momentum.core.state.states.wall.WallClimbState;
+import com.akirahane.momentum.core.state.states.wall.WallRunState;
+import com.akirahane.momentum.core.state.states.wall.WallSlideState;
 import com.akirahane.momentum.core.state.states.water.SwimState;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.world.entity.player.Player;
@@ -29,6 +32,15 @@ public class AirborneState extends BaseState {
         }
         if (DodgeState.canDodge(player, context)) {
             return StateType.DODGE.getState();
+        }
+        if (WallRunState.canWallRun(player, context)){
+            return StateType.WALL_RUN.getState();
+        }
+        if (WallClimbState.canWallClimb(player, context)){
+            return StateType.WALL_CLIMB.getState();
+        }
+        if (WallSlideState.canWallSlide(player, context)){
+            return StateType.WALL_SLIDE.getState();
         }
         if (SwimState.canSwim(player, context)) {
             return StateType.SWIM.getState();

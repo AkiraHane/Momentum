@@ -32,15 +32,4 @@ public class MomentumUtils {
         // =================== 内容 ===================
         return ServerConfig.AIR_FRICTION.get().floatValue();
     }
-
-
-//    public static float getLookAngleToWall(LocalPlayer player) {
-//        PlayerMovementContext.WallHit result = detectWall(player);
-//        return result == null ? -1 : result.lookAngle();
-//    }
-//
-//    public static float getInputAngleToWall(LocalPlayer player) {
-//        PlayerMovementContext.WallHit result = detectWall(player);
-//        return result == null ? -1 : result.inputAngle();
-//    }
 }

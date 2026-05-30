@@ -27,7 +27,7 @@ public class PlayerMovementContext {
     // 日志
     protected static final Logger LOGGER = LogUtils.getLogger();
     // 键位
-    private static final int UP = 0, DOWN = 1, LEFT = 2, RIGHT = 3, JUMP = 4;
+    public static final int UP = 0, DOWN = 1, LEFT = 2, RIGHT = 3, JUMP = 4;
     // 键位名称
     public static final String[] KEYS = {"up", "down", "left", "right", "jump"};
     // 墙面检测方向
@@ -46,6 +46,8 @@ public class PlayerMovementContext {
     private boolean noMoveInput = false;
     // 是否禁止跳跃
     private boolean noJump = false;
+    // 是否有边缘
+    private boolean hasLedge = false;
     // 是否双击UP DOWN LEFT RIGHT JUMP
     private boolean doubleClickUp = false;
     private boolean doubleClickDown = false;
@@ -82,10 +84,12 @@ public class PlayerMovementContext {
     private final Map<MomentumEffectType, MomentumEffect> effectMap = new HashMap<>();
     // 输入缓冲角标
     private int inputBufferIndex = 0;
+    // 输入缓冲大小
+    private final int inputBufferSize = 10;
     // 输入缓冲
     private final Map<MomentumEffectType, Set<PendingEffect>> pendingEffectPool = new HashMap<>();
     @SuppressWarnings("unchecked")
-    private final HashSet<String>[] inputBuffer = new HashSet[KEYS.length];
+    private final HashSet<String>[] inputBuffer = new HashSet[inputBufferSize];
 
     // 每tick要变动的效果
     // 跳跃计数 用于跳跃限速
@@ -96,6 +100,8 @@ public class PlayerMovementContext {
     private int breakFallTimer = 0;
     // 闪避计时器
     private int dodgeTimer = 0;
+    // 翻越计时器
+    private int vaultTimer = 0;
 
     public PendingEffect SLIDE_FRICTION = new PendingEffect(
             0, 0, 0.1F, 0, -1
@@ -112,7 +118,7 @@ public class PlayerMovementContext {
             effectMap.put(type, new MomentumEffect());
             pendingEffectPool.put(type, new HashSet<>());
         }
-        for (int i = 0; i < KEYS.length; i++) {
+        for (int i = 0; i < inputBufferSize; i++) {
             inputBuffer[i] = new HashSet<>();
         }
     }
@@ -235,12 +241,27 @@ public class PlayerMovementContext {
             }
         }
         if (bestDir == null) {
+            this.hasLedge = false;
             this.wallDirection = null;
             this.wallNormal = Vec3.ZERO;
             this.lookWallAngle = -1;
             this.inputWallAngle = -1;
             return;
         }
+
+        // 在眼睛位置往墙方向做一个小碰撞箱检测是否有凹槽
+        double eyeY = player.getEyeY();
+        double halfSize = 0.2;
+        Vec3 eyeCenter = new Vec3(
+                player.getX() + bestDir.getStepX() * 0.5,
+                eyeY,
+                player.getZ() + bestDir.getStepZ() * 0.5
+        );
+        AABB ledgeBox = new AABB(
+                eyeCenter.x - halfSize, eyeCenter.y - halfSize, eyeCenter.z - halfSize,
+                eyeCenter.x + halfSize, eyeCenter.y + halfSize, eyeCenter.z + halfSize
+        );
+        this.hasLedge = level.noCollision(player, ledgeBox);
         this.wallDirection = bestDir;
         this.wallNormal = new Vec3(bestDir.getStepX(), 0, bestDir.getStepZ());
         this.lookWallAngle = bestLookAngle;

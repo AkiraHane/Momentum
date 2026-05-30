@@ -13,9 +13,10 @@ import net.minecraft.world.entity.player.Player;
 public class SwimState extends BaseState {
 
     public static boolean canSwim(LocalPlayer player, PlayerMovementContext context) {
-        Minecraft mc = Minecraft.getInstance();
-        KeyMapping keyUp = mc.options.keyUp;
-        return context.isLowerCenter() && player.isInWater() && keyUp.isDown() && player.getXRot() > 0;
+        return context.isLowerCenter() &&
+                player.isInWater() &&
+                Minecraft.getInstance().options.keyUp.isDown() &&
+                player.getXRot() > 0;
     }
 
     public void onEnter(Player player, PlayerMovementContext context) {

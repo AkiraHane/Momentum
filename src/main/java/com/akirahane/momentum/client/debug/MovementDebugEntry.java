@@ -20,8 +20,6 @@ public class MovementDebugEntry implements DebugScreenEntry {
     private static final Identifier group =
             Identifier.fromNamespaceAndPath(MODID, "movement");
 
-    private int count = 0;
-
     @Override
     public void display(@NotNull DebugScreenDisplayer displayer, @Nullable Level level, @Nullable LevelChunk clientChunk, @Nullable LevelChunk serverChunk) {
         Minecraft mc = Minecraft.getInstance();
@@ -46,5 +44,7 @@ public class MovementDebugEntry implements DebugScreenEntry {
         // getLookAngleToWall
         float lookAngleToWall = context.getLookWallAngle();
         displayer.addToGroup(group, String.format("[Momentum] LookAngleToWall: %.4f", lookAngleToWall));
+        boolean hasLedge = context.isHasLedge();
+        displayer.addToGroup(group, String.format("[Momentum] HasLedge: %s", hasLedge));
     }
 }

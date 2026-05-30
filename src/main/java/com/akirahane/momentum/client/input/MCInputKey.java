@@ -1,23 +1,20 @@
 package com.akirahane.momentum.client.input;
 
 import com.akirahane.momentum.Momentum;
-import com.akirahane.momentum.core.context.PlayerMovementContext;
 import com.akirahane.momentum.core.state.MovementStateMachine;
 import com.akirahane.momentum.init.InitAttachments;
-import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.logging.LogUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.fml.common.Mod;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
-import net.neoforged.neoforge.event.tick.PlayerTickEvent;
 import org.slf4j.Logger;
 
 import java.util.HashSet;
-import java.util.Map;
+
+import static com.akirahane.momentum.core.context.PlayerMovementContext.*;
 
 @EventBusSubscriber(modid = Momentum.MODID, value = Dist.CLIENT)
 public class MCInputKey {
@@ -39,27 +36,27 @@ public class MCInputKey {
         MovementStateMachine machine = player.getData(InitAttachments.MOVEMENT_STATE);
         HashSet<String>[] list = machine.getContext().getInputBuffer();
         machine.getContext().setInputBufferIndex(
-                (machine.getContext().getInputBufferIndex() + 1) % PlayerMovementContext.KEYS.length
+                (machine.getContext().getInputBufferIndex() + 1) % KEYS.length
         );
         list[machine.getContext().getInputBufferIndex()].clear();
         if (mc.options.keyUp.isDown() && !wasUp) {
-            list[machine.getContext().getInputBufferIndex()].add("up");
+            list[machine.getContext().getInputBufferIndex()].add(KEYS[UP]);
         }
         wasUp = mc.options.keyUp.isDown();
         if (mc.options.keyDown.isDown() && !wasDown) {
-            list[machine.getContext().getInputBufferIndex()].add("down");
+            list[machine.getContext().getInputBufferIndex()].add(KEYS[DOWN]);
         }
         wasDown = mc.options.keyDown.isDown();
         if (mc.options.keyLeft.isDown() && !wasLeft) {
-            list[machine.getContext().getInputBufferIndex()].add("left");
+            list[machine.getContext().getInputBufferIndex()].add(KEYS[LEFT]);
         }
         wasLeft = mc.options.keyLeft.isDown();
         if (mc.options.keyRight.isDown() && !wasRight) {
-            list[machine.getContext().getInputBufferIndex()].add("right");
+            list[machine.getContext().getInputBufferIndex()].add(KEYS[RIGHT]);
         }
         wasRight = mc.options.keyRight.isDown();
         if (mc.options.keyJump.isDown() && !wasJump) {
-            list[machine.getContext().getInputBufferIndex()].add("jump");
+            list[machine.getContext().getInputBufferIndex()].add(KEYS[JUMP]);
         }
         wasJump = mc.options.keyJump.isDown();
     }
