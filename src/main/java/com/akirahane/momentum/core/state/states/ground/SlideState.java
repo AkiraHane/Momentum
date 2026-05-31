@@ -8,7 +8,6 @@ import com.akirahane.momentum.core.state.states.air.AirborneState;
 import com.akirahane.momentum.core.state.states.special.DodgeState;
 import com.akirahane.momentum.mixin.LivingEntityAccessor;
 import com.akirahane.momentum.config.ServerConfig;
-import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.Pose;
 import net.minecraft.world.phys.Vec3;
@@ -17,7 +16,7 @@ import static com.akirahane.momentum.core.effect.MomentumEffectType.BLOCK_FRICTI
 
 
 public class SlideState extends BaseState {
-    public static boolean canSlide(LocalPlayer player, PlayerMovementContext context) {
+    public static boolean canSlide(Player player, PlayerMovementContext context) {
         return player.onGround() &&
                 context.isLowerCenter() &&
                 player.isSprinting() &&
@@ -37,7 +36,7 @@ public class SlideState extends BaseState {
 
         if (context.getSlideCooldown() == 0) {
             Vec3 velocity = player.getDeltaMovement();
-            float jumpPower = ((LivingEntityAccessor) player).invokeGetJumpPower() * 1.2F;
+            float jumpPower = ((LivingEntityAccessor) player).invokeGetJumpPower();
             LOGGER.debug("player.getJumpPower() {}", jumpPower);
             player.addDeltaMovement(
                     new Vec3(
@@ -61,7 +60,7 @@ public class SlideState extends BaseState {
     }
 
     @Override
-    public BaseState evaluate(LocalPlayer player, PlayerMovementContext context) {
+    public BaseState evaluate(Player player, PlayerMovementContext context) {
         BaseState baseEvaluate = super.evaluate(player, context);
         if (baseEvaluate != null) {
             return baseEvaluate;

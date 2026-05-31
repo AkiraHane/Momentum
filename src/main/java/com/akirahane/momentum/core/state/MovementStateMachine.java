@@ -6,7 +6,7 @@ import com.akirahane.momentum.core.effect.MomentumEffectType;
 import com.mojang.logging.LogUtils;
 import lombok.Getter;
 import lombok.Setter;
-import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
 import org.slf4j.Logger;
@@ -24,6 +24,8 @@ public class MovementStateMachine {
     private BaseState currentState;
     // 玩家数据上下文
     private final PlayerMovementContext context;
+    // 是否需要广播状态
+    private boolean dirty = false;
 
     public MovementStateMachine() {
         this.context = new PlayerMovementContext();
@@ -35,10 +37,10 @@ public class MovementStateMachine {
     // 客户端 加服务端, 状态转换、实施效果、计算移动和视觉效果
     public BaseState clientTick(Player player) {
         handleEffect();
-        BaseState next = currentState.evaluate((LocalPlayer) player, context);
+        BaseState next = currentState.evaluate((Player) player, context);
         boolean isTurn = transition(next, player);
         context.clientTick(player);
-        currentState.clientTick((LocalPlayer) player, context);
+        currentState.clientTick((Player) player, context);
         if (isTurn) {
             return next;
         }
@@ -64,6 +66,7 @@ public class MovementStateMachine {
     // 客户端向服务端同步状态
     public void setStateFromClient(StateType newStateType, Player player) {
         transition(newStateType.getState(), player);
+        dirty = true;
     }
 
     // 效果处理

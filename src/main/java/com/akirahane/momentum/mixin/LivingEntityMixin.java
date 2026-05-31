@@ -1,17 +1,16 @@
 package com.akirahane.momentum.mixin;
 
-import com.akirahane.momentum.core.MomentumUtils;
+import com.akirahane.momentum.config.ServerConfig;
 import com.akirahane.momentum.core.state.MovementStateMachine;
 import com.akirahane.momentum.core.state.StateType;
 import com.akirahane.momentum.init.InitAttachments;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
-import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Attackable;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
@@ -43,7 +42,7 @@ public abstract class LivingEntityMixin extends Entity implements Attackable, Wa
             name = "input")
     private Vec3 modifyTravelInput(Vec3 original) {
         LivingEntity self = (LivingEntity) (Object) this;
-        if (!(self instanceof LocalPlayer player)) {
+        if (!(self instanceof Player player)) {
             return original;
         }
         MovementStateMachine stateMachine = player.getData(InitAttachments.MOVEMENT_STATE);
@@ -60,7 +59,7 @@ public abstract class LivingEntityMixin extends Entity implements Attackable, Wa
     @ModifyVariable(method = "travelInAir", at = @At("STORE"), name = "blockFriction")
     private float blockFriction(float original) {
         LivingEntity self = (LivingEntity) (Object) this;
-        if (!(self instanceof LocalPlayer player)) {
+        if (!(self instanceof Player player)) {
             return original;
         }
         MovementStateMachine stateMachine = player.getData(InitAttachments.MOVEMENT_STATE);
@@ -75,7 +74,7 @@ public abstract class LivingEntityMixin extends Entity implements Attackable, Wa
     @ModifyVariable(method = "travelInAir", at = @At("STORE"), name = "friction")
     private float friction(float original) {
         LivingEntity self = (LivingEntity) (Object) this;
-        if (!(self instanceof LocalPlayer player)) {
+        if (!(self instanceof Player player)) {
             return original;
         }
         MovementStateMachine stateMachine = player.getData(InitAttachments.MOVEMENT_STATE);
@@ -93,16 +92,21 @@ public abstract class LivingEntityMixin extends Entity implements Attackable, Wa
     )
     public float modifyAirFriction(float original) {
         LivingEntity self = (LivingEntity) (Object) this;
-        if (!(self instanceof LocalPlayer player)) {
+        if (!(self instanceof Player player)) {
             return original;
         }
-        return MomentumUtils.getAirFriction(player);
+        MovementStateMachine stateMachine = player.getData(InitAttachments.MOVEMENT_STATE);
+        if (stateMachine.getCurrentState().getStateType().equals(StateType.ORIGINAL)) {
+            return original;
+        }
+        // =================== 内容 ===================
+        return ServerConfig.AIR_FRICTION.get().floatValue();
     }
 
     @ModifyVariable(method = "travelInAir", at = @At("STORE"), name = "movement")
     private Vec3 movement(Vec3 original) {
         LivingEntity self = (LivingEntity) (Object) this;
-        if (!(self instanceof LocalPlayer player)) {
+        if (!(self instanceof Player player)) {
             return original;
         }
         MovementStateMachine stateMachine = player.getData(InitAttachments.MOVEMENT_STATE);
@@ -111,31 +115,31 @@ public abstract class LivingEntityMixin extends Entity implements Attackable, Wa
         }
         // =================== 内容 ===================
         original = stateMachine.applyEffect(
-                original.subtract(stateMachine.getContext().getDeltaMovement()),
+                original.subtract(stateMachine.getContext().getOldDeltaMovement()),
                 player.getYRot(),
                 ACCELERATION
-        ).add(stateMachine.getContext().getDeltaMovement());
+        ).add(stateMachine.getContext().getOldDeltaMovement());
         Vec3 limitSpeed = stateMachine.applyEffect(Vec3.ZERO, player.getYRot(), LIMIT_ACCELERATION_SPEED);
         if (limitSpeed.length() != 0) {
             original = new Vec3(
                     // 这里存了上一tick的速度
                     Math.abs(original.x) > Math.abs(limitSpeed.x)
                             ? (
-                            Math.abs(original.x) < Math.abs(stateMachine.getContext().getDeltaMovement().x)
+                            Math.abs(original.x) < Math.abs(stateMachine.getContext().getOldDeltaMovement().x)
                                     ? original.x
-                                    : stateMachine.getContext().getDeltaMovement().x)
+                                    : stateMachine.getContext().getOldDeltaMovement().x)
                             : original.x,
                     Math.abs(original.y) > Math.abs(limitSpeed.y)
                             ? (
-                            Math.abs(original.y) < Math.abs(stateMachine.getContext().getDeltaMovement().y)
+                            Math.abs(original.y) < Math.abs(stateMachine.getContext().getOldDeltaMovement().y)
                                     ? original.y
-                                    : stateMachine.getContext().getDeltaMovement().y)
+                                    : stateMachine.getContext().getOldDeltaMovement().y)
                             : original.y,
                     Math.abs(original.z) > Math.abs(limitSpeed.z)
                             ? (
-                            Math.abs(original.z) < Math.abs(stateMachine.getContext().getDeltaMovement().z)
+                            Math.abs(original.z) < Math.abs(stateMachine.getContext().getOldDeltaMovement().z)
                                     ? original.z
-                                    : stateMachine.getContext().getDeltaMovement().z)
+                                    : stateMachine.getContext().getOldDeltaMovement().z)
                             : original.z
             );
         }
@@ -143,7 +147,7 @@ public abstract class LivingEntityMixin extends Entity implements Attackable, Wa
         return original;
     }
 
-//
+    //
 //    // https://github.com/LlamaLad7/MixinExtras/wiki/WrapOperation
     @WrapOperation(method = "jumpFromGround",
             at = @At(value = "INVOKE",
@@ -158,21 +162,24 @@ public abstract class LivingEntityMixin extends Entity implements Attackable, Wa
             original.call(self, originalBoost);
             return;
         }
-        double moveSpeed = self.getAttributeValue(Attributes.MOVEMENT_SPEED);
-        double jumpStrength = self.getAttributeValue(Attributes.JUMP_STRENGTH);
         // TODO 完善公式, 添加连跳惩罚
-        double jumpLimitSpeed = moveSpeed * (1 + jumpStrength) * 2;
         Vec3 current = self.getDeltaMovement();
-        Vec3 boosted = current.add(originalBoost);
+        float angle = self.getYRot() * ((float) Math.PI / 180F);
+        Vec3 acceleration = new Vec3(
+                (double) (-Mth.sin((double) angle)) * stateMachine.getContext().getJumpAcceleration(),
+                (double) 0.0F,
+                (double) Mth.cos((double) angle) * stateMachine.getContext().getJumpAcceleration()
+        );
+        Vec3 boosted = current.add(acceleration);
         double currentH = current.horizontalDistance();
         double boostedH = boosted.horizontalDistance();
 
-        if (boostedH > jumpLimitSpeed && currentH < jumpLimitSpeed) {
-            Vec3 clamped = new Vec3(boosted.x * jumpLimitSpeed / boostedH, 0, boosted.z * jumpLimitSpeed / boostedH);
+        if (boostedH > stateMachine.getContext().getJumpLimitSpeed() && currentH < stateMachine.getContext().getJumpLimitSpeed()) {
+            Vec3 clamped = new Vec3(boosted.x * stateMachine.getContext().getJumpLimitSpeed() / boostedH, 0, boosted.z * stateMachine.getContext().getJumpLimitSpeed() / boostedH);
             Vec3 diff = clamped.subtract(current.x, 0, current.z);
             original.call(self, new Vec3(diff.x, 0, diff.z));
-        } else if (currentH < jumpLimitSpeed) {
-            original.call(self, originalBoost);
+        } else if (currentH < stateMachine.getContext().getJumpLimitSpeed()) {
+            original.call(self, acceleration);
         }
         // 已超速则不调用
     }

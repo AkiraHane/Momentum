@@ -7,11 +7,12 @@ import com.akirahane.momentum.core.state.states.air.AirborneState;
 import com.akirahane.momentum.core.state.states.special.DodgeState;
 import com.akirahane.momentum.core.state.states.wall.WallRunState;
 import com.akirahane.momentum.core.state.states.water.SwimState;
-import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.world.entity.player.Player;
 
+import static com.akirahane.momentum.core.MomentumUtils.playStateAnimation;
+
 public class WalkState extends BaseState {
-    public static boolean canWalk(LocalPlayer player, PlayerMovementContext context) {
+    public static boolean canWalk(Player player, PlayerMovementContext context) {
         return player.onGround();
     }
 
@@ -20,26 +21,20 @@ public class WalkState extends BaseState {
 
     @Override
     public void onEnter(Player player, PlayerMovementContext context) {
-        super.onEnter(player, context);
-    }
-
-    @Override
-    public void serverTick(Player player, PlayerMovementContext context) {
-        super.serverTick(player, context);
-    }
-
-    @Override
-    public void clientTick(LocalPlayer player, PlayerMovementContext context) {
-        super.clientTick(player, context);
+        if (player.level().isClientSide()) {
+            playStateAnimation(player, "walk");
+        }
     }
 
     @Override
     public void onExit(Player player, PlayerMovementContext context) {
-        super.onExit(player, context);
+        if (player.level().isClientSide()) {
+            playStateAnimation(player, "idle");
+        }
     }
 
     @Override
-    public BaseState evaluate(LocalPlayer player, PlayerMovementContext context) {
+    public BaseState evaluate(Player player, PlayerMovementContext context) {
         BaseState baseEvaluate = super.evaluate(player, context);
         if (baseEvaluate != null) {
             return baseEvaluate;

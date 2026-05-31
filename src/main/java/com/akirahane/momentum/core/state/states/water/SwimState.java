@@ -6,12 +6,12 @@ import com.akirahane.momentum.core.state.BaseState;
 import com.akirahane.momentum.core.state.states.air.AirborneState;
 import com.akirahane.momentum.core.state.states.ground.WalkState;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.player.Player;
 
 public class SwimState extends BaseState {
 
-    public static boolean canSwim(LocalPlayer player, PlayerMovementContext context) {
+    public static boolean canSwim(Player player, PlayerMovementContext context) {
         return context.isLowerCenter() &&
                 player.isInWater() &&
                 Minecraft.getInstance().options.keyUp.isDown() &&
@@ -30,7 +30,7 @@ public class SwimState extends BaseState {
     }
 
     @Override
-    public BaseState evaluate(LocalPlayer player, PlayerMovementContext context) {
+    public BaseState evaluate(Player player, PlayerMovementContext context) {
         BaseState baseEvaluate = super.evaluate(player, context);
         if (baseEvaluate != null) {
             return baseEvaluate;

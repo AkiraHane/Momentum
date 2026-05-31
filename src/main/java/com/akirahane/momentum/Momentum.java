@@ -1,14 +1,26 @@
 package com.akirahane.momentum;
 
+import com.akirahane.momentum.core.state.MovementStateMachine;
 import com.akirahane.momentum.init.InitAttachments;
 import com.akirahane.momentum.init.InitItems;
 import com.akirahane.momentum.config.ServerConfig;
+import com.akirahane.momentum.network.StateBroadcastPacket;
+import com.akirahane.momentum.network.StateTransitionPacket;
+import com.akirahane.momentum.network.SyncMomentumEnabledPacket;
 import com.mojang.logging.LogUtils;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.level.ServerPlayer;
+import net.neoforged.bus.api.EventPriority;
 import net.neoforged.bus.api.IEventBus;
+import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.config.ModConfig;
+import net.neoforged.neoforge.event.entity.player.PlayerEvent;
+import net.neoforged.neoforge.event.tick.PlayerTickEvent;
+import net.neoforged.neoforge.event.tick.ServerTickEvent;
+import net.neoforged.neoforge.network.PacketDistributor;
 import org.slf4j.Logger;
 
 // 此处的值应与 META-INF/neoforge.mods.toml 文件中的条目匹配
@@ -23,5 +35,40 @@ public class Momentum {
         modContainer.registerConfig(ModConfig.Type.SERVER, ServerConfig.SPEC);
         InitItems.register(modEventBus);
         InitAttachments.register(modEventBus);
+    }
+
+    @SubscribeEvent
+    public static void onPlayerLogin(PlayerEvent.PlayerLoggedInEvent event) {
+        if (event.getEntity() instanceof ServerPlayer player) {
+            PacketDistributor.sendToPlayer(player, new SyncMomentumEnabledPacket(
+                    player.getData(InitAttachments.MOMENTUM_ENABLED))
+            );
+        }
+    }
+
+    // 服务端驱动 状态机处理放在原版逻辑之前, 但是要晚于玩家输入处理
+    @SubscribeEvent(priority = EventPriority.LOWEST)
+    public static void onPlayerTick(PlayerTickEvent.Pre event) {
+        if (event.getEntity() instanceof ServerPlayer player) {
+            MovementStateMachine sm = player.getData(InitAttachments.MOVEMENT_STATE);
+            sm.serverTick(player);
+        }
+    }
+
+    @SubscribeEvent
+    public static void onServerTick(ServerTickEvent.Post event) {
+        MinecraftServer server = event.getServer();
+        for (ServerPlayer player : server.getPlayerList().getPlayers()) {
+            MovementStateMachine stateMachine = player.getData(InitAttachments.MOVEMENT_STATE);
+            if (stateMachine.isDirty()) {
+                StateBroadcastPacket packet = new StateBroadcastPacket(player.getId(), stateMachine.getCurrentState().getStateType());
+                for (ServerPlayer observer : player.level().players()) {
+                    if (observer != player) {
+                        PacketDistributor.sendToPlayer(observer, packet);
+                    }
+                }
+                stateMachine.setDirty(false);
+            }
+        }
     }
 }

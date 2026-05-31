@@ -5,10 +5,10 @@ import com.akirahane.momentum.core.state.StateType;
 import com.akirahane.momentum.core.state.BaseState;
 import com.akirahane.momentum.core.state.states.air.AirborneState;
 import com.akirahane.momentum.core.state.states.ground.WalkState;
-import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.world.entity.player.Player;
 
 public class WallClimbState extends BaseState {
-    public static boolean canWallClimb(LocalPlayer player, PlayerMovementContext context) {
+    public static boolean canWallClimb(Player player, PlayerMovementContext context) {
         return player.onClimbable() || (
                 context.getWallDirection() != null &&
                         context.getInputWallAngle() < 90 &&
@@ -19,7 +19,7 @@ public class WallClimbState extends BaseState {
     }
 
     @Override
-    public BaseState evaluate(LocalPlayer player, PlayerMovementContext context) {
+    public BaseState evaluate(Player player, PlayerMovementContext context) {
         BaseState baseEvaluate = super.evaluate(player, context);
         if (baseEvaluate != null) {
             return baseEvaluate;

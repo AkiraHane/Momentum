@@ -2,9 +2,11 @@ package com.akirahane.momentum.init;
 
 import com.akirahane.momentum.Momentum;
 import com.akirahane.momentum.core.state.MovementStateMachine;
+import com.akirahane.momentum.network.StateBroadcastPacket;
 import com.akirahane.momentum.network.StateTransitionPacket;
 import com.akirahane.momentum.network.SyncMomentumEnabledPacket;
 import com.akirahane.momentum.network.ToggleMomentumPacket;
+import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
@@ -26,7 +28,6 @@ public class InitNetwork {
                 ToggleMomentumPacket.TYPE,
                 ToggleMomentumPacket.STREAM_CODEC,
                 (packet, context) -> {
-                    // 已经在主线程了，NeoForge 1.21.1默认在主线程处理
                     Player player = context.player();
                     boolean current = !player.getData(InitAttachments.MOMENTUM_ENABLED);
                     player.setData(InitAttachments.MOMENTUM_ENABLED, current);
@@ -56,8 +57,24 @@ public class InitNetwork {
                 StateTransitionPacket.TYPE,
                 StateTransitionPacket.STREAM_CODEC,
                 (packet, context) -> {
-                    // 已经在主线程了，NeoForge 1.21.1默认在主线程处理
                     Player player = context.player();
+                    MovementStateMachine stateMachine = player.getData(InitAttachments.MOVEMENT_STATE);
+                    stateMachine.setStateFromClient(packet.stateType(), player);
+                }
+        );
+
+        registrar.playToClient(
+                StateBroadcastPacket.TYPE,
+                StateBroadcastPacket.STREAM_CODEC,
+                (packet, context) -> {
+                    var mc = Minecraft.getInstance();
+                    if (mc.level == null) return;
+
+                    var entity = mc.level.getEntity(packet.playerId());
+                    if (!(entity instanceof Player player)) return;
+                    if (player == mc.player) return;
+
+                    // 直接设置那个玩家实体上的状态机
                     MovementStateMachine stateMachine = player.getData(InitAttachments.MOVEMENT_STATE);
                     stateMachine.setStateFromClient(packet.stateType(), player);
                 }

@@ -7,12 +7,11 @@ import com.akirahane.momentum.core.state.states.air.AirborneState;
 import com.akirahane.momentum.core.state.states.ground.WalkState;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
 
 public class DodgeState extends BaseState {
-    public static boolean canDodge(LocalPlayer player, PlayerMovementContext context) {
+    public static boolean canDodge(Player player, PlayerMovementContext context) {
         Minecraft mc = Minecraft.getInstance();
         KeyMapping keyShift = mc.options.keyShift;
         return player.onGround() &&
@@ -37,7 +36,7 @@ public class DodgeState extends BaseState {
     }
 
     @Override
-    public BaseState evaluate(LocalPlayer player, PlayerMovementContext context) {
+    public BaseState evaluate(Player player, PlayerMovementContext context) {
         BaseState baseEvaluate = super.evaluate(player, context);
         if (baseEvaluate != null) {
             return baseEvaluate;

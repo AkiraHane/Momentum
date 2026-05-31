@@ -10,6 +10,7 @@ import lombok.Getter;
 import lombok.Setter;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.Direction;
+import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
@@ -60,7 +61,7 @@ public class PlayerMovementContext {
     // 上一Tick移动速度
     private Vec3 oldSpeed = Vec3.ZERO;
     // 上一Tick的DeltaMovement
-    private Vec3 deltaMovement = Vec3.ZERO;
+    private Vec3 oldDeltaMovement = Vec3.ZERO;
     // 滑行上下单位高度
     private double blockStep = 0;
     // 坡度加速向量
@@ -79,6 +80,10 @@ public class PlayerMovementContext {
     float lookWallAngle = 0;
     // 向墙输入角度
     float inputWallAngle = 0;
+    // 跳跃最高速度(到达这个速度停止继续加速, 但不会减速)
+    private double jumpLimitSpeed = 0;
+    // 跳跃加速强度(同时吃速度属性和跳跃提升属性)
+    private double jumpAcceleration = 0;
 
 
     // 效果合计
@@ -102,6 +107,18 @@ public class PlayerMovementContext {
     private int dodgeTimer = 0;
     // 翻越计时器
     private int vaultTimer = 0;
+
+    // 状态中进行变动的数值
+    // 滞空计时器
+    private int airborneTimer = 0;
+
+    // 机动模式总阻力
+    public static MomentumEffect DEFAULT_FRICTION = new MomentumEffect(
+            new Vec3(0.9, 0, 0),
+            Vec3.ZERO,
+            MULTIPLIER,
+            -1
+    );
 
     // 滑铲总阻力
     public MomentumEffect SLIDE_FRICTION = new MomentumEffect(
@@ -165,6 +182,10 @@ public class PlayerMovementContext {
         this.doubleClickLeft = isDoubleClick(LEFT);
         this.doubleClickRight = isDoubleClick(RIGHT);
         this.doubleClickJump = isDoubleClick(JUMP);
+        double moveSpeed = player.getAttributeValue(Attributes.MOVEMENT_SPEED);
+        double jumpStrength = player.getJumpBoostPower();
+        this.jumpLimitSpeed = moveSpeed * (1 + jumpStrength) * 100;
+        this.jumpAcceleration = moveSpeed * (1 + jumpStrength) * 1.2;
         this.setWorldInputVec(player);
         this.detectWall(player);
     }

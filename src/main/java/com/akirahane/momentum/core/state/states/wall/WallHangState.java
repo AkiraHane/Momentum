@@ -6,18 +6,18 @@ import com.akirahane.momentum.core.state.BaseState;
 import com.akirahane.momentum.core.state.states.air.AirborneState;
 import com.akirahane.momentum.core.state.states.ground.WalkState;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.world.entity.player.Player;
 
 public class WallHangState extends BaseState {
 
-    public static boolean canWallHang(LocalPlayer player, PlayerMovementContext context) {
+    public static boolean canWallHang(Player player, PlayerMovementContext context) {
         return context.isHasLedge() &&
                 !Minecraft.getInstance().options.keyJump.isDown();
 
     }
 
     @Override
-    public BaseState evaluate(LocalPlayer player, PlayerMovementContext context) {
+    public BaseState evaluate(Player player, PlayerMovementContext context) {
         BaseState baseEvaluate = super.evaluate(player, context);
         if (baseEvaluate != null) {
             return baseEvaluate;
