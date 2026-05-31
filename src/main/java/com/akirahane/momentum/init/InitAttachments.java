@@ -2,6 +2,7 @@ package com.akirahane.momentum.init;
 
 import com.akirahane.momentum.core.state.MovementStateMachine;
 import com.mojang.serialization.Codec;
+import net.minecraft.world.entity.player.Player;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.attachment.AttachmentType;
 import net.neoforged.neoforge.registries.DeferredRegister;
@@ -25,8 +26,9 @@ public class InitAttachments {
             );
     public static final Supplier<AttachmentType<@NotNull MovementStateMachine>> MOVEMENT_STATE =
             ATTACHMENT_TYPES.register("movement_state",
-                    () -> AttachmentType.builder(MovementStateMachine::new)
-                            .build()
+                    () -> AttachmentType.builder(
+                                    holder -> new MovementStateMachine((Player) holder)
+                            ).build()
             );
 
     public static void register(IEventBus modEventBus) {

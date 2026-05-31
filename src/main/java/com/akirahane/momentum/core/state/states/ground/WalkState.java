@@ -22,14 +22,14 @@ public class WalkState extends BaseState {
     @Override
     public void onEnter(Player player, PlayerMovementContext context) {
         if (player.level().isClientSide()) {
-            playStateAnimation(player, "walk");
+            playStateAnimation(player, "walk", context.getController());
         }
     }
 
     @Override
     public void onExit(Player player, PlayerMovementContext context) {
         if (player.level().isClientSide()) {
-            playStateAnimation(player, "idle");
+            playStateAnimation(player, "idle", context.getController());
         }
     }
 

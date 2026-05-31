@@ -1,11 +1,15 @@
 package com.akirahane.momentum.core.context;
 
+import com.akirahane.momentum.client.MomentumClient;
+import com.akirahane.momentum.client.animation.MomentumAnimationController;
 import com.akirahane.momentum.core.effect.MomentumEffect;
 import com.akirahane.momentum.core.effect.MomentumEffectType;
 import com.akirahane.momentum.compat.curios.CuriosCompat;
 import com.akirahane.momentum.config.ServerConfig;
 import com.akirahane.momentum.compat.curios.handler.CuriosHandler;
 import com.mojang.logging.LogUtils;
+import com.zigythebird.playeranim.api.PlayerAnimationAccess;
+import com.zigythebird.playeranimcore.animation.AnimationController;
 import lombok.Getter;
 import lombok.Setter;
 import net.minecraft.client.player.LocalPlayer;
@@ -17,6 +21,8 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec2;
 import net.minecraft.world.phys.Vec3;
 import org.slf4j.Logger;
+import team.unnamed.mocha.MochaEngine;
+import team.unnamed.mocha.runtime.value.ObjectValue;
 
 import java.util.*;
 
@@ -34,6 +40,10 @@ public class PlayerMovementContext {
     private static final Direction[] HORIZONTALS = {
             Direction.NORTH, Direction.SOUTH, Direction.EAST, Direction.WEST
     };
+    // 动画控制器
+    MomentumAnimationController controller;
+    // 动画moLang
+    MochaEngine<AnimationController> mocha;
 
     // 标志位
     // 是否降低重心
@@ -149,13 +159,27 @@ public class PlayerMovementContext {
             -1
     );
 
-    public PlayerMovementContext() {
+    public PlayerMovementContext(Player player) {
         for (MomentumEffectType type : MomentumEffectType.values()) {
             pendingEffectPool.put(type, new HashSet<>());
         }
         for (int i = 0; i < inputBufferSize; i++) {
             inputBuffer[i] = new HashSet<>();
         }
+        if (player.level().isClientSide()) {
+            controller = (MomentumAnimationController) PlayerAnimationAccess.getPlayerAnimationLayer(
+                    player, MomentumClient.MOVEMENT_ANIM
+            );
+            if (controller != null) {
+                mocha = controller.getMolangRuntime();
+                bindVariables();
+            }
+        }
+    }
+
+    private void bindVariables() {
+        ObjectValue variables = (ObjectValue) this.mocha.scope().get("variable");
+        variables.setFunction("movement_speed", (ctx, args) -> (float) speed.horizontalDistance());
     }
 
     public void resetEffect() {

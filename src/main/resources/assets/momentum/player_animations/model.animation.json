@@ -3,39 +3,17 @@
 	"animations": {
 		"walk": {
 			"loop": true,
-			"animation_length": 1,
+			"animation_length": 0.5,
 			"bones": {
 				"right_arm": {
-					"rotation": {
-						"0.0": {
-							"post": [-117.5, 0, 0],
-							"lerp_mode": "catmullrom"
-						},
-						"0.5": {
-							"post": [-55, 0, 0],
-							"lerp_mode": "catmullrom"
-						},
-						"1.0": {
-							"post": [-117.5, 0, 0],
-							"lerp_mode": "catmullrom"
-						}
+					"position": {
+						"0.0": [0, "-1+variable.movement_speed() * 10", 0],
+						"0.25": [0, "-1+variable.movement_speed() * 10", 0],
+						"0.5": [0, "-1+variable.movement_speed() * 10", 0]
 					}
 				},
 				"left_arm": {
-					"rotation": {
-						"0.0": {
-							"post": [-45, 0, 0],
-							"lerp_mode": "catmullrom"
-						},
-						"0.5": {
-							"post": [-120, 0, 0],
-							"lerp_mode": "catmullrom"
-						},
-						"1.0": {
-							"post": [-45, 0, 0],
-							"lerp_mode": "catmullrom"
-						}
-					}
+					"position": [0, "-1+variable.movement_speed() * 10", 0]
 				}
 			}
 		},

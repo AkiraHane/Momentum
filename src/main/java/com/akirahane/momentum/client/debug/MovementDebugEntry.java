@@ -1,7 +1,11 @@
 package com.akirahane.momentum.client.debug;
 
+import com.akirahane.momentum.client.MomentumClient;
+import com.akirahane.momentum.client.animation.MomentumAnimationController;
 import com.akirahane.momentum.core.context.PlayerMovementContext;
 import com.akirahane.momentum.init.InitAttachments;
+import com.zigythebird.playeranim.api.PlayerAnimationAccess;
+import com.zigythebird.playeranimcore.animation.AnimationController;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.debug.DebugScreenDisplayer;
 import net.minecraft.client.gui.components.debug.DebugScreenEntry;
@@ -12,6 +16,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.NotNull;
+import team.unnamed.mocha.MochaEngine;
 
 import javax.annotation.Nullable;
 
@@ -55,6 +60,13 @@ public class MovementDebugEntry implements DebugScreenEntry {
         displayer.addToGroup(group, String.format("[Momentum] JumpAcceleration: %.4f", jumpAcceleration));
         double safeFallDistance = player.getAttributeValue(Attributes.SAFE_FALL_DISTANCE);
         displayer.addToGroup(group, String.format("[Momentum] SafeFallDistance: %.4f", safeFallDistance));
-
+        MomentumAnimationController controller = (MomentumAnimationController) PlayerAnimationAccess.getPlayerAnimationLayer(
+                player, MomentumClient.MOVEMENT_ANIM
+        );
+        if (controller != null) {
+            MochaEngine<AnimationController> mocha = controller.getMolangRuntime();
+            // query.ground_speed
+            displayer.addToGroup(group, String.format("[Momentum] GroundSpeed: %.4f", mocha.eval("variable.movement_speed()")));
+        }
     }
 }

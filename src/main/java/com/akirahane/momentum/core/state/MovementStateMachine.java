@@ -27,8 +27,8 @@ public class MovementStateMachine {
     // 是否需要广播状态
     private boolean dirty = false;
 
-    public MovementStateMachine() {
-        this.context = new PlayerMovementContext();
+    public MovementStateMachine(Player player) {
+        this.context = new PlayerMovementContext(player);
         currentState = ORIGINAL.getState();
         LOGGER.debug("[MovementStateMachine] init");
     }
@@ -37,10 +37,10 @@ public class MovementStateMachine {
     // 客户端 加服务端, 状态转换、实施效果、计算移动和视觉效果
     public BaseState clientTick(Player player) {
         handleEffect();
-        BaseState next = currentState.evaluate((Player) player, context);
+        BaseState next = currentState.evaluate(player, context);
         boolean isTurn = transition(next, player);
         context.clientTick(player);
-        currentState.clientTick((Player) player, context);
+        currentState.clientTick(player, context);
         if (isTurn) {
             return next;
         }

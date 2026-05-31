@@ -16,26 +16,19 @@ public class MomentumUtils {
     protected static final Logger LOGGER = LogUtils.getLogger();
 
     // 客户端，状态切换时调用
-    public static void playStateAnimation(Player player, String animName) {
-        PlayerAnimationController controller = (PlayerAnimationController) PlayerAnimationAccess.getPlayerAnimationLayer(
-                player, MomentumClient.MOVEMENT_ANIM
-        );
-
+    public static void playStateAnimation(Player player, String animName, PlayerAnimationController controller) {
         if (controller != null) {
             controller.replaceAnimationWithFade(
                     AbstractFadeModifier.standardFadeIn(4, EasingType.EASE_IN_OUT_SINE),
                     Identifier.fromNamespaceAndPath(Momentum.MODID, animName)
             );
         } else {
-            LOGGER.warn("播放动画失败, 没有找到玩家: {} 的动画控制器", player.getName().getString());
+            LOGGER.warn("播放动画失败, 没有找到玩家: {} 的动画控制器或控制器死了", player.getName().getString());
         }
     }
 
     // 停止动画
-    public static void stopAnimation(Player player) {
-        PlayerAnimationController controller = (PlayerAnimationController) PlayerAnimationAccess.getPlayerAnimationLayer(
-                player, MomentumClient.MOVEMENT_ANIM
-        );
+    public static void stopAnimation(Player player, PlayerAnimationController controller) {
         // 停止动画（4tick 淡出）
         if (controller != null && controller.isActive()) {
             controller.stop();

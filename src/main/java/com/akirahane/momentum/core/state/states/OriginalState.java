@@ -31,7 +31,7 @@ public class OriginalState extends BaseState {
     public void onEnter(Player player, PlayerMovementContext context) {
         context.resetEffect();
         if (player.level().isClientSide()) {
-            stopAnimation((Player) player);
+            stopAnimation(player, context.getController());
         }
     }
 
