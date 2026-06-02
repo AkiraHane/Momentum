@@ -95,6 +95,9 @@ public class PlayerMovementContext {
     // 跳跃加速强度(同时吃速度属性和跳跃提升属性)
     private double jumpAcceleration = 0;
 
+    // 当前播放的动画名称
+    private String currentAnimationName = null;
+
 
     // 效果合计
     // 输入缓冲角标
@@ -180,6 +183,8 @@ public class PlayerMovementContext {
     private void bindVariables() {
         ObjectValue variables = (ObjectValue) this.mocha.scope().get("variable");
         variables.setFunction("movement_speed", (ctx, args) -> (float) speed.horizontalDistance());
+        ObjectValue math = (ObjectValue) this.mocha.scope().get("math");
+        math.setFunction("mod", (a, b) -> a % b);
     }
 
     public void resetEffect() {

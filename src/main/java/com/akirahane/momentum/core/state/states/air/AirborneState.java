@@ -59,6 +59,7 @@ public class AirborneState extends BaseState {
 
     @Override
     public void onEnter(Player player, PlayerMovementContext context) {
+        super.onEnter(player, context);
         context.getPendingEffectPool().get(MomentumEffectType.ACCELERATION).add(AIR_ACCELERATION);
         context.getPendingEffectPool().get(MomentumEffectType.LIMIT_ACCELERATION_SPEED).add(AIR_LIMIT_ACCELERATION);
     }

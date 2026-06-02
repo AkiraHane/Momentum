@@ -9,8 +9,6 @@ import com.akirahane.momentum.core.state.states.wall.WallRunState;
 import com.akirahane.momentum.core.state.states.water.SwimState;
 import net.minecraft.world.entity.player.Player;
 
-import static com.akirahane.momentum.core.MomentumUtils.playStateAnimation;
-
 public class WalkState extends BaseState {
     public static boolean canWalk(Player player, PlayerMovementContext context) {
         return player.onGround();
@@ -21,16 +19,11 @@ public class WalkState extends BaseState {
 
     @Override
     public void onEnter(Player player, PlayerMovementContext context) {
-        if (player.level().isClientSide()) {
-            playStateAnimation(player, "walk", context.getController());
-        }
+        super.onEnter(player, context);
     }
 
     @Override
     public void onExit(Player player, PlayerMovementContext context) {
-        if (player.level().isClientSide()) {
-            playStateAnimation(player, "idle", context.getController());
-        }
     }
 
     @Override

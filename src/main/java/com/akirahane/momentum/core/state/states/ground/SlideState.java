@@ -1,5 +1,6 @@
 package com.akirahane.momentum.core.state.states.ground;
 
+import com.akirahane.momentum.core.effect.MomentumEffect;
 import com.akirahane.momentum.core.effect.MomentumEffectType;
 import com.akirahane.momentum.core.state.StateType;
 import com.akirahane.momentum.core.state.BaseState;
@@ -8,14 +9,21 @@ import com.akirahane.momentum.core.state.states.air.AirborneState;
 import com.akirahane.momentum.core.state.states.special.DodgeState;
 import com.akirahane.momentum.mixin.LivingEntityAccessor;
 import com.akirahane.momentum.config.ServerConfig;
-import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.Pose;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
 
+import static com.akirahane.momentum.core.effect.MomentumEffect.EffectType.LOCAL_VALUE;
 import static com.akirahane.momentum.core.effect.MomentumEffectType.BLOCK_FRICTION;
 
 
 public class SlideState extends BaseState {
+    // 动画名称
+    protected String SLIDE = "slide";
+
+    // 跳跃减速窗口时间
+    protected int JUMP_DECELERATION_WINDOW = 5;
+
     public static boolean canSlide(Player player, PlayerMovementContext context) {
         return player.onGround() &&
                 context.isLowerCenter() &&
@@ -29,7 +37,7 @@ public class SlideState extends BaseState {
         player.setForcedPose(Pose.SWIMMING);
         context.setNoMoveInput(true);
         context.getPendingEffectPool().get(MomentumEffectType.FRICTION).add(context.SLIDE_FRICTION);
-        context.SLIDE_BLOCK_FRICTION.setDuration(4);
+        context.SLIDE_BLOCK_FRICTION.setDuration(JUMP_DECELERATION_WINDOW);
         context.getPendingEffectPool().get(BLOCK_FRICTION).add(
                 context.SLIDE_BLOCK_FRICTION
         );
@@ -47,9 +55,22 @@ public class SlideState extends BaseState {
             );
         }
         context.setSlideCooldown(ServerConfig.SLIDE_ACCELERATION_COOLDOWN.get());
+        playStateAnimation(player, SLIDE, context, 6);
     }
 
     public void onExit(Player player, PlayerMovementContext context) {
+        if (JUMP_DECELERATION_WINDOW >= (ServerConfig.SLIDE_ACCELERATION_COOLDOWN.get() - context.getSlideCooldown())) {
+            context.getPendingEffectPool().get(MomentumEffectType.FRICTION).remove(context.SLIDE_FRICTION);
+            context.getPendingEffectPool().get(BLOCK_FRICTION).remove(context.SLIDE_BLOCK_FRICTION);
+            context.getPendingEffectPool().get(MomentumEffectType.FRICTION).add(
+                    new MomentumEffect(
+                            new Vec3(0.1, 0, 0),
+                            Vec3.ZERO,
+                            LOCAL_VALUE,
+                            5
+                    )
+            );
+        }
         player.setForcedPose(null);
         context.setNoMoveInput(false);
         context.getPendingEffectPool().get(MomentumEffectType.FRICTION).remove(context.SLIDE_FRICTION);
