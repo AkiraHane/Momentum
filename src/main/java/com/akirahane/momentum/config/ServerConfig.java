@@ -44,13 +44,13 @@ public class ServerConfig {
 
     // ========== 机动配置 ==========
     public static final ModConfigSpec.DoubleValue MIN_SLIDE_SPEED = BUILDER
-            .comment("滑铲最低速度（米/秒）", "默认值: 2.0")
-            .defineInRange("minSlideSpeed", 2.0, 1.0, 100.0);
+            .comment("滑铲最低速度（米/秒）", "默认值: 4.0")
+            .defineInRange("minSlideSpeed", 4.0, 1.0, 100.0);
 
     // 滑铲加速冷却
     public static final ModConfigSpec.IntValue SLIDE_ACCELERATION_COOLDOWN = BUILDER
             .comment("滑铲加速冷却（tick）", "默认值: 40")
-            .defineInRange("slideAccelerationCooldown", 30, 0, 200);
+            .defineInRange("slideAccelerationCooldown", 40, 0, 200);
 
     // 空气阻力
     public static final ModConfigSpec.DoubleValue AIR_FRICTION = BUILDER

@@ -3,38 +3,39 @@ package com.akirahane.momentum.mixin;
 import com.akirahane.momentum.core.state.MovementStateMachine;
 import com.akirahane.momentum.core.state.StateType;
 import com.akirahane.momentum.init.InitAttachments;
-import com.llamalad7.mixinextras.sugar.Local;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.entity.player.AvatarRenderer;
 import net.minecraft.client.renderer.entity.state.AvatarRenderState;
+import net.minecraft.world.entity.Avatar;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.ModifyVariable;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(AvatarRenderer.class)
 public abstract class AvatarRendererMixin {
 
-    @ModifyVariable(
-            method = "setupRotations(Lnet/minecraft/client/renderer/entity/state/AvatarRenderState;Lcom/mojang/blaze3d/vertex/PoseStack;FF)V",
-            at = @At("STORE"),
-            name = "swimAmount")
-    private float setupRotations(float swimAmount, @Local(argsOnly = true, name = "state") AvatarRenderState state) {
-        if (Minecraft.getInstance().level == null) {
-            return swimAmount;
+    @Inject(method = "extractRenderState(Lnet/minecraft/world/entity/Avatar;Lnet/minecraft/client/renderer/entity/state/AvatarRenderState;F)V", at = @At("TAIL"))
+    public void momentum$modifyRenderState(Avatar entity, AvatarRenderState state, float partialTicks, CallbackInfo ci) {
+        Entity e;
+        if (Minecraft.getInstance().level != null) {
+            e = Minecraft.getInstance().level.getEntity(state.id);
+        } else {
+            return;
         }
-        Entity entity = Minecraft.getInstance().level.getEntity(state.id);
-        if (!(entity instanceof Player player)) {
-            return swimAmount;
-        }
+        if (!(e instanceof Player player)) return;
+
         MovementStateMachine stateMachine = player.getData(InitAttachments.MOVEMENT_STATE);
-        if (stateMachine.getCurrentState().getStateType().equals(StateType.ORIGINAL)) {
-            return swimAmount;
+        if (stateMachine.getCurrentState().getStateType().equals(StateType.SWIM)) {
+            return;
         }
-        if (stateMachine.getCurrentState().getStateType().equals(StateType.SLIDE)) {
-            return 0.0F;
+        if (stateMachine.getCurrentState().getStateType().equals(StateType.PRONE)) {
+            return;
         }
-        return swimAmount;
+        if (!stateMachine.getCurrentState().getStateType().equals(StateType.ORIGINAL)) {
+            state.swimAmount = 0.0F;
+        }
     }
 }
