@@ -147,6 +147,13 @@ public class PlayerMovementContext {
             MULTIPLIER,
             0
     );
+    // 滑铲加速
+    public MomentumEffect SLIDE_ACCELERATION = new MomentumEffect(
+            Vec3.ZERO,
+            Vec3.ZERO,
+            COMPOSE,
+            0
+    );
 
     public static MomentumEffect AIR_ACCELERATION = new MomentumEffect(
             new Vec3(0.06, 1, 0.06),
@@ -268,7 +275,6 @@ public class PlayerMovementContext {
     // 墙面数据判断
     public void detectWall(Player player) {
         AABB box = player.getBoundingBox();
-        @SuppressWarnings("resource")
         Level level = player.level();
         double reach = 0.05;
 
