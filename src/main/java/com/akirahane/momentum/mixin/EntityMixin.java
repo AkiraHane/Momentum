@@ -101,7 +101,6 @@ public abstract class EntityMixin {
         // 在stepdown为0.6时,如果当前的速度大于0.5小于1, 下楼梯会出现直接跳过中间小台阶
         // 所需步进为1的情况, 这种情况依旧会向下0.6, 但是由于没有到1所以在目标位置是空中,然后飞出去
         float maxDownStep = (float) (this.maxUpStep() + Math.ceil(Math.max(Math.abs(movement.x), Math.abs(movement.z))));
-        System.out.println("maxDownStep: " + maxDownStep);
         // 正常行走无法落地才考虑要不要下坡
         if (maxDownStep > 0.0F && (!onGroundAfterCollision) && this.onGround()) {
             List<VoxelShape> entityColliders = this.level.getEntityCollisions(

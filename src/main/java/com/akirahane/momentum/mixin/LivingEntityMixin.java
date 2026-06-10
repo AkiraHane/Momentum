@@ -181,7 +181,6 @@ public abstract class LivingEntityMixin extends Entity implements Attackable, Wa
             original.call(self, originalBoost);
             return;
         }
-        // TODO 完善公式, 添加连跳惩罚
         Vec3 current = self.getDeltaMovement();
         float angle = self.getYRot() * ((float) Math.PI / 180F);
         Vec3 acceleration = new Vec3(

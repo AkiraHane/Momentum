@@ -85,6 +85,8 @@ public class MovementDebugEntry implements DebugScreenEntry {
             displayer.addToGroup(group, String.format("[Momentum] HeadYRotation - BodyYRotation: %.4f", mocha.eval("math.mod(query.head_y_rotation - query.body_y_rotation, 360)")));
             boolean isJumping = player.isJumping();
             displayer.addToGroup(group, String.format("[Momentum] IsJumping: %s", isJumping));
+            // player.isSprinting()
+            displayer.addToGroup(group, String.format("[Momentum] IsSprinting: %s", player.isSprinting()));
         }
     }
 }

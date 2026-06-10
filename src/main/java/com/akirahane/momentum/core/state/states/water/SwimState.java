@@ -12,10 +12,9 @@ import net.minecraft.world.entity.player.Player;
 public class SwimState extends BaseState {
 
     public static boolean canSwim(Player player, PlayerMovementContext context) {
-        return context.isLowerCenter() &&
+        return (context.isLowerCenter() || player.isSprinting()) &&
                 player.isInWater() &&
-                Minecraft.getInstance().options.keyUp.isDown() &&
-                player.getXRot() > 0;
+                Minecraft.getInstance().options.keyUp.isDown();
     }
 
     public void onEnter(Player player, PlayerMovementContext context) {
