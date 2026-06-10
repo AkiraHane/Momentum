@@ -5,9 +5,7 @@ import com.akirahane.momentum.core.state.StateType;
 import com.akirahane.momentum.init.InitAttachments;
 import com.llamalad7.mixinextras.sugar.Local;
 import it.unimi.dsi.fastutil.doubles.DoubleList;
-import it.unimi.dsi.fastutil.floats.FloatArraySet;
-import it.unimi.dsi.fastutil.floats.FloatArrays;
-import it.unimi.dsi.fastutil.floats.FloatSet;
+import it.unimi.dsi.fastutil.floats.*;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.entity.Entity;
@@ -32,7 +30,7 @@ import java.util.List;
 import static com.akirahane.momentum.core.MomentumUtils.setSlideAcceleration;
 
 @Mixin(Entity.class)
-public abstract class EntityMixin{
+public abstract class EntityMixin {
 
     @Shadow
     private Level level;
@@ -73,7 +71,10 @@ public abstract class EntityMixin{
         if (!(self instanceof Player player)) {
             return;
         }
-        if (!player.level().isClientSide()){
+        if (!player.level().isClientSide()) {
+            return;
+        }
+        if (player.isInLiquid()) {
             return;
         }
         MovementStateMachine stateMachine = player.getData(InitAttachments.MOVEMENT_STATE);
@@ -118,7 +119,7 @@ public abstract class EntityMixin{
             // 获取所有碰撞
             List<VoxelShape> colliders = collectColliders(self, this.level, entityColliders, stepDownAABB);
             float stepHeightToSkip = (float) movementStep.y;
-            float[] candidateStepDownHeights = momentum$collectCandidateStepDownHeights(aabb, colliders, -maxDownStep, stepHeightToSkip);
+            float[] candidateStepDownHeights = momentum$collectCandidateStepDownHeights(aabb, colliders, -maxDownStep, stepHeightToSkip, this.maxUpStep());
 
             for (float candidateStepDHeight : candidateStepDownHeights) {
                 Vec3 stepFromGround = collideWithShapes(new Vec3(movement.x, candidateStepDHeight, movement.z), aabb, colliders);
@@ -136,7 +137,10 @@ public abstract class EntityMixin{
     }
 
     @Unique
-    private static float[] momentum$collectCandidateStepDownHeights(AABB boundingBox, List<VoxelShape> colliders, float maxStepHeight, float stepHeightToSkip) {
+    private static float[] momentum$collectCandidateStepDownHeights(
+            AABB boundingBox, List<VoxelShape> colliders, float maxStepHeight, float stepHeightToSkip,
+            float original_StepHeight
+    ) {
         FloatSet candidates = new FloatArraySet(4);
 
         for (VoxelShape collider : colliders) {
@@ -155,7 +159,21 @@ public abstract class EntityMixin{
 
         float[] sortedCandidates = candidates.toFloatArray();
         FloatArrays.unstableSort(sortedCandidates);
-        return sortedCandidates;
+        FloatList filtered = new FloatArrayList();
+        float lastHeight = 0.0F;
+
+        for (int i = sortedCandidates.length - 1; i >= 0; i--) {
+            float current = sortedCandidates[i];
+            if (Math.abs(current - lastHeight) <= original_StepHeight) {
+                filtered.add(current);
+                lastHeight = current;
+            } else {
+                break; // 超过单次限制，后面更低的都舍弃
+            }
+        }
+        float[] result = filtered.toFloatArray();
+        FloatArrays.unstableSort(result);
+        return result;
     }
 
     // 计算坡面单位
