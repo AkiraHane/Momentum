@@ -3,6 +3,7 @@ package com.akirahane.momentum.mixin;
 import com.akirahane.momentum.core.state.MovementStateMachine;
 import com.akirahane.momentum.core.state.StateType;
 import com.akirahane.momentum.init.InitAttachments;
+import com.google.common.collect.ImmutableList;
 import com.llamalad7.mixinextras.sugar.Local;
 import it.unimi.dsi.fastutil.doubles.DoubleList;
 import it.unimi.dsi.fastutil.floats.*;
@@ -10,13 +11,14 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
+import org.jetbrains.annotations.NotNull;
 import org.jspecify.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -46,11 +48,6 @@ public abstract class EntityMixin {
     @Shadow
     public abstract boolean onGround();
 
-    @Shadow
-    private static Vec3 collideWithShapes(Vec3 movement, AABB boundingBox, List<VoxelShape> shapes) {
-        throw new UnsupportedOperationException("Implemented via mixin");
-    }
-
     protected EntityMixin(EntityType<?> type, Level level) {
     }
 
@@ -64,8 +61,8 @@ public abstract class EntityMixin {
             Vec3 movement,
             CallbackInfoReturnable<Vec3> cir,
             @Local(name = "aabb") AABB aabb,
-            @Local(name = "movementStep") Vec3 movementStep,
-            @Local(name = "onGroundAfterCollision") boolean onGroundAfterCollision
+            @Local(name = "entityColliders") List<VoxelShape> entityColliders,
+            @Local(name = "movementStep") Vec3 movementStep
     ) {
         Entity self = (Entity) (Object) this;
         if (!(self instanceof Player player)) {
@@ -88,14 +85,25 @@ public abstract class EntityMixin {
             setSlideAcceleration(movement, cir.getReturnValue().y, stateMachine);
             return;
         }
-        // 上升时不需要下坡
-        if (movement.y >= 0) {
+
+        movementStep = movement.lengthSqr() == (double)0.0F ? movement : momentum$collideBoundingBoxDown(
+                self, movement, aabb, player.level(), entityColliders
+        );
+
+        // 上升或平地时不需要下坡
+        if (movementStep.y >= 0) {
             return;
         }
-        // 下落速度超过重力则不下坡
-        if (movement.y < -player.getAttributeValue(Attributes.GRAVITY)) {
-            return;
-        }
+//        // 下落速度超过重力则不下坡
+//        if (movement.y < -player.getAttributeValue(Attributes.GRAVITY)) {
+//            return;
+//        }
+        boolean yCollision = movement.y != movementStep.y;
+        boolean onGroundAfterCollision = yCollision && movement.y < (double)0.0F;
+
+//        if (movement.horizontalDistance() > 5) {
+//            System.out.println("test");
+//        }
 
         // 步进加速度特殊处理, 原因如下
         // 在stepdown为0.6时,如果当前的速度大于0.5小于1, 下楼梯会出现直接跳过中间小台阶
@@ -103,7 +111,7 @@ public abstract class EntityMixin {
         float maxDownStep = (float) (this.maxUpStep() + Math.ceil(Math.max(Math.abs(movement.x), Math.abs(movement.z))));
         // 正常行走无法落地才考虑要不要下坡
         if (maxDownStep > 0.0F && (!onGroundAfterCollision) && this.onGround()) {
-            List<VoxelShape> entityColliders = this.level.getEntityCollisions(
+            entityColliders = this.level.getEntityCollisions(
                     self,
                     aabb.expandTowards(movement.subtract(0, maxDownStep, 0))
             );
@@ -121,7 +129,7 @@ public abstract class EntityMixin {
             float[] candidateStepDownHeights = momentum$collectCandidateStepDownHeights(aabb, colliders, -maxDownStep, stepHeightToSkip, this.maxUpStep());
 
             for (float candidateStepDHeight : candidateStepDownHeights) {
-                Vec3 stepFromGround = collideWithShapes(new Vec3(movement.x, candidateStepDHeight, movement.z), aabb, colliders);
+                Vec3 stepFromGround = momentum$collideWithShapesDown(new Vec3(movement.x, candidateStepDHeight, movement.z), aabb, colliders);
                 if (stepFromGround.horizontalDistanceSqr() > 0) {
                     cir.setReturnValue(stepFromGround);
                     if (!stateMachine.getCurrentState().getStateType().equals(StateType.SLIDE)) {
@@ -240,5 +248,42 @@ public abstract class EntityMixin {
         BlockPos check = feet.offset(dx, 0, dz);
         // 同层有实心碰撞 = 那边比脚底高
         return !level.getBlockState(check).getCollisionShape(level, check).isEmpty();
+    }
+
+    @Unique
+    private static final ImmutableList<Direction.@NotNull Axis> XZY_AXIS_ORDER = ImmutableList.of(Direction.Axis.X, Direction.Axis.Z, Direction.Axis.Y);
+
+    @Unique
+    private static final ImmutableList<Direction.@NotNull Axis> ZXY_AXIS_ORDER = ImmutableList.of(Direction.Axis.Z, Direction.Axis.X, Direction.Axis.Y);
+
+    @Unique
+    private static Vec3 momentum$collideBoundingBoxDown(@Nullable Entity source, Vec3 movement, AABB boundingBox, Level level, List<VoxelShape> entityColliders) {
+        List<VoxelShape> colliders = collectColliders(source, level, entityColliders, boundingBox.expandTowards(movement));
+        return momentum$collideWithShapesDown(movement, boundingBox, colliders);
+    }
+
+
+    @Unique
+    private static Vec3 momentum$collideWithShapesDown(Vec3 movement, AABB boundingBox, List<VoxelShape> shapes) {
+        if (shapes.isEmpty()) {
+            return movement;
+        } else {
+            Vec3 resolvedMovement = Vec3.ZERO;
+
+            for (Direction.Axis axis : momentum$axisStepOrderDown(movement)) {
+                double axisMovement = movement.get(axis);
+                if (axisMovement != (double) 0.0F) {
+                    double collision = Shapes.collide(axis, boundingBox.move(resolvedMovement), shapes, axisMovement);
+                    resolvedMovement = resolvedMovement.with(axis, collision);
+                }
+            }
+
+            return resolvedMovement;
+        }
+    }
+
+    @Unique
+    private static ImmutableList<Direction.@NotNull Axis> momentum$axisStepOrderDown(Vec3 movement) {
+        return Math.abs(movement.x) < Math.abs(movement.z) ? XZY_AXIS_ORDER : ZXY_AXIS_ORDER;
     }
 }

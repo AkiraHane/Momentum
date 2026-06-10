@@ -26,6 +26,7 @@ import team.unnamed.mocha.runtime.value.ObjectValue;
 
 import java.util.*;
 
+import static com.akirahane.momentum.core.MomentumUtils.applyBoosterAttributes;
 import static com.akirahane.momentum.core.effect.MomentumEffect.EffectType.*;
 
 @Getter
@@ -209,7 +210,11 @@ public class PlayerMovementContext {
         if (this.breakFallTimer > 0) this.breakFallTimer--;
         if (this.dodgeTimer > 0) this.dodgeTimer--;
         if (this.jumpCooldown > 0) this.jumpCooldown--;
-        this.hasJetBooster = checkBoosterEquipped(player);
+        boolean newHasJetBooster = checkBoosterEquipped(player);
+        if (newHasJetBooster != this.hasJetBooster) {
+            this.hasJetBooster = newHasJetBooster;
+            applyBoosterAttributes(player, newHasJetBooster);
+        }
         this.canMomentum = checkMomentum(this.hasJetBooster);
         if (player.fallDistance > 0) this.lastFallDistance = player.fallDistance;
     }

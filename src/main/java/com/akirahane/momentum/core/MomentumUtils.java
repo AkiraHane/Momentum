@@ -1,8 +1,14 @@
 package com.akirahane.momentum.core;
 
+import com.akirahane.momentum.Momentum;
 import com.akirahane.momentum.core.state.MovementStateMachine;
 import com.akirahane.momentum.core.state.StateType;
 import com.mojang.logging.LogUtils;
+import net.minecraft.resources.Identifier;
+import net.minecraft.world.entity.ai.attributes.AttributeInstance;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
 import org.slf4j.Logger;
 
@@ -11,6 +17,10 @@ import static com.akirahane.momentum.core.effect.MomentumEffectType.ACCELERATION
 public class MomentumUtils {
     // 日志
     protected static final Logger LOGGER = LogUtils.getLogger();
+
+    private static final Identifier BOOSTER_SPEED_ID = Identifier.fromNamespaceAndPath(Momentum.MODID, "booster_speed");
+    private static final Identifier BOOSTER_JUMP_ID = Identifier.fromNamespaceAndPath(Momentum.MODID, "booster_jump");
+
 
     // 滑行上下坡加速和减速
     public static void setSlideAcceleration(Vec3 movement, double movementStepY, MovementStateMachine stateMachine) {
@@ -69,6 +79,20 @@ public class MomentumUtils {
                     stateMachine.getContext().SLIDE_ACCELERATION
             );
 
+        }
+    }
+
+    public static void applyBoosterAttributes(Player player, boolean apply) {
+        AttributeInstance speed = player.getAttribute(Attributes.MOVEMENT_SPEED);
+        AttributeInstance jump = player.getAttribute(Attributes.JUMP_STRENGTH);
+        if (speed == null || jump == null) return;
+
+        speed.removeModifier(BOOSTER_SPEED_ID);
+        jump.removeModifier(BOOSTER_JUMP_ID);
+
+        if (apply) {
+            speed.addOrReplacePermanentModifier(new AttributeModifier(BOOSTER_SPEED_ID, 0.04, AttributeModifier.Operation.ADD_VALUE));
+            jump.addOrReplacePermanentModifier(new AttributeModifier(BOOSTER_JUMP_ID, 0.2, AttributeModifier.Operation.ADD_VALUE));
         }
     }
 
