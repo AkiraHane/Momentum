@@ -14,9 +14,6 @@ public class WalkState extends BaseState {
         return player.onGround();
     }
 
-    // TODO 掉落移速惩罚
-    // TODO 地面状态处于水中时, 根据水面占比碰撞箱调整减速
-
     @Override
     public void onEnter(Player player, PlayerMovementContext context) {
         super.onEnter(player, context);

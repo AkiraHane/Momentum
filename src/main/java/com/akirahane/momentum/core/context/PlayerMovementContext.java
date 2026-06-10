@@ -94,6 +94,8 @@ public class PlayerMovementContext {
     private double jumpLimitSpeed = 0;
     // 跳跃加速强度(同时吃速度属性和跳跃提升属性)
     private double jumpAcceleration = 0;
+    // 连跳阻止加速持续时间
+    private int jumpCooldown = 0;
 
     // 当前播放的动画名称
     private String currentAnimationName = null;
@@ -206,6 +208,7 @@ public class PlayerMovementContext {
         if (this.slideCooldown > 0) this.slideCooldown--;
         if (this.breakFallTimer > 0) this.breakFallTimer--;
         if (this.dodgeTimer > 0) this.dodgeTimer--;
+        if (this.jumpCooldown > 0) this.jumpCooldown--;
         this.hasJetBooster = checkBoosterEquipped(player);
         this.canMomentum = checkMomentum(this.hasJetBooster);
         if (player.fallDistance > 0) this.lastFallDistance = player.fallDistance;
@@ -221,7 +224,7 @@ public class PlayerMovementContext {
         double moveSpeed = player.getAttributeValue(Attributes.MOVEMENT_SPEED);
         double jumpStrength = player.getJumpBoostPower();
         this.jumpLimitSpeed = moveSpeed * (1 + jumpStrength) * 100;
-        this.jumpAcceleration = moveSpeed * (1 + jumpStrength) * 1.2;
+        this.jumpAcceleration = jumpCooldown > 0 ? 0 : moveSpeed * (1 + jumpStrength) * 1.2;
         this.setWorldInputVec(player);
         this.detectWall(player);
     }
