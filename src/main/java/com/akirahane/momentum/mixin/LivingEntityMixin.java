@@ -6,6 +6,7 @@ import com.akirahane.momentum.core.state.StateType;
 import com.akirahane.momentum.init.InitAttachments;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
+import net.minecraft.tags.FluidTags;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Attackable;
 import net.minecraft.world.entity.Entity;
@@ -32,6 +33,24 @@ public abstract class LivingEntityMixin extends Entity implements Attackable, Wa
 
     protected LivingEntityMixin(EntityType<?> type, Level level) {
         super(type, level);
+    }
+
+    @ModifyVariable(method = "travelInWater", at = @At(value = "STORE", ordinal = 0), name = "waterWalker")
+    private float momentum$adjustWaterWalker(float original) {
+        LivingEntity self = (LivingEntity) (Object) this;
+        if (!(self instanceof Player player)) {
+            return original;
+        }
+        MovementStateMachine stateMachine = player.getData(InitAttachments.MOVEMENT_STATE);
+        if (stateMachine.getCurrentState().getStateType() == StateType.ORIGINAL) {
+            return original;
+        }
+
+        double submergedRatio = Math.min(1.0, self.getFluidHeight(FluidTags.WATER) / self.getBbHeight());
+        // 没入越少 → waterWalker 越接近 1（陆地表现）
+        float airRatio = (float) (1.0 - submergedRatio);
+
+        return Math.max(original, airRatio);
     }
 
     @ModifyVariable(
