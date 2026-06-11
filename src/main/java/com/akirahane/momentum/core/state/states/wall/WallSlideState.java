@@ -3,10 +3,15 @@ package com.akirahane.momentum.core.state.states.wall;
 import com.akirahane.momentum.core.context.PlayerMovementContext;
 import com.akirahane.momentum.core.state.StateType;
 import com.akirahane.momentum.core.state.BaseState;
-import com.akirahane.momentum.core.state.states.air.AirborneState;
-import com.akirahane.momentum.core.state.states.ground.WalkState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.entity.player.Player;
+
+import static com.akirahane.momentum.core.state.states.OriginalState.canOriginal;
+import static com.akirahane.momentum.core.state.states.air.AirborneState.canAirborne;
+import static com.akirahane.momentum.core.state.states.ground.WalkState.canWalk;
+import static com.akirahane.momentum.core.state.states.wall.WallClimbState.canWallClimb;
+import static com.akirahane.momentum.core.state.states.wall.WallHangState.canWallHang;
+import static com.akirahane.momentum.core.state.states.wall.WallRunState.canWallRun;
 
 public class WallSlideState extends BaseState {
 
@@ -20,26 +25,25 @@ public class WallSlideState extends BaseState {
 
     @Override
     public BaseState evaluate(Player player, PlayerMovementContext context) {
-        BaseState baseEvaluate = super.evaluate(player, context);
-        if (baseEvaluate != null) {
-            return baseEvaluate;
+        if (canOriginal(player, context)) {
+            return StateType.ORIGINAL.getState();
         }
-        if (WallHangState.canWallHang(player, context)) {
+        if (canWallHang(player, context)) {
             return StateType.WALL_HANG.getState();
         }
-        if (WallRunState.canWallRun(player, context)) {
+        if (canWallRun(player, context)) {
             return StateType.WALL_RUN.getState();
         }
-        if (WallClimbState.canWallClimb(player, context)) {
+        if (canWallClimb(player, context)) {
             return StateType.WALL_CLIMB.getState();
         }
-        if (WallSlideState.canWallSlide(player, context)) {
+        if (canWallSlide(player, context)) {
             return StateType.WALL_SLIDE.getState();
         }
-        if (AirborneState.canAirborne(player, context)) {
+        if (canAirborne(player, context)) {
             return StateType.AIRBORNE.getState();
         }
-        if (WalkState.canWalk(player, context)) {
+        if (canWalk(player, context)) {
             return StateType.WALK.getState();
         }
         return StateType.WALL_SLIDE.getState();

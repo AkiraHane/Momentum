@@ -8,6 +8,8 @@ import com.akirahane.momentum.core.state.states.ground.WalkState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.entity.player.Player;
 
+import static com.akirahane.momentum.core.state.states.OriginalState.canOriginal;
+
 public class WallHangState extends BaseState {
 
     public static boolean canWallHang(Player player, PlayerMovementContext context) {
@@ -18,9 +20,8 @@ public class WallHangState extends BaseState {
 
     @Override
     public BaseState evaluate(Player player, PlayerMovementContext context) {
-        BaseState baseEvaluate = super.evaluate(player, context);
-        if (baseEvaluate != null) {
-            return baseEvaluate;
+        if (canOriginal(player, context)) {
+            return StateType.ORIGINAL.getState();
         }
         if (WallRunState.canWallRun(player, context)) {
             return StateType.WALL_RUN.getState();

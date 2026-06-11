@@ -15,6 +15,7 @@ import net.minecraft.world.phys.Vec3;
 
 import static com.akirahane.momentum.core.effect.MomentumEffect.EffectType.LOCAL_VALUE;
 import static com.akirahane.momentum.core.effect.MomentumEffectType.BLOCK_FRICTION;
+import static com.akirahane.momentum.core.state.states.OriginalState.canOriginal;
 
 
 public class SlideState extends BaseState {
@@ -28,8 +29,12 @@ public class SlideState extends BaseState {
         return player.onGround() &&
                 context.isLowerCenter() &&
                 player.isSprinting() &&
-                context.getSpeed().horizontalDistance() * 20 > ServerConfig.MIN_SLIDE_SPEED.get() &&
-                context.getOldSpeed().horizontalDistance() > -context.getOldSpeed().y;
+                canSlideSpeedCheck(player, context);
+    }
+
+    public static boolean canSlideSpeedCheck(Player player, PlayerMovementContext context) {
+        return context.getSpeed().horizontalDistance() * 20 > ServerConfig.MIN_SLIDE_SPEED.get() &&
+                context.getOldSpeed().horizontalDistance() >= -context.getOldSpeed().y * 2;
     }
 
     @Override
@@ -82,9 +87,8 @@ public class SlideState extends BaseState {
 
     @Override
     public BaseState evaluate(Player player, PlayerMovementContext context) {
-        BaseState baseEvaluate = super.evaluate(player, context);
-        if (baseEvaluate != null) {
-            return baseEvaluate;
+        if (canOriginal(player, context)) {
+            return StateType.ORIGINAL.getState();
         }
         if (DodgeState.canDodge(player, context)) {
             return StateType.DODGE.getState();

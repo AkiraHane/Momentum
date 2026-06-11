@@ -7,12 +7,11 @@ import com.akirahane.momentum.core.state.states.air.AirborneState;
 import com.akirahane.momentum.core.state.states.ground.WalkState;
 import net.minecraft.world.entity.player.Player;
 
+import static com.akirahane.momentum.core.state.states.OriginalState.canOriginal;
+
 public class BreakFallState extends BaseState {
     public static boolean canBreakFall(Player player, PlayerMovementContext context) {
-        return player.onGround() &&
-                !player.isInLiquid() &&
-                context.isLowerCenter() &&
-                context.getLastFallDistance() > 2;
+        return context.isToBreakFallState();
     }
 
     @Override
@@ -28,9 +27,8 @@ public class BreakFallState extends BaseState {
 
     @Override
     public BaseState evaluate(Player player, PlayerMovementContext context) {
-        BaseState baseEvaluate = super.evaluate(player, context);
-        if (baseEvaluate != null) {
-            return baseEvaluate;
+        if (canOriginal(player, context)) {
+            return StateType.ORIGINAL.getState();
         }
         if (AirborneState.canAirborne(player, context)) {
             return StateType.AIRBORNE.getState();
@@ -38,7 +36,7 @@ public class BreakFallState extends BaseState {
         if (context.getBreakFallTimer() > 0) {
             return StateType.BREAK_FALL.getState();
         }
-        if (WalkState.canWalk(player, context)){
+        if (WalkState.canWalk(player, context)) {
             return StateType.WALK.getState();
         }
         return StateType.BREAK_FALL.getState();

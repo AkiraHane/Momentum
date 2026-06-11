@@ -6,6 +6,7 @@ import com.akirahane.momentum.core.state.BaseState;
 import net.minecraft.world.entity.player.Player;
 
 import static com.akirahane.momentum.core.context.PlayerMovementContext.JUMP;
+import static com.akirahane.momentum.core.state.states.OriginalState.canOriginal;
 
 public class VaultState extends BaseState {
 
@@ -20,9 +21,8 @@ public class VaultState extends BaseState {
 
     @Override
     public BaseState evaluate(Player player, PlayerMovementContext context) {
-        BaseState baseEvaluate = super.evaluate(player, context);
-        if (baseEvaluate != null) {
-            return baseEvaluate;
+        if (canOriginal(player, context)) {
+            return StateType.ORIGINAL.getState();
         }
         if (context.getVaultTimer() <= 0) {
             return StateType.WALL_CLIMB.getState();

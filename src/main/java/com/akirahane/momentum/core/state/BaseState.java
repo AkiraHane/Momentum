@@ -2,6 +2,7 @@ package com.akirahane.momentum.core.state;
 
 import com.akirahane.momentum.Momentum;
 import com.akirahane.momentum.core.context.PlayerMovementContext;
+import com.akirahane.momentum.core.state.states.special.DodgeState;
 import com.akirahane.momentum.init.InitAttachments;
 import com.mojang.logging.LogUtils;
 import com.zigythebird.playeranimcore.animation.layered.modifier.AbstractFadeModifier;
@@ -10,6 +11,8 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.player.Player;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
+
+import static com.akirahane.momentum.core.state.states.OriginalState.canOriginal;
 
 public abstract class BaseState {
     // 日志
@@ -38,21 +41,7 @@ public abstract class BaseState {
     }
 
     // 状态转换检查
-    public BaseState evaluate(Player player, PlayerMovementContext context) {
-        if (!(player.getData(InitAttachments.MOMENTUM_ENABLED) && context.isCanMomentum())
-                || player.getAbilities().flying    // 飞行
-                || player.isFallFlying()           // 鞘翅
-                || player.isPassenger()            // 骑乘
-                || player.onClimbable()            // 爬梯子
-                || player.isSleeping()             // 睡觉
-                || player.isSpectator()            // 旁观者
-                || player.isAutoSpinAttack()       // 旋转攻击(三叉戟)
-                || player.isDeadOrDying()          // 死亡
-        ) {
-            return StateType.ORIGINAL.getState();
-        }
-        return null;
-    }
+    public abstract BaseState evaluate(Player player, PlayerMovementContext context);
 
     public abstract StateType getStateType();
 

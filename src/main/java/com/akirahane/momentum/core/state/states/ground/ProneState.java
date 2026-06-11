@@ -8,6 +8,8 @@ import com.akirahane.momentum.core.state.states.special.DodgeState;
 import net.minecraft.world.entity.Pose;
 import net.minecraft.world.entity.player.Player;
 
+import static com.akirahane.momentum.core.state.states.OriginalState.canOriginal;
+
 
 public class ProneState extends BaseState {
     public static boolean canProne(Player player, PlayerMovementContext context) {
@@ -16,9 +18,8 @@ public class ProneState extends BaseState {
 
     @Override
     public BaseState evaluate(Player player, PlayerMovementContext context) {
-        BaseState baseEvaluate = super.evaluate(player, context);
-        if (baseEvaluate != null) {
-            return baseEvaluate;
+        if (canOriginal(player, context)) {
+            return StateType.ORIGINAL.getState();
         }
         if (DodgeState.canDodge(player, context)) {
             return StateType.DODGE.getState();

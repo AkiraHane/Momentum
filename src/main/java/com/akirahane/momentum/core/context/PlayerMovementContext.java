@@ -125,6 +125,8 @@ public class PlayerMovementContext {
     private int dodgeTimer = 0;
     // 翻越计时器
     private int vaultTimer = 0;
+    // 受身计数器
+    private int breakFallReadyCount = -1;
 
     // 状态中进行变动的数值
     // 滞空计时器
@@ -212,6 +214,7 @@ public class PlayerMovementContext {
         if (this.breakFallTimer > 0) this.breakFallTimer--;
         if (this.dodgeTimer > 0) this.dodgeTimer--;
         if (this.jumpCooldown > 0) this.jumpCooldown--;
+        if (this.breakFallReadyCount > 0) this.breakFallReadyCount--;
         boolean newHasJetBooster = checkBoosterEquipped(player);
         if (newHasJetBooster != this.hasJetBooster) {
             this.hasJetBooster = newHasJetBooster;

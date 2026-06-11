@@ -9,6 +9,10 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.player.Player;
 
+import static com.akirahane.momentum.core.state.states.OriginalState.canOriginal;
+import static com.akirahane.momentum.core.state.states.air.AirborneState.canAirborne;
+import static com.akirahane.momentum.core.state.states.ground.WalkState.canWalk;
+
 public class SwimState extends BaseState {
 
     public static boolean canSwim(Player player, PlayerMovementContext context) {
@@ -30,17 +34,16 @@ public class SwimState extends BaseState {
 
     @Override
     public BaseState evaluate(Player player, PlayerMovementContext context) {
-        BaseState baseEvaluate = super.evaluate(player, context);
-        if (baseEvaluate != null) {
-            return baseEvaluate;
+        if (canOriginal(player, context)) {
+            return StateType.ORIGINAL.getState();
         }
         if (player.isSwimming()) {
             return StateType.SWIM.getState();
         }
-        if (AirborneState.canAirborne(player, context)) {
+        if (canAirborne(player, context)) {
             return StateType.AIRBORNE.getState();
         }
-        if (WalkState.canWalk(player, context)) {
+        if (canWalk(player, context)) {
             return StateType.WALK.getState();
         }
         return StateType.SWIM.getState();

@@ -10,6 +10,7 @@ import com.akirahane.momentum.network.SyncMomentumEnabledPacket;
 import com.mojang.logging.LogUtils;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.player.Player;
 import net.neoforged.bus.api.EventPriority;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -17,6 +18,7 @@ import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.config.ModConfig;
+import net.neoforged.neoforge.event.entity.living.LivingFallEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.neoforge.event.tick.PlayerTickEvent;
 import net.neoforged.neoforge.event.tick.ServerTickEvent;
@@ -70,5 +72,29 @@ public class Momentum {
                 stateMachine.setDirty(false);
             }
         }
+    }
+
+    @SubscribeEvent
+    public static void onLivingFall(LivingFallEvent event) {
+        if (!(event.getEntity() instanceof Player player)) return;
+
+        MovementStateMachine stateMachine = player.getData(InitAttachments.MOVEMENT_STATE);
+        float distance = (float) event.getDistance();
+        float multiplier = event.getDamageMultiplier();
+
+        if (conditionA(player, stateMachine)) {
+            distance -= 6;
+            multiplier *= 0.7F;
+        } else if (conditionB(player, stateMachine)) {
+            distance -= 3;
+            multiplier *= 0.4F;
+        }
+
+        if (conditionC(player, stateMachine)) {
+            multiplier *= 0.8F;
+        }
+
+        event.setDistance(Math.max(0, distance));
+        event.setDamageMultiplier(multiplier);
     }
 }

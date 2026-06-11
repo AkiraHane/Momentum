@@ -7,6 +7,8 @@ import com.akirahane.momentum.core.state.states.air.AirborneState;
 import com.akirahane.momentum.core.state.states.ground.WalkState;
 import net.minecraft.world.entity.player.Player;
 
+import static com.akirahane.momentum.core.state.states.OriginalState.canOriginal;
+
 public class WallClimbState extends BaseState {
     public static boolean canWallClimb(Player player, PlayerMovementContext context) {
         return player.onClimbable() || (
@@ -20,9 +22,8 @@ public class WallClimbState extends BaseState {
 
     @Override
     public BaseState evaluate(Player player, PlayerMovementContext context) {
-        BaseState baseEvaluate = super.evaluate(player, context);
-        if (baseEvaluate != null) {
-            return baseEvaluate;
+        if (canOriginal(player, context)) {
+            return StateType.ORIGINAL.getState();
         }
         if (WallHangState.canWallHang(player, context)) {
             return StateType.WALL_HANG.getState();

@@ -16,6 +16,9 @@ import net.minecraft.world.entity.player.Player;
 import static com.akirahane.momentum.core.MomentumUtils.isDivingEdge;
 import static com.akirahane.momentum.core.context.PlayerMovementContext.AIR_ACCELERATION;
 import static com.akirahane.momentum.core.context.PlayerMovementContext.AIR_LIMIT_ACCELERATION;
+import static com.akirahane.momentum.core.state.states.OriginalState.canOriginal;
+import static com.akirahane.momentum.core.state.states.air.BreakFallReadyState.canBreakFallReady;
+import static com.akirahane.momentum.core.state.states.ground.WalkState.canWalk;
 
 public class AirborneState extends BaseState {
     public static boolean canAirborne(Player player, PlayerMovementContext context) {
@@ -24,9 +27,8 @@ public class AirborneState extends BaseState {
 
     @Override
     public BaseState evaluate(Player player, PlayerMovementContext context) {
-        BaseState baseEvaluate = super.evaluate(player, context);
-        if (baseEvaluate != null) {
-            return baseEvaluate;
+        if (canOriginal(player, context)) {
+            return StateType.ORIGINAL.getState();
         }
         if (DodgeState.canDodge(player, context)) {
             return StateType.DODGE.getState();
@@ -43,16 +45,10 @@ public class AirborneState extends BaseState {
         if (SwimState.canSwim(player, context)) {
             return StateType.SWIM.getState();
         }
-        if (SlideState.canSlide(player, context)) {
-            return StateType.SLIDE.getState();
+        if (canBreakFallReady(player, context)) {
+            return StateType.BREAK_FALL_READY.getState();
         }
-        if (BreakFallState.canBreakFall(player, context)) {
-            return StateType.BREAK_FALL.getState();
-        }
-//        if (player.onGround() && context.isLowerCenter()) {
-//            return StateType.PRONE.getState();
-//        }
-        if (player.onGround() && !context.isLowerCenter()) {
+        if (canWalk(player, context)) {
             return StateType.WALK.getState();
         }
         return StateType.AIRBORNE.getState();
@@ -75,6 +71,7 @@ public class AirborneState extends BaseState {
     public void onExit(Player player, PlayerMovementContext context) {
         context.getPendingEffectPool().get(MomentumEffectType.ACCELERATION).remove(AIR_ACCELERATION);
         context.getPendingEffectPool().get(MomentumEffectType.LIMIT_ACCELERATION_SPEED).remove(AIR_LIMIT_ACCELERATION);
+        context.setToBreakFallState(false);
     }
 
     @Override

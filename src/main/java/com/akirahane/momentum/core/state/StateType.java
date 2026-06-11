@@ -2,6 +2,7 @@ package com.akirahane.momentum.core.state;
 
 import com.akirahane.momentum.core.state.states.OriginalState;
 import com.akirahane.momentum.core.state.states.air.AirborneState;
+import com.akirahane.momentum.core.state.states.air.BreakFallReadyState;
 import com.akirahane.momentum.core.state.states.ground.ProneState;
 import com.akirahane.momentum.core.state.states.ground.SlideState;
 import com.akirahane.momentum.core.state.states.ground.WalkState;
@@ -21,6 +22,7 @@ public enum StateType {
     PRONE(new ProneState()),
     SLIDE(new SlideState()),
     AIRBORNE(new AirborneState()),
+    BREAK_FALL_READY(new BreakFallReadyState()),
     SWIM(new SwimState()),
     BREAK_FALL(new BreakFallState()),
     DODGE(new DodgeState()),

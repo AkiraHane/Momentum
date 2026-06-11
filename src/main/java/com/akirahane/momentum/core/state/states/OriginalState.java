@@ -3,24 +3,37 @@ package com.akirahane.momentum.core.state.states;
 import com.akirahane.momentum.core.state.StateType;
 import com.akirahane.momentum.core.context.PlayerMovementContext;
 import com.akirahane.momentum.core.state.BaseState;
-import com.akirahane.momentum.core.state.states.ground.WalkState;
-import com.akirahane.momentum.core.state.states.water.SwimState;
+import com.akirahane.momentum.init.InitAttachments;
 import net.minecraft.world.entity.player.Player;
 
 import static com.akirahane.momentum.core.context.PlayerMovementContext.DEFAULT_FRICTION;
 import static com.akirahane.momentum.core.effect.MomentumEffectType.FRICTION;
+import static com.akirahane.momentum.core.state.states.ground.WalkState.canWalk;
+import static com.akirahane.momentum.core.state.states.water.SwimState.canSwim;
 
 public class OriginalState extends BaseState {
+    public static boolean canOriginal(Player player, PlayerMovementContext context) {
+        return !(player.getData(InitAttachments.MOMENTUM_ENABLED) && context.isCanMomentum())
+                || player.getAbilities().flying    // 飞行
+                || player.isFallFlying()           // 鞘翅
+                || player.isPassenger()            // 骑乘
+                || player.onClimbable()            // 爬梯子
+                || player.isSleeping()             // 睡觉
+                || player.isSpectator()            // 旁观者
+                || player.isAutoSpinAttack()       // 旋转攻击(三叉戟)
+                || player.isDeadOrDying()          // 死亡
+                ;
+    }
+
     @Override
     public BaseState evaluate(Player player, PlayerMovementContext context) {
-        BaseState baseEvaluate = super.evaluate(player, context);
-        if (baseEvaluate != null) {
-            return baseEvaluate;
+        if (canOriginal(player, context)) {
+            return StateType.ORIGINAL.getState();
         }
-        if (SwimState.canSwim(player, context)) {
+        if (canSwim(player, context)) {
             return StateType.SWIM.getState();
         }
-        if (WalkState.canWalk(player, context)) {
+        if (canWalk(player, context)) {
             return StateType.WALK.getState();
         }
         return StateType.AIRBORNE.getState();
