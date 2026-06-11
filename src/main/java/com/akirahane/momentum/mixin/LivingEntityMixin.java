@@ -35,6 +35,21 @@ public abstract class LivingEntityMixin extends Entity implements Attackable, Wa
         super(type, level);
     }
 
+    @ModifyVariable(method = "travelInWater", at = @At("STORE"), name = "slowDown")
+    private float slowDown(float original) {
+        LivingEntity self = (LivingEntity) (Object) this;
+        if (!(self instanceof Player player)) {
+            return original;
+        }
+        MovementStateMachine stateMachine = player.getData(InitAttachments.MOVEMENT_STATE);
+        if (stateMachine.getCurrentState().getStateType().equals(StateType.ORIGINAL)) {
+            return original;
+        }
+        // =================== 内容 ===================
+        original = Math.clamp(0F, 1F - (float) stateMachine.applyEffect(1F - Math.max(0, original), FRICTION), 1F);
+        return original;
+    }
+
     @ModifyVariable(method = "travelInWater", at = @At(value = "STORE", ordinal = 0), name = "waterWalker")
     private float momentum$adjustWaterWalker(float original) {
         LivingEntity self = (LivingEntity) (Object) this;

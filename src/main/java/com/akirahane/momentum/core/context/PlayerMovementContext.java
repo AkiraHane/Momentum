@@ -65,6 +65,8 @@ public class PlayerMovementContext {
     private boolean doubleClickLeft = false;
     private boolean doubleClickRight = false;
     private boolean doubleClickJump = false;
+    // 是否进入受身
+    private boolean toBreakFallState = true;
 
 
     // 移动速度
@@ -228,8 +230,8 @@ public class PlayerMovementContext {
         this.doubleClickJump = isDoubleClick(JUMP);
         double moveSpeed = player.getAttributeValue(Attributes.MOVEMENT_SPEED);
         double jumpStrength = player.getJumpBoostPower();
-        this.jumpLimitSpeed = moveSpeed * (1 + jumpStrength) * 100;
-        this.jumpAcceleration = jumpCooldown > 0 ? 0 : moveSpeed * (1 + jumpStrength) * 1.2;
+        this.jumpLimitSpeed = moveSpeed * (1 + jumpStrength) * 3;
+        this.jumpAcceleration = jumpCooldown > 0 ? -moveSpeed : moveSpeed * (1 + jumpStrength) * 1.2;
         this.setWorldInputVec(player);
         this.detectWall(player);
     }

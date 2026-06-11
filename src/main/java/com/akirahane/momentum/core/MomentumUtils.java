@@ -1,14 +1,18 @@
 package com.akirahane.momentum.core;
 
 import com.akirahane.momentum.Momentum;
+import com.akirahane.momentum.core.context.PlayerMovementContext;
 import com.akirahane.momentum.core.state.MovementStateMachine;
 import com.akirahane.momentum.core.state.StateType;
 import com.mojang.logging.LogUtils;
+import net.minecraft.core.BlockPos;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 import org.slf4j.Logger;
 
@@ -94,6 +98,31 @@ public class MomentumUtils {
             speed.addOrReplacePermanentModifier(new AttributeModifier(BOOSTER_SPEED_ID, 0.04, AttributeModifier.Operation.ADD_VALUE));
             jump.addOrReplacePermanentModifier(new AttributeModifier(BOOSTER_JUMP_ID, 0.2, AttributeModifier.Operation.ADD_VALUE));
         }
+    }
+
+
+    public static boolean isDivingEdge(Player player, PlayerMovementContext context) {
+        Vec3 movement = player.getDeltaMovement();
+        int dx = (int) Math.signum(movement.x);
+        int dz = (int) Math.signum(movement.z);
+        if (dx == 0 && dz == 0) return false;
+
+        BlockPos center = player.blockPosition().offset(dx * 2, 0, dz * 2);
+        Level level = player.level();
+
+        for (int x = -1; x <= 1; x++) {
+            for (int z = -1; z <= 1; z++) {
+                for (int y = -1; y >= -3; y--) {
+                    BlockPos pos = center.offset(x, y, z);
+                    BlockState state = level.getBlockState(pos);
+                    // 有碰撞箱 = 有实体方块，不是跳水边缘
+                    if (!state.getCollisionShape(level, pos).isEmpty()) {
+                        return false;
+                    }
+                }
+            }
+        }
+        return true;
     }
 
 }

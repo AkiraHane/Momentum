@@ -55,7 +55,7 @@ public class MovementDebugEntry implements DebugScreenEntry {
         displayer.addToGroup(group, String.format("[Momentum] HasLedge: %s", hasLedge));
         Player player = mc.player;
         double jumpLimitSpeed = context.getJumpLimitSpeed();
-//        displayer.addToGroup(group, String.format("[Momentum] JumpLimitSpeed: %.4f", jumpLimitSpeed * 20));
+        displayer.addToGroup(group, String.format("[Momentum] JumpLimitSpeed: %.4f", jumpLimitSpeed * 20));
 //        double jumpAcceleration = context.getJumpAcceleration();
 //        displayer.addToGroup(group, String.format("[Momentum] JumpAcceleration: %.4f", jumpAcceleration));
 //        double safeFallDistance = player.getAttributeValue(Attributes.SAFE_FALL_DISTANCE);
@@ -87,6 +87,8 @@ public class MovementDebugEntry implements DebugScreenEntry {
             displayer.addToGroup(group, String.format("[Momentum] IsJumping: %s", isJumping));
             // player.isSprinting()
             displayer.addToGroup(group, String.format("[Momentum] IsSprinting: %s", player.isSprinting()));
+            int jumpCooldown = context.getJumpCooldown();
+            displayer.addToGroup(group, String.format("[Momentum] JumpCooldown: %d", jumpCooldown));
         }
     }
 }

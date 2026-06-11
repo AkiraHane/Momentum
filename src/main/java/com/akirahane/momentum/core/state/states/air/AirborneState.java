@@ -13,6 +13,7 @@ import com.akirahane.momentum.core.state.states.wall.WallSlideState;
 import com.akirahane.momentum.core.state.states.water.SwimState;
 import net.minecraft.world.entity.player.Player;
 
+import static com.akirahane.momentum.core.MomentumUtils.isDivingEdge;
 import static com.akirahane.momentum.core.context.PlayerMovementContext.AIR_ACCELERATION;
 import static com.akirahane.momentum.core.context.PlayerMovementContext.AIR_LIMIT_ACCELERATION;
 
@@ -62,7 +63,12 @@ public class AirborneState extends BaseState {
         super.onEnter(player, context);
         context.getPendingEffectPool().get(MomentumEffectType.ACCELERATION).add(AIR_ACCELERATION);
         context.getPendingEffectPool().get(MomentumEffectType.LIMIT_ACCELERATION_SPEED).add(AIR_LIMIT_ACCELERATION);
-        context.setJumpCooldown(20);
+        context.setJumpCooldown(15);
+
+        if (isDivingEdge(player, context)) {
+            LOGGER.info("Diving Edge");
+        }
+
     }
 
     @Override
