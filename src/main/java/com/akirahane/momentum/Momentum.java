@@ -82,16 +82,14 @@ public class Momentum {
         float distance = (float) event.getDistance();
         float multiplier = event.getDamageMultiplier();
 
-        if (conditionA(player, stateMachine)) {
+        if (stateMachine.getContext().getBreakFallReadyCount() > 0) {
             distance -= 6;
-            multiplier *= 0.7F;
-        } else if (conditionB(player, stateMachine)) {
+            multiplier *= 0.3F;
+            stateMachine.getContext().setToBreakFallState(true);
+        } else if (stateMachine.getContext().getBreakFallReadyCount() == 0) {
             distance -= 3;
-            multiplier *= 0.4F;
-        }
-
-        if (conditionC(player, stateMachine)) {
-            multiplier *= 0.8F;
+            multiplier *= 0.6F;
+            stateMachine.getContext().setToBreakFallState(true);
         }
 
         event.setDistance(Math.max(0, distance));

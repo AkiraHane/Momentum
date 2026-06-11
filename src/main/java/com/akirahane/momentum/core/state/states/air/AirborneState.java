@@ -71,7 +71,6 @@ public class AirborneState extends BaseState {
     public void onExit(Player player, PlayerMovementContext context) {
         context.getPendingEffectPool().get(MomentumEffectType.ACCELERATION).remove(AIR_ACCELERATION);
         context.getPendingEffectPool().get(MomentumEffectType.LIMIT_ACCELERATION_SPEED).remove(AIR_LIMIT_ACCELERATION);
-        context.setToBreakFallState(false);
     }
 
     @Override

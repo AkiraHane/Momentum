@@ -11,7 +11,7 @@ import static com.akirahane.momentum.core.state.states.OriginalState.canOriginal
 
 public class BreakFallState extends BaseState {
     public static boolean canBreakFall(Player player, PlayerMovementContext context) {
-        return context.isToBreakFallState();
+        return context.isToBreakFallState() && context.getLastFallDistance() > 4;
     }
 
     @Override

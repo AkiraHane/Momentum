@@ -66,7 +66,7 @@ public class PlayerMovementContext {
     private boolean doubleClickRight = false;
     private boolean doubleClickJump = false;
     // 是否进入受身
-    private boolean toBreakFallState = true;
+    private boolean toBreakFallState = false;
 
 
     // 移动速度

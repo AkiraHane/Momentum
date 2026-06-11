@@ -1,10 +1,13 @@
 package com.akirahane.momentum.core.state.states.air;
 
 import com.akirahane.momentum.core.context.PlayerMovementContext;
+import com.akirahane.momentum.core.effect.MomentumEffectType;
 import com.akirahane.momentum.core.state.BaseState;
 import com.akirahane.momentum.core.state.StateType;
 import net.minecraft.world.entity.player.Player;
 
+import static com.akirahane.momentum.core.context.PlayerMovementContext.AIR_ACCELERATION;
+import static com.akirahane.momentum.core.context.PlayerMovementContext.AIR_LIMIT_ACCELERATION;
 import static com.akirahane.momentum.core.state.states.OriginalState.canOriginal;
 import static com.akirahane.momentum.core.state.states.air.AirborneState.canAirborne;
 import static com.akirahane.momentum.core.state.states.ground.SlideState.canSlide;
@@ -53,6 +56,9 @@ public class BreakFallReadyState extends BaseState {
     @Override
     public void onEnter(Player player, PlayerMovementContext context) {
         context.setBreakFallReadyCount(6);
+        context.getPendingEffectPool().get(MomentumEffectType.ACCELERATION).add(AIR_ACCELERATION);
+        context.getPendingEffectPool().get(MomentumEffectType.LIMIT_ACCELERATION_SPEED).add(AIR_LIMIT_ACCELERATION);
+        context.setJumpCooldown(15);
     }
 
     @Override
@@ -67,6 +73,9 @@ public class BreakFallReadyState extends BaseState {
     @Override
     public void onExit(Player player, PlayerMovementContext context) {
         context.setBreakFallReadyCount(-1);
+        context.setToBreakFallState(false);
+        context.getPendingEffectPool().get(MomentumEffectType.ACCELERATION).remove(AIR_ACCELERATION);
+        context.getPendingEffectPool().get(MomentumEffectType.LIMIT_ACCELERATION_SPEED).remove(AIR_LIMIT_ACCELERATION);
     }
 
     @Override
