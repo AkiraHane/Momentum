@@ -24,7 +24,7 @@ public class DodgeState extends BaseState {
 
     @Override
     public void onEnter(Player player, PlayerMovementContext context) {
-        Vec3 direction = Vec3.directionFromRotation(player.getXRot(), player.getYRot());
+        Vec3 direction = Vec3.directionFromRotation(0, player.getYRot());
         player.setDeltaMovement(direction.x, 0.0D, direction.z);
         context.setDodgeTimer(10);
         context.setNoJump(true);

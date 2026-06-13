@@ -80,6 +80,7 @@ public class MovementStateMachine {
                 // -1 代表永久 需要添加的地方使用引用移除
                 if (momentumEffect.getDuration() >= 0 &&
                         momentumEffect.getElapsedDuration() >= momentumEffect.getDuration()) {
+                    momentumEffect.setElapsedDuration(0);
                     iterator.remove();
                     continue;
                 }

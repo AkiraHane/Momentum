@@ -63,11 +63,8 @@ public class MomentumUtils {
             // 加速值 = 落差产生的势能转化 × 剩余空间
             // dropHeight 通过 tanh 软限制，防止大落差产生过大加速
             float acceleration = (float) (DOWNHILL_ACCEL_FACTOR * Math.tanh(dropHeight * 2.0) * headroom);
-            stateMachine.getContext().SLIDE_ACCELERATION.setDuration(duration);
             stateMachine.getContext().SLIDE_ACCELERATION.setValue(new Vec3(slopeDir.x * acceleration, 0, slopeDir.z * acceleration));
-            stateMachine.getContext().getPendingEffectPool().get(ACCELERATION).add(
-                    stateMachine.getContext().SLIDE_ACCELERATION
-            );
+            stateMachine.getContext().addEffect(ACCELERATION, stateMachine.getContext().SLIDE_ACCELERATION, duration);
 
             // === 上坡（movementStepY > 0）===
         } else if (movementStepY > 0) {
@@ -77,12 +74,8 @@ public class MomentumUtils {
             // 不会一步减到 0，保留滑行惯性感
             float deceleration = (float) (-UPHILL_DECEL_FACTOR * Math.min(riseHeight * riseHeight, 1.0));
 
-            stateMachine.getContext().SLIDE_ACCELERATION.setDuration(duration);
             stateMachine.getContext().SLIDE_ACCELERATION.setValue(new Vec3(slopeDir.x * deceleration, 0, slopeDir.z * deceleration));
-            stateMachine.getContext().getPendingEffectPool().get(ACCELERATION).add(
-                    stateMachine.getContext().SLIDE_ACCELERATION
-            );
-
+            stateMachine.getContext().addEffect(ACCELERATION, stateMachine.getContext().SLIDE_ACCELERATION, duration);
         }
     }
 

@@ -57,8 +57,8 @@ public class AirborneState extends BaseState {
 
     @Override
     public void onEnter(Player player, PlayerMovementContext context) {
-        context.getPendingEffectPool().get(MomentumEffectType.ACCELERATION).add(AIR_ACCELERATION);
-        context.getPendingEffectPool().get(MomentumEffectType.LIMIT_ACCELERATION_SPEED).add(AIR_LIMIT_ACCELERATION);
+        context.addPermanentEffect(MomentumEffectType.ACCELERATION, AIR_ACCELERATION);
+        context.addPermanentEffect(MomentumEffectType.LIMIT_ACCELERATION_SPEED, AIR_LIMIT_ACCELERATION);
         context.setJumpCooldown(15);
 
         if (isDivingEdge(player, context)) {
@@ -69,7 +69,7 @@ public class AirborneState extends BaseState {
 
     @Override
     public void clientTick(Player player, PlayerMovementContext context) {
-        if (player.fallDistance > 0f) {
+        if (player.fallDistance > 3f) {
             float t = (float) ((player.fallDistance - 3.0f) / (70.0f - 3.0f));
             float speed = Math.clamp(t, 0.0f, 1.0f) * 1.5F + 0.5F;
             playStateAnimation(player, FALL, context, 20, speed);
@@ -80,8 +80,8 @@ public class AirborneState extends BaseState {
 
     @Override
     public void onExit(Player player, PlayerMovementContext context) {
-        context.getPendingEffectPool().get(MomentumEffectType.ACCELERATION).remove(AIR_ACCELERATION);
-        context.getPendingEffectPool().get(MomentumEffectType.LIMIT_ACCELERATION_SPEED).remove(AIR_LIMIT_ACCELERATION);
+        context.removeEffect(MomentumEffectType.ACCELERATION, AIR_ACCELERATION);
+        context.removeEffect(MomentumEffectType.LIMIT_ACCELERATION_SPEED, AIR_LIMIT_ACCELERATION);
     }
 
     @Override

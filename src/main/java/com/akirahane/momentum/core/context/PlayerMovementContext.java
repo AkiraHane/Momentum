@@ -140,6 +140,14 @@ public class PlayerMovementContext {
             -1
     );
 
+    // 翻滚breakfall总阻力
+    public MomentumEffect BREAK_FALL_FRICTION = new MomentumEffect(
+            new Vec3(0.5, 0, 0),
+            Vec3.ZERO,
+            MULTIPLIER,
+            0
+    );
+
     // 滑铲总阻力
     public MomentumEffect SLIDE_FRICTION = new MomentumEffect(
             new Vec3(0.1, 0, 0),
@@ -369,6 +377,25 @@ public class PlayerMovementContext {
         double z = forward * cos + strafe * sin;
 
         this.inputVec = new Vec3(x, 0, z);
+    }
+
+    // 向指定效果添加永久buff
+    public void addPermanentEffect(MomentumEffectType type, MomentumEffect effect) {
+        effect.setDuration(-1);
+        effect.setElapsedDuration(0);
+        this.pendingEffectPool.get(type).add(effect);
+    }
+    // 向指定效果添加时效buff
+    public void addEffect(MomentumEffectType type, MomentumEffect effect, int duration) {
+        effect.setDuration(duration);
+        effect.setElapsedDuration(0);
+        this.pendingEffectPool.get(type).add(effect);
+    }
+
+    // 为指定效果去除buff
+    public void removeEffect(MomentumEffectType type, MomentumEffect effect) {
+        effect.setElapsedDuration(0);
+        this.pendingEffectPool.get(type).remove(effect);
     }
 
 

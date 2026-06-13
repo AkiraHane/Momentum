@@ -47,7 +47,7 @@ public class OriginalState extends BaseState {
 
     @Override
     public void onExit(Player player, PlayerMovementContext context) {
-        context.getPendingEffectPool().get(FRICTION).add(DEFAULT_FRICTION);
+        context.addPermanentEffect(FRICTION, DEFAULT_FRICTION);
     }
 
     @Override

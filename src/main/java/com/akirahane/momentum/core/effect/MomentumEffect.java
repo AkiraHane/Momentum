@@ -6,6 +6,9 @@ import lombok.Setter;
 import lombok.experimental.Accessors;
 import net.minecraft.world.phys.Vec3;
 
+import java.util.Map;
+import java.util.Set;
+
 // 临时变量
 @Getter
 @Setter

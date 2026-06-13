@@ -48,7 +48,7 @@ public abstract class BaseState {
 
     // 客户端，状态切换时调用
     public static void playStateAnimation(Player player, @NotNull String animName, PlayerMovementContext context) {
-        playStateAnimation(player, animName, context, 4, 1.0f);
+        playStateAnimation(player, animName, context, 6, 1.0f);
     }
 
     public static void playStateAnimation(Player player, @NotNull String animName, PlayerMovementContext context, int fadeInTime, float speed) {

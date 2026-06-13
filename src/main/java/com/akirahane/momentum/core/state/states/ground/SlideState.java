@@ -14,7 +14,6 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
 
 import static com.akirahane.momentum.core.effect.MomentumEffect.EffectType.LOCAL_VALUE;
-import static com.akirahane.momentum.core.effect.MomentumEffectType.BLOCK_FRICTION;
 import static com.akirahane.momentum.core.state.states.OriginalState.canOriginal;
 import static com.akirahane.momentum.core.state.states.air.BreakFallReadyState.canBreakFallReady;
 
@@ -42,11 +41,8 @@ public class SlideState extends BaseState {
     public void onEnter(Player player, PlayerMovementContext context) {
         player.setForcedPose(Pose.SWIMMING);
         context.setNoMoveInput(true);
-        context.getPendingEffectPool().get(MomentumEffectType.FRICTION).add(context.SLIDE_FRICTION);
-        context.SLIDE_BLOCK_FRICTION.setDuration(JUMP_DECELERATION_WINDOW);
-        context.getPendingEffectPool().get(BLOCK_FRICTION).add(
-                context.SLIDE_BLOCK_FRICTION
-        );
+        context.addPermanentEffect(MomentumEffectType.FRICTION, context.SLIDE_FRICTION);
+        context.addEffect(MomentumEffectType.BLOCK_FRICTION, context.SLIDE_BLOCK_FRICTION, JUMP_DECELERATION_WINDOW);
 
         if (context.getSlideCooldown() == 0) {
             Vec3 velocity = player.getDeltaMovement();
@@ -66,22 +62,22 @@ public class SlideState extends BaseState {
 
     public void onExit(Player player, PlayerMovementContext context) {
         if (JUMP_DECELERATION_WINDOW >= (ServerConfig.SLIDE_ACCELERATION_COOLDOWN.get() - context.getSlideCooldown())) {
-            context.getPendingEffectPool().get(MomentumEffectType.FRICTION).remove(context.SLIDE_FRICTION);
-            context.getPendingEffectPool().get(BLOCK_FRICTION).remove(context.SLIDE_BLOCK_FRICTION);
-            context.getPendingEffectPool().get(MomentumEffectType.FRICTION).add(
+            // 如果跳跃的时间小于冷却, 则增加移动方向的阻力
+            context.addEffect(
+                    MomentumEffectType.FRICTION,
                     new MomentumEffect(
                             new Vec3(0.1, 0, 0),
                             Vec3.ZERO,
                             LOCAL_VALUE,
                             5
-                    )
+                    ),
+                    5
             );
         }
         player.setForcedPose(null);
         context.setNoMoveInput(false);
-        context.getPendingEffectPool().get(MomentumEffectType.FRICTION).remove(context.SLIDE_FRICTION);
-        context.getPendingEffectPool().get(MomentumEffectType.BLOCK_FRICTION)
-                .remove(context.SLIDE_BLOCK_FRICTION);
+        context.removeEffect(MomentumEffectType.FRICTION, context.SLIDE_FRICTION);
+        context.removeEffect(MomentumEffectType.BLOCK_FRICTION, context.SLIDE_BLOCK_FRICTION);
         player.setSprinting(false);
         context.setSlopeUnitVector(Vec3.ZERO);
     }
