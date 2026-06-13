@@ -148,6 +148,14 @@ public class PlayerMovementContext {
             0
     );
 
+    // 闪避方块摩擦力
+    public MomentumEffect DODGE_BLOCK_FRICTION = new MomentumEffect(
+            new Vec3(0, 0, 0),
+            Vec3.ZERO,
+            MULTIPLIER,
+            0
+    );
+
     // 滑铲总阻力
     public MomentumEffect SLIDE_FRICTION = new MomentumEffect(
             new Vec3(0.1, 0, 0),
