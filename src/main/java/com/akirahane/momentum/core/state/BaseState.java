@@ -48,11 +48,15 @@ public abstract class BaseState {
 
     // 客户端，状态切换时调用
     public static void playStateAnimation(Player player, @NotNull String animName, PlayerMovementContext context) {
-        playStateAnimation(player, animName, context, 4);
+        playStateAnimation(player, animName, context, 4, 1.0f);
     }
 
-    public static void playStateAnimation(Player player, @NotNull String animName, PlayerMovementContext context, int fadeInTime) {
-        if (!player.level().isClientSide() || animName.equals(context.getCurrentAnimationName())) {
+    public static void playStateAnimation(Player player, @NotNull String animName, PlayerMovementContext context, int fadeInTime, float speed) {
+        if (!player.level().isClientSide()) {
+            return;
+        }
+        context.getController().setAnimationSpeed(speed);
+        if (animName.equals(context.getCurrentAnimationName())) {
             return;
         }
         if (context.getController() == null) {

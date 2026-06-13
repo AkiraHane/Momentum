@@ -4,8 +4,6 @@ import com.akirahane.momentum.core.context.PlayerMovementContext;
 import com.akirahane.momentum.core.effect.MomentumEffectType;
 import com.akirahane.momentum.core.state.StateType;
 import com.akirahane.momentum.core.state.BaseState;
-import com.akirahane.momentum.core.state.states.ground.SlideState;
-import com.akirahane.momentum.core.state.states.special.BreakFallState;
 import com.akirahane.momentum.core.state.states.special.DodgeState;
 import com.akirahane.momentum.core.state.states.wall.WallClimbState;
 import com.akirahane.momentum.core.state.states.wall.WallRunState;
@@ -21,6 +19,9 @@ import static com.akirahane.momentum.core.state.states.air.BreakFallReadyState.c
 import static com.akirahane.momentum.core.state.states.ground.WalkState.canWalk;
 
 public class AirborneState extends BaseState {
+    // 动画名称
+    public static String FALL = "fall";
+
     public static boolean canAirborne(Player player, PlayerMovementContext context) {
         return !player.onGround();
     }
@@ -56,7 +57,6 @@ public class AirborneState extends BaseState {
 
     @Override
     public void onEnter(Player player, PlayerMovementContext context) {
-        super.onEnter(player, context);
         context.getPendingEffectPool().get(MomentumEffectType.ACCELERATION).add(AIR_ACCELERATION);
         context.getPendingEffectPool().get(MomentumEffectType.LIMIT_ACCELERATION_SPEED).add(AIR_LIMIT_ACCELERATION);
         context.setJumpCooldown(15);
@@ -65,6 +65,17 @@ public class AirborneState extends BaseState {
             LOGGER.info("Diving Edge");
         }
 
+    }
+
+    @Override
+    public void clientTick(Player player, PlayerMovementContext context) {
+        if (player.fallDistance > 0f) {
+            float t = (float) ((player.fallDistance - 3.0f) / (70.0f - 3.0f));
+            float speed = Math.clamp(t, 0.0f, 1.0f) * 1.5F + 0.5F;
+            playStateAnimation(player, FALL, context, 20, speed);
+        } else {
+            playStateAnimation(player, IDLE, context);
+        }
     }
 
     @Override

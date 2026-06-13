@@ -16,11 +16,12 @@ import net.minecraft.world.phys.Vec3;
 import static com.akirahane.momentum.core.effect.MomentumEffect.EffectType.LOCAL_VALUE;
 import static com.akirahane.momentum.core.effect.MomentumEffectType.BLOCK_FRICTION;
 import static com.akirahane.momentum.core.state.states.OriginalState.canOriginal;
+import static com.akirahane.momentum.core.state.states.air.BreakFallReadyState.canBreakFallReady;
 
 
 public class SlideState extends BaseState {
     // 动画名称
-    protected String SLIDE = "slide";
+    public static String SLIDE = "slide";
 
     // 跳跃减速窗口时间
     protected int JUMP_DECELERATION_WINDOW = 5;
@@ -34,7 +35,7 @@ public class SlideState extends BaseState {
 
     public static boolean canSlideSpeedCheck(Player player, PlayerMovementContext context) {
         return context.getSpeed().horizontalDistance() * 20 > ServerConfig.MIN_SLIDE_SPEED.get() &&
-                context.getOldSpeed().horizontalDistance() >= -context.getOldSpeed().y * 2;
+                context.getOldSpeed().horizontalDistance() >= -context.getOldSpeed().y;
     }
 
     @Override
@@ -60,7 +61,7 @@ public class SlideState extends BaseState {
             );
         }
         context.setSlideCooldown(ServerConfig.SLIDE_ACCELERATION_COOLDOWN.get());
-        playStateAnimation(player, SLIDE, context, 6);
+        playStateAnimation(player, SLIDE, context, 6, 1.0f);
     }
 
     public void onExit(Player player, PlayerMovementContext context) {
@@ -92,6 +93,9 @@ public class SlideState extends BaseState {
         }
         if (DodgeState.canDodge(player, context)) {
             return StateType.DODGE.getState();
+        }
+        if (canBreakFallReady(player, context)) {
+            return StateType.BREAK_FALL_READY.getState();
         }
         if (AirborneState.canAirborne(player, context)) {
             return StateType.AIRBORNE.getState();

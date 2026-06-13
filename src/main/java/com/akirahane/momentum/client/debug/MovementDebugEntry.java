@@ -40,8 +40,8 @@ public class MovementDebugEntry implements DebugScreenEntry {
         float xRot = mc.player.getXRot(); // 垂直角度 (pitch), -90 到 90
         displayer.addToGroup(group, String.format("[Momentum] yRot: %.4f", yRot));
         displayer.addToGroup(group, String.format("[Momentum] xRot: %.4f", xRot));
-//        double fallDistance = mc.player.fallDistance;
-//        displayer.addToGroup(group, String.format("[Momentum] Fall Distance: %.4f", fallDistance));
+        double fallDistance = mc.player.fallDistance;
+        displayer.addToGroup(group, String.format("[Momentum] Fall Distance: %.4f", fallDistance));
 //        // getWorldInputVec
 //        Vec3 inputVec = context.getInputVec();
 //        displayer.addToGroup(group, String.format("[Momentum] InputVec: %s", inputVec));
@@ -58,11 +58,11 @@ public class MovementDebugEntry implements DebugScreenEntry {
         displayer.addToGroup(group, String.format("[Momentum] JumpLimitSpeed: %.4f", jumpLimitSpeed * 20));
 //        double jumpAcceleration = context.getJumpAcceleration();
 //        displayer.addToGroup(group, String.format("[Momentum] JumpAcceleration: %.4f", jumpAcceleration));
-//        double safeFallDistance = player.getAttributeValue(Attributes.SAFE_FALL_DISTANCE);
-//        displayer.addToGroup(group, String.format("[Momentum] SafeFallDistance: %.4f", safeFallDistance));
-//        MomentumAnimationController controller = (MomentumAnimationController) PlayerAnimationAccess.getPlayerAnimationLayer(
-//                player, MomentumClient.MOVEMENT_ANIM
-//        );
+        double safeFallDistance = player.getAttributeValue(Attributes.SAFE_FALL_DISTANCE);
+        displayer.addToGroup(group, String.format("[Momentum] SafeFallDistance: %.4f", safeFallDistance));
+        MomentumAnimationController controller = (MomentumAnimationController) PlayerAnimationAccess.getPlayerAnimationLayer(
+                player, MomentumClient.MOVEMENT_ANIM
+        );
         if (context.getController() != null) {
             MochaEngine<AnimationController> mocha = context.getMocha();
 //            // query.ground_speed
