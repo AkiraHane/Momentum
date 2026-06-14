@@ -46,7 +46,7 @@ public class DodgeState extends BaseState {
         }
         Vec3 direction = Vec3.directionFromRotation(4, yRot);
         player.setDeltaMovement(direction.x * 0.8, 0.0D, direction.z * 0.8);
-        context.setDodgeTimer(10);
+        context.setDodgeTimer(8);
         context.setNoJump(true);
         context.setNoMoveInput(true);
         context.addEffect(MomentumEffectType.BLOCK_FRICTION, context.DODGE_BLOCK_FRICTION, 3);

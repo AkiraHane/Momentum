@@ -1,6 +1,7 @@
 package com.akirahane.momentum;
 
 import com.akirahane.momentum.core.state.MovementStateMachine;
+import com.akirahane.momentum.core.state.StateType;
 import com.akirahane.momentum.init.InitAttachments;
 import com.akirahane.momentum.init.InitItems;
 import com.akirahane.momentum.config.ServerConfig;
@@ -19,6 +20,7 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.config.ModConfig;
 import net.neoforged.neoforge.event.entity.living.LivingFallEvent;
+import net.neoforged.neoforge.event.entity.living.LivingIncomingDamageEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.neoforge.event.tick.PlayerTickEvent;
 import net.neoforged.neoforge.event.tick.ServerTickEvent;
@@ -94,5 +96,17 @@ public class Momentum {
 
         event.setDistance(Math.max(0, distance));
         event.setDamageMultiplier(multiplier);
+    }
+
+    // 监听伤害
+    @SubscribeEvent
+    public static void onPlayerHurt(LivingIncomingDamageEvent event) {
+        if (!(event.getEntity() instanceof Player player)) return;
+
+        MovementStateMachine stateMachine = player.getData(InitAttachments.MOVEMENT_STATE);
+        if (StateType.DODGE.equals(stateMachine.getCurrentState().getStateType())){
+            event.setCanceled(true);
+            player.fallDistance = 0;
+        }
     }
 }
