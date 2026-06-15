@@ -13,6 +13,7 @@ import net.minecraft.world.entity.Pose;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
 
+import static com.akirahane.momentum.core.MomentumUtils.canPlayerFitAtPose;
 import static com.akirahane.momentum.core.effect.MomentumEffect.EffectType.LOCAL_VALUE;
 import static com.akirahane.momentum.core.state.states.OriginalState.canOriginal;
 import static com.akirahane.momentum.core.state.states.air.BreakFallReadyState.canBreakFallReady;
@@ -96,8 +97,12 @@ public class SlideState extends BaseState {
         if (AirborneState.canAirborne(player, context)) {
             return StateType.AIRBORNE.getState();
         }
-        if (!context.isLowerCenter()) {
+        boolean canCrouching = canPlayerFitAtPose(player, Pose.CROUCHING);
+        if (!context.isLowerCenter() && canCrouching) {
             return StateType.WALK.getState();
+        }
+        if (!context.isLowerCenter()){
+            return StateType.PRONE.getState();
         }
         if (context.getSpeed().horizontalDistance() * 20 <= ServerConfig.MIN_SLIDE_SPEED.get()) {
             return StateType.PRONE.getState();

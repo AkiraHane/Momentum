@@ -6,7 +6,6 @@ import com.akirahane.momentum.init.InitAttachments;
 import com.akirahane.momentum.init.InitItems;
 import com.akirahane.momentum.config.ServerConfig;
 import com.akirahane.momentum.network.StateBroadcastPacket;
-import com.akirahane.momentum.network.StateTransitionPacket;
 import com.akirahane.momentum.network.SyncMomentumEnabledPacket;
 import com.mojang.logging.LogUtils;
 import net.minecraft.server.MinecraftServer;
@@ -104,7 +103,7 @@ public class Momentum {
         if (!(event.getEntity() instanceof Player player)) return;
 
         MovementStateMachine stateMachine = player.getData(InitAttachments.MOVEMENT_STATE);
-        if (StateType.DODGE.equals(stateMachine.getCurrentState().getStateType())){
+        if (StateType.DODGE.equals(stateMachine.getCurrentState().getStateType())) {
             event.setCanceled(true);
             player.fallDistance = 0;
         }

@@ -7,12 +7,15 @@ import com.akirahane.momentum.core.state.StateType;
 import com.mojang.logging.LogUtils;
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.Identifier;
+import net.minecraft.world.entity.EntityDimensions;
+import net.minecraft.world.entity.Pose;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import org.slf4j.Logger;
 
@@ -116,6 +119,12 @@ public class MomentumUtils {
             }
         }
         return true;
+    }
+
+    public static boolean canPlayerFitAtPose(Player player, Pose pose) {
+        EntityDimensions dimensions = player.getDimensions(pose);
+        AABB boundingBox = dimensions.makeBoundingBox(player.position());
+        return player.level().noCollision(player, boundingBox);
     }
 
 }

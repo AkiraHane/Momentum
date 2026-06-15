@@ -62,7 +62,7 @@ public class BreakFallReadyState extends BaseState {
 
     @Override
     public void clientTick(Player player, PlayerMovementContext context) {
-        if (player.fallDistance > 0f) {
+        if (player.fallDistance > 3f) {
             float t = (float) ((player.fallDistance - 3.0f) / (70.0f - 3.0f));
             float speed = Math.clamp(t, 0.0f, 1.0f) * 1.5F + 0.5F;
             playStateAnimation(player, FALL, context, 20, speed);

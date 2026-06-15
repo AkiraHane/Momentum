@@ -81,6 +81,8 @@ public class PlayerMovementContext {
     private Vec3 slopeUnitVector = Vec3.ZERO;
     // 上次掉落的数据
     private double lastFallDistance = 0;
+    // 上次掉落的增量
+    private double deltaLastFallDistance = 0;
     // 闪避无敌时间
     private final int dodgeInvincible = 10;
     // 移动向量
@@ -99,6 +101,8 @@ public class PlayerMovementContext {
     private double jumpAcceleration = 0;
     // 连跳阻止加速持续时间
     private int jumpCooldown = 0;
+    // 墙面方块摩擦力
+    private float wallFriction = 0.6f;
 
     // 当前播放的动画名称
     private String currentAnimationName = null;
@@ -237,7 +241,11 @@ public class PlayerMovementContext {
             applyBoosterAttributes(player, newHasJetBooster);
         }
         this.canMomentum = checkMomentum(this.hasJetBooster);
-        if (player.fallDistance > 0) this.lastFallDistance = player.fallDistance;
+        if (player.fallDistance > 0) {
+            this.deltaLastFallDistance = player.fallDistance - this.lastFallDistance;
+            this.lastFallDistance = player.fallDistance;
+        }
+        ;
     }
 
     public void clientTick(Player player) {
@@ -393,6 +401,7 @@ public class PlayerMovementContext {
         effect.setElapsedDuration(0);
         this.pendingEffectPool.get(type).add(effect);
     }
+
     // 向指定效果添加时效buff
     public void addEffect(MomentumEffectType type, MomentumEffect effect, int duration) {
         effect.setDuration(duration);

@@ -46,6 +46,11 @@ public class OriginalState extends BaseState {
     }
 
     @Override
+    public void serverTick(Player player, PlayerMovementContext context) {
+        // 原版状态不修改掉落距离计算
+    }
+
+    @Override
     public void onExit(Player player, PlayerMovementContext context) {
         context.addPermanentEffect(FRICTION, DEFAULT_FRICTION);
     }

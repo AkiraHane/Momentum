@@ -8,12 +8,17 @@ import com.akirahane.momentum.core.state.states.special.DodgeState;
 import net.minecraft.world.entity.Pose;
 import net.minecraft.world.entity.player.Player;
 
+import static com.akirahane.momentum.core.MomentumUtils.canPlayerFitAtPose;
 import static com.akirahane.momentum.core.state.states.OriginalState.canOriginal;
 
 
 public class ProneState extends BaseState {
     public static boolean canProne(Player player, PlayerMovementContext context) {
-        return player.onGround() && context.isLowerCenter();
+        return player.onGround() && (
+                context.isLowerCenter() || (
+                        player.getPose() == Pose.SWIMMING && !canPlayerFitAtPose(player, Pose.CROUCHING)
+                )
+        );
     }
 
     @Override

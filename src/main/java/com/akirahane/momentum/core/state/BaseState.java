@@ -18,6 +18,9 @@ public abstract class BaseState {
     // 日志
     protected static final Logger LOGGER = LogUtils.getLogger();
 
+    protected static final Identifier WALL_GRAVITY_ID =
+            Identifier.fromNamespaceAndPath(Momentum.MODID, "wall_gravity");
+
     // 动画名称
     protected String IDLE = "idle";
 
@@ -30,6 +33,12 @@ public abstract class BaseState {
 
     // 服务器和客户端都支持的功能
     public void serverTick(Player player, PlayerMovementContext context) {
+        if (context.getDeltaLastFallDistance() > 0) {
+            double cap = context.getDeltaLastFallDistance() * 5.0; // 伤害和速度成正比, 需要调试
+            if (player.fallDistance > cap) {
+                player.fallDistance = cap;
+            }
+        }
     }
 
     // 觉效果和移动、状态转换相关内容

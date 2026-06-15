@@ -76,7 +76,6 @@ public class MomentumClient {
                     player.getY() - player.yOld,
                     player.getZ() - player.zOld
             ));
-            sm.getContext().setOldDeltaMovement(player.getDeltaMovement());
         }
     }
 

@@ -4,6 +4,8 @@ import com.akirahane.momentum.core.context.PlayerMovementContext;
 import com.akirahane.momentum.core.state.StateType;
 import com.akirahane.momentum.core.state.BaseState;
 import net.minecraft.client.Minecraft;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
 
 import static com.akirahane.momentum.core.state.states.OriginalState.canOriginal;
@@ -19,8 +21,8 @@ public class WallSlideState extends BaseState {
         return context.getWallDirection() != null &&
                 context.getInputWallAngle() < 90 &&
                 context.getLookWallAngle() < 45 &&
-                context.getSpeed().y < 0 &&
-                Minecraft.getInstance().options.keyJump.isDown();
+                context.getInputWallAngle() >= 0 &&
+                context.getSpeed().y < 0;
     }
 
     @Override
@@ -47,6 +49,26 @@ public class WallSlideState extends BaseState {
             return StateType.WALK.getState();
         }
         return StateType.WALL_SLIDE.getState();
+    }
+
+    @Override
+    public void onEnter(Player player, PlayerMovementContext context) {
+        var instance = player.getAttribute(Attributes.GRAVITY);
+        if (instance != null && instance.getModifier(WALL_GRAVITY_ID) == null) {
+            instance.addOrReplacePermanentModifier(new AttributeModifier(
+                    WALL_GRAVITY_ID,
+                    -0.9,
+                    AttributeModifier.Operation.ADD_MULTIPLIED_BASE
+            ));
+        }
+    }
+
+    @Override
+    public void onExit(Player player, PlayerMovementContext context) {
+        var instance = player.getAttribute(Attributes.GRAVITY);
+        if (instance != null) {
+            instance.removeModifier(WALL_GRAVITY_ID);
+        }
     }
 
     @Override
