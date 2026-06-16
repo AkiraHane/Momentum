@@ -1,5 +1,6 @@
 package com.akirahane.momentum.core.state.states.wall;
 
+import com.akirahane.momentum.config.ServerConfig;
 import com.akirahane.momentum.core.context.PlayerMovementContext;
 import com.akirahane.momentum.core.state.StateType;
 import com.akirahane.momentum.core.state.BaseState;
@@ -16,6 +17,8 @@ import static com.akirahane.momentum.core.state.states.wall.WallHangState.canWal
 import static com.akirahane.momentum.core.state.states.wall.WallRunState.canWallRun;
 
 public class WallSlideState extends BaseState {
+    // 动画名称
+    public static String WALL_SLIDE = "wall_slide";
 
     public static boolean canWallSlide(Player player, PlayerMovementContext context) {
         return context.getWallDirection() != null &&
@@ -61,6 +64,20 @@ public class WallSlideState extends BaseState {
                     AttributeModifier.Operation.ADD_MULTIPLIED_BASE
             ));
         }
+        // 播放动画
+        playStateAnimation(player, WALL_SLIDE, context);
+    }
+
+    @Override
+    public void serverTick(Player player, PlayerMovementContext context) {
+        // 按照重力倍率衰减掉落伤害
+        player.fallDistance *= 0.9;
+    }
+
+    @Override
+    public void clientTick(Player player, PlayerMovementContext context) {
+        // 按照重力倍率衰减掉落伤害
+        player.fallDistance *= 0.9;
     }
 
     @Override

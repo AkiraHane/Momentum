@@ -9,6 +9,7 @@ import com.akirahane.momentum.core.state.states.wall.WallClimbState;
 import com.akirahane.momentum.core.state.states.wall.WallRunState;
 import com.akirahane.momentum.core.state.states.wall.WallSlideState;
 import com.akirahane.momentum.core.state.states.water.SwimState;
+import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
 
 import static com.akirahane.momentum.core.MomentumUtils.isDivingEdge;
@@ -69,7 +70,7 @@ public class AirborneState extends BaseState {
 
     @Override
     public void clientTick(Player player, PlayerMovementContext context) {
-        if (player.fallDistance > 3f) {
+        if (player.fallDistance > player.getAttributeValue(Attributes.SAFE_FALL_DISTANCE)) {
             float t = (float) ((player.fallDistance - 3.0f) / (70.0f - 3.0f));
             float speed = Math.clamp(t, 0.0f, 1.0f) * 1.5F + 0.5F;
             playStateAnimation(player, FALL, context, 20, speed);

@@ -5,6 +5,7 @@ import com.akirahane.momentum.core.effect.MomentumEffectType;
 import com.akirahane.momentum.core.state.BaseState;
 import com.akirahane.momentum.core.state.StateType;
 import com.akirahane.momentum.core.state.states.ground.SlideState;
+import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
 
 import static com.akirahane.momentum.core.context.PlayerMovementContext.AIR_ACCELERATION;
@@ -62,7 +63,7 @@ public class BreakFallReadyState extends BaseState {
 
     @Override
     public void clientTick(Player player, PlayerMovementContext context) {
-        if (player.fallDistance > 3f) {
+        if (player.fallDistance > player.getAttributeValue(Attributes.SAFE_FALL_DISTANCE)) {
             float t = (float) ((player.fallDistance - 3.0f) / (70.0f - 3.0f));
             float speed = Math.clamp(t, 0.0f, 1.0f) * 1.5F + 0.5F;
             playStateAnimation(player, FALL, context, 20, speed);

@@ -13,6 +13,9 @@ import net.minecraft.world.phys.Vec3;
 import static com.akirahane.momentum.core.state.states.OriginalState.canOriginal;
 
 public class WallClimbState extends BaseState {
+    // 动画名称
+    public static String WALL_CLIMB = "wall_climb";
+
     public static boolean canWallClimb(Player player, PlayerMovementContext context) {
         return player.onClimbable() || (
                 context.getWallDirection() != null &&
@@ -52,6 +55,7 @@ public class WallClimbState extends BaseState {
 
     @Override
     public void onEnter(Player player, PlayerMovementContext context) {
+        playStateAnimation(player, WALL_CLIMB, context);
         var instance = player.getAttribute(Attributes.GRAVITY);
         if (instance != null && instance.getModifier(WALL_GRAVITY_ID) == null) {
             instance.addOrReplacePermanentModifier(new AttributeModifier(
@@ -61,6 +65,12 @@ public class WallClimbState extends BaseState {
             ));
         }
         player.addDeltaMovement(new Vec3(0, player.getDeltaMovement().y * 0.2, 0));
+    }
+
+    @Override
+    public void clientTick(Player player, PlayerMovementContext context) {
+        float speed = (float) Math.min(context.getSpeed().y * 6, 5);
+        playStateAnimation(player, WALL_CLIMB, context, 0, speed);
     }
 
     @Override
