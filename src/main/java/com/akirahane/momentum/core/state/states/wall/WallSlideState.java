@@ -64,7 +64,6 @@ public class WallSlideState extends BaseState {
                     AttributeModifier.Operation.ADD_MULTIPLIED_BASE
             ));
         }
-        // 播放动画
         playStateAnimation(player, WALL_SLIDE, context);
     }
 

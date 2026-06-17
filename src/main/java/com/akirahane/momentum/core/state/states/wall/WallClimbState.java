@@ -69,6 +69,11 @@ public class WallClimbState extends BaseState {
 
     @Override
     public void clientTick(Player player, PlayerMovementContext context) {
+        clientTickRemote(player, context);
+    }
+
+    @Override
+    public void clientTickRemote(Player player, PlayerMovementContext context) {
         float speed = (float) Math.min(context.getSpeed().y * 6, 5);
         playStateAnimation(player, WALL_CLIMB, context, 0, speed);
     }

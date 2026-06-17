@@ -9,12 +9,11 @@ import com.akirahane.momentum.core.state.BaseState;
 import com.akirahane.momentum.init.InitAttachments;
 import com.akirahane.momentum.network.StateTransitionPacket;
 import com.mojang.logging.LogUtils;
-import com.zigythebird.playeranim.api.PlayerAnimationAccess;
 import com.zigythebird.playeranim.api.PlayerAnimationFactory;
-import com.zigythebird.playeranimcore.animation.AnimationController;
 import com.zigythebird.playeranimcore.enums.PlayState;
 import net.minecraft.client.gui.components.debug.DebugScreenEntryStatus;
 import net.minecraft.client.gui.components.debug.DebugScreenProfile;
+import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.player.Player;
@@ -33,7 +32,6 @@ import net.neoforged.neoforge.client.gui.IConfigScreenFactory;
 import net.neoforged.neoforge.client.network.ClientPacketDistributor;
 import net.neoforged.neoforge.event.tick.PlayerTickEvent;
 import org.slf4j.Logger;
-import team.unnamed.mocha.MochaEngine;
 
 // 此类不会在专用服务器上加载。在此处访问客户端代码是安全的。
 @Mod(value = Momentum.MODID, dist = Dist.CLIENT)
@@ -57,11 +55,16 @@ public class MomentumClient {
     @SubscribeEvent(priority = EventPriority.LOWEST)
     public static void onClientPlayerTick(PlayerTickEvent.Pre event) {
         if (event.getEntity() instanceof LocalPlayer player) {
+            // 本地玩家
             MovementStateMachine sm = player.getData(InitAttachments.MOVEMENT_STATE);
             BaseState state = sm.clientTick(player);
             if (state != null) {
                 ClientPacketDistributor.sendToServer(new StateTransitionPacket(state.getStateType()));
             }
+        } else if (event.getEntity() instanceof AbstractClientPlayer otherPlayer) {
+            // 其他联机玩家
+            MovementStateMachine sm = otherPlayer.getData(InitAttachments.MOVEMENT_STATE);
+            sm.clientTickRemote(otherPlayer);
         }
     }
 

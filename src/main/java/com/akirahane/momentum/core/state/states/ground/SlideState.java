@@ -104,7 +104,7 @@ public class SlideState extends BaseState {
         if (!context.isLowerCenter()){
             return StateType.PRONE.getState();
         }
-        if (context.getSpeed().horizontalDistance() * 20 <= ServerConfig.MIN_SLIDE_SPEED.get()) {
+        if (context.getSpeed().horizontalDistance() * 20 <= ServerConfig.MIN_SLIDE_SPEED.get() / 2) {
             return StateType.PRONE.getState();
         }
         return StateType.SLIDE.getState();

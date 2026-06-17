@@ -6,6 +6,7 @@ import com.akirahane.momentum.core.state.StateType;
 import com.akirahane.momentum.core.state.BaseState;
 import com.akirahane.momentum.core.state.states.air.AirborneState;
 import com.akirahane.momentum.core.state.states.ground.WalkState;
+import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
 
@@ -16,7 +17,7 @@ public class BreakFallState extends BaseState {
     public static String BREAK_FALL = "break_fall";
 
     public static boolean canBreakFall(Player player, PlayerMovementContext context) {
-        return context.isToBreakFallState() && context.getLastFallDistance() > 4;
+        return context.isToBreakFallState() && player.fallDistance > Math.min(4, player.getAttributeValue(Attributes.SAFE_FALL_DISTANCE));
     }
 
     @Override

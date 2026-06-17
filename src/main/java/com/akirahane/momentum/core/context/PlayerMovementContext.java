@@ -26,6 +26,7 @@ import team.unnamed.mocha.runtime.value.ObjectValue;
 
 import java.util.*;
 
+import static com.akirahane.momentum.core.MomentumUtils.HORIZONTALS;
 import static com.akirahane.momentum.core.MomentumUtils.applyBoosterAttributes;
 import static com.akirahane.momentum.core.effect.MomentumEffect.EffectType.*;
 
@@ -37,10 +38,6 @@ public class PlayerMovementContext {
     protected static final Logger LOGGER = LogUtils.getLogger();
     // 键位
     public static final int UP = 0, DOWN = 1, LEFT = 2, RIGHT = 3, JUMP = 4;
-    // 墙面检测方向
-    private static final Direction[] HORIZONTALS = {
-            Direction.NORTH, Direction.SOUTH, Direction.EAST, Direction.WEST
-    };
     // 动画控制器
     MomentumAnimationController controller;
     // 动画moLang
@@ -81,8 +78,6 @@ public class PlayerMovementContext {
     private Vec3 slopeUnitVector = Vec3.ZERO;
     // 上次掉落的数据
     private double lastFallDistance = 0;
-    // 上次掉落的增量
-    private double deltaLastFallDistance = 0;
     // 闪避无敌时间
     private final int dodgeInvincible = 10;
     // 移动向量
@@ -196,6 +191,14 @@ public class PlayerMovementContext {
             -1
     );
 
+    // 挂墙移动阻力
+    public static MomentumEffect WALL_FRICTION = new MomentumEffect(
+            new Vec3(0.4, 0, 0),
+            Vec3.ZERO,
+            COMPOSE,
+            -1
+    );
+
     public PlayerMovementContext(Player player) {
         for (MomentumEffectType type : MomentumEffectType.values()) {
             pendingEffectPool.put(type, new HashSet<>());
@@ -215,8 +218,6 @@ public class PlayerMovementContext {
     }
 
     private void bindVariables() {
-        ObjectValue variables = (ObjectValue) this.mocha.scope().get("variable");
-        variables.setFunction("movement_speed", (ctx, args) -> (float) speed.horizontalDistance());
         ObjectValue math = (ObjectValue) this.mocha.scope().get("math");
         math.setFunction("mod", (a, b) -> a % b);
     }
@@ -242,10 +243,8 @@ public class PlayerMovementContext {
         }
         this.canMomentum = checkMomentum(this.hasJetBooster);
         if (player.fallDistance > 0) {
-            this.deltaLastFallDistance = player.fallDistance - this.lastFallDistance;
             this.lastFallDistance = player.fallDistance;
         }
-        ;
     }
 
     public void clientTick(Player player) {
@@ -261,6 +260,10 @@ public class PlayerMovementContext {
         this.jumpAcceleration = jumpCooldown > 0 ? -moveSpeed : moveSpeed * (1 + jumpStrength) * 1.2;
         this.setWorldInputVec(player);
         this.detectWall(player);
+    }
+
+    public void clientTickRemote(Player player) {
+        remoteDetectWall(player);
     }
 
     // 是否双击了某个键(两个true中至少隔一个false)
@@ -309,11 +312,11 @@ public class PlayerMovementContext {
         }
     }
 
-    // 墙面数据判断
+    // 客户端墙面数据判断
     public void detectWall(Player player) {
         AABB box = player.getBoundingBox();
         Level level = player.level();
-        double reach = 0.05;
+        double reach = 0.2;
 
         float yaw = player.getYRot();
         Vec3 lookVec = new Vec3(
@@ -359,19 +362,29 @@ public class PlayerMovementContext {
             return;
         }
 
-        // 在眼睛位置往墙方向做一个小碰撞箱检测是否有凹槽
+        // 眼睛到头顶做个碰撞箱判断凹槽
         double eyeY = player.getEyeY();
-        double halfSize = 0.2;
-        Vec3 eyeCenter = new Vec3(
-                player.getX() + bestDir.getStepX() * 0.5,
-                eyeY,
-                player.getZ() + bestDir.getStepZ() * 0.5
-        );
+        double topY = box.maxY; // 头顶
+        double headHalf = topY - eyeY;
+        double chinY = eyeY - headHalf * 2;
+        // 碰撞箱从玩家位置向墙面方向偏移一格
         AABB ledgeBox = new AABB(
-                eyeCenter.x - halfSize, eyeCenter.y - halfSize, eyeCenter.z - halfSize,
-                eyeCenter.x + halfSize, eyeCenter.y + halfSize, eyeCenter.z + halfSize
+                box.minX + bestDir.getStepX() * reach,
+                eyeY,
+                box.minZ + bestDir.getStepZ() * reach,
+                box.maxX + bestDir.getStepX() * reach,
+                topY,
+                box.maxZ + bestDir.getStepZ() * reach
         );
-        this.hasLedge = level.noCollision(player, ledgeBox);
+        AABB chinBox = new AABB(
+                box.minX - reach,
+                chinY,
+                box.minZ - reach,
+                box.maxX + reach,
+                eyeY,
+                box.maxZ + reach
+        );
+        this.hasLedge = level.noCollision(player, ledgeBox) && !level.noCollision(player, chinBox);
         this.wallDirection = bestDir;
         this.wallNormal = new Vec3(bestDir.getStepX(), 0, bestDir.getStepZ());
         this.lookWallAngle = bestLookAngle;
@@ -395,6 +408,52 @@ public class PlayerMovementContext {
         this.inputVec = new Vec3(x, 0, z);
     }
 
+    // 非客户端本地玩家墙面数据判断
+    public void remoteDetectWall(Player player) {
+        AABB box = player.getBoundingBox();
+        Level level = player.level();
+        double reach = 0.2;
+
+        float yaw = player.getYRot();
+        Vec3 lookVec = new Vec3(
+                -Math.sin(Math.toRadians(yaw)),
+                0,
+                Math.cos(Math.toRadians(yaw))
+        ).normalize();
+
+        Direction bestDir = null;
+        float bestLookAngle = Float.MAX_VALUE;
+
+        for (Direction dir : HORIZONTALS) {
+            AABB expanded = box.expandTowards(
+                    dir.getStepX() * reach,
+                    0,
+                    dir.getStepZ() * reach
+            );
+
+            if (!level.noCollision(player, expanded)) {
+                Vec3 wallNormal = new Vec3(dir.getStepX(), 0, dir.getStepZ());
+                float lookAngle = (float) Math.toDegrees(Math.acos(lookVec.dot(wallNormal)));
+
+                if (lookAngle < bestLookAngle) {
+                    bestLookAngle = lookAngle;
+                    bestDir = dir;
+                }
+            }
+        }
+
+        if (bestDir == null) {
+            this.setWallDirection(null);
+            this.setLookWallAngle(-1);
+            this.setWallNormal(Vec3.ZERO);
+            return;
+        }
+
+        this.setWallDirection(bestDir);
+        this.setWallNormal(new Vec3(bestDir.getStepX(), 0, bestDir.getStepZ()));
+        this.setLookWallAngle(bestLookAngle);
+    }
+
     // 向指定效果添加永久buff
     public void addPermanentEffect(MomentumEffectType type, MomentumEffect effect) {
         effect.setDuration(-1);
@@ -414,6 +473,5 @@ public class PlayerMovementContext {
         effect.setElapsedDuration(0);
         this.pendingEffectPool.get(type).remove(effect);
     }
-
 
 }

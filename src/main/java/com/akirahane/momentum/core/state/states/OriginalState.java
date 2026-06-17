@@ -4,6 +4,7 @@ import com.akirahane.momentum.core.state.StateType;
 import com.akirahane.momentum.core.context.PlayerMovementContext;
 import com.akirahane.momentum.core.state.BaseState;
 import com.akirahane.momentum.init.InitAttachments;
+import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
 
 import static com.akirahane.momentum.core.context.PlayerMovementContext.DEFAULT_FRICTION;
@@ -43,10 +44,20 @@ public class OriginalState extends BaseState {
     public void onEnter(Player player, PlayerMovementContext context) {
         context.resetEffect();
         stopAnimation(player, context);
+        var instance = player.getAttribute(Attributes.GRAVITY);
+        if (instance != null) {
+            instance.removeModifier(WALL_GRAVITY_ID);
+        }
     }
 
     @Override
     public void onExit(Player player, PlayerMovementContext context) {
+        context.resetEffect();
+        stopAnimation(player, context);
+        var instance = player.getAttribute(Attributes.GRAVITY);
+        if (instance != null) {
+            instance.removeModifier(WALL_GRAVITY_ID);
+        }
         context.addPermanentEffect(FRICTION, DEFAULT_FRICTION);
     }
 

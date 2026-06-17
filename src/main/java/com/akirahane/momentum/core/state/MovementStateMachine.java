@@ -7,7 +7,6 @@ import com.mojang.logging.LogUtils;
 import lombok.Getter;
 import lombok.Setter;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
 import org.slf4j.Logger;
 
@@ -37,11 +36,14 @@ public class MovementStateMachine {
     // 客户端 加服务端, 状态转换、实施效果、计算移动和视觉效果
     public BaseState clientTick(Player player) {
         handleEffect();
+        BaseState org = currentState;
         BaseState next = currentState.evaluate(player, context);
-        boolean isTurn = transition(next, player);
+        transition(next, player);
         context.clientTick(player);
         currentState.clientTick(player, context);
-        if (isTurn) {
+        next = currentState.evaluate(player, context);
+        transition(next, player);
+        if (!org.equals(next)) {
             return next;
         }
         return null;
@@ -53,14 +55,19 @@ public class MovementStateMachine {
         currentState.serverTick(player, context);
     }
 
+    // 客户端远程玩家tick
+    public void clientTickRemote(Player player) {
+        context.clientTickRemote(player);
+        currentState.clientTickRemote(player, context);
+    }
+
     // 状态转换
-    private boolean transition(BaseState next, Player player) {
-        if (next.equals(currentState)) return false;
+    private void transition(BaseState next, Player player) {
+        if (next.equals(currentState)) return;
         LOGGER.debug("[MovementStateMachine] {} to {}", currentState.getStateType(), next.getStateType());
         currentState.onExit(player, context);
         currentState = next;
         currentState.onEnter(player, context);
-        return true;
     }
 
     // 客户端向服务端同步状态

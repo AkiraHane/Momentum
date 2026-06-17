@@ -2,8 +2,6 @@ package com.akirahane.momentum.core.state;
 
 import com.akirahane.momentum.Momentum;
 import com.akirahane.momentum.core.context.PlayerMovementContext;
-import com.akirahane.momentum.core.state.states.special.DodgeState;
-import com.akirahane.momentum.init.InitAttachments;
 import com.mojang.logging.LogUtils;
 import com.zigythebird.playeranimcore.animation.layered.modifier.AbstractFadeModifier;
 import com.zigythebird.playeranimcore.easing.EasingType;
@@ -11,8 +9,6 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.player.Player;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
-
-import static com.akirahane.momentum.core.state.states.OriginalState.canOriginal;
 
 public abstract class BaseState {
     // 日志
@@ -35,8 +31,12 @@ public abstract class BaseState {
     public void serverTick(Player player, PlayerMovementContext context) {
     }
 
-    // 觉效果和移动、状态转换相关内容
+    // 视觉效果和移动、状态转换相关内容
     public void clientTick(Player player, PlayerMovementContext context) {
+    }
+
+    // 其他玩家要在客户端渲染视觉效果的所需数据
+    public void clientTickRemote(Player player, PlayerMovementContext context) {
     }
 
     // 离开状态时调用一次。

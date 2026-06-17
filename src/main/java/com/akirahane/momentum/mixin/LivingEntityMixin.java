@@ -1,6 +1,7 @@
 package com.akirahane.momentum.mixin;
 
 import com.akirahane.momentum.config.ServerConfig;
+import com.akirahane.momentum.core.context.PlayerMovementContext;
 import com.akirahane.momentum.core.state.MovementStateMachine;
 import com.akirahane.momentum.core.state.StateType;
 import com.akirahane.momentum.init.InitAttachments;
@@ -29,7 +30,7 @@ public abstract class LivingEntityMixin extends Entity implements Attackable, Wa
 
     // 日志
     @Shadow
-    protected abstract double getEffectiveGravity();
+    public float yBodyRot;
 
     protected LivingEntityMixin(EntityType<?> type, Level level) {
         super(type, level);
@@ -228,6 +229,53 @@ public abstract class LivingEntityMixin extends Entity implements Attackable, Wa
             return;
         }
         if (stateMachine.getContext().isNoJump()) {
+            ci.cancel();
+        }
+    }
+
+    // 在一些动作的时候阻止身体旋转
+
+
+    @Inject(method = "tickHeadTurn", at = @At("HEAD"), cancellable = true)
+    private void momentum$lockBodyRotation(float yBodyRotT, CallbackInfo ci) {
+        LivingEntity self = (LivingEntity) (Object) this;
+        if (!(self instanceof Player player)) {
+            return;
+        }
+
+        MovementStateMachine stateMachine = player.getData(InitAttachments.MOVEMENT_STATE);
+        if (stateMachine.getCurrentState().getStateType().equals(StateType.ORIGINAL)) {
+            return;
+        }
+        StateType state = stateMachine.getCurrentState().getStateType();
+
+        if (StateType.WALL_CLIMB.equals(state) ||
+                StateType.WALL_RUN.equals(state) ||
+                StateType.WALL_SLIDE.equals(state) ||
+                StateType.WALL_HANG.equals(state)
+        ) {
+            PlayerMovementContext context = stateMachine.getContext();
+            Vec3 wallNormal = context.getWallNormal();
+
+            if (wallNormal.lengthSqr() > 0.001) {
+                // 面对墙面 = 朝着 wallNormal 的反方向看
+                // wallNormal 是墙面朝外的法线，取反就是面对墙
+                float targetBodyRot = (float) Math.toDegrees(Math.atan2(-wallNormal.x, wallNormal.z));
+
+                // 平滑过渡到目标角度
+                float diff = Mth.wrapDegrees(targetBodyRot - this.yBodyRot);
+                this.yBodyRot += diff * 0.3f;
+
+                // 限制头部偏转
+                float headDiff = Mth.wrapDegrees(player.getYRot() - this.yBodyRot);
+                float maxAngle = 70.0f;
+                if (headDiff > maxAngle) {
+                    this.yBodyRot = player.getYRot() - maxAngle;
+                } else if (headDiff < -maxAngle) {
+                    this.yBodyRot = player.getYRot() + maxAngle;
+                }
+            }
+
             ci.cancel();
         }
     }
