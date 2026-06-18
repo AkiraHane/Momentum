@@ -19,6 +19,7 @@ public class WallClimbState extends BaseState {
     public static boolean canWallClimb(Player player, PlayerMovementContext context) {
         return player.onClimbable() || (
                 context.getWallDirection() != null &&
+                        context.isHasFaceWall() &&
                         context.getInputWallAngle() < 90 &&
                         context.getInputWallAngle() >= 0 &&
                         context.getLookWallAngle() < 45 &&

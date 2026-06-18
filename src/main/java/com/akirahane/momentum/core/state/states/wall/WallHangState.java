@@ -23,7 +23,6 @@ public class WallHangState extends BaseState {
 
     public static boolean canWallHang(Player player, PlayerMovementContext context) {
         return context.isHasLedge() &&
-                !Minecraft.getInstance().options.keyJump.isDown() &&
                 !Minecraft.getInstance().options.keyShift.isDown() &&
                 player.fallDistance <= player.getAttributeValue(Attributes.SAFE_FALL_DISTANCE) * 3;
 
@@ -43,11 +42,11 @@ public class WallHangState extends BaseState {
         if (WallSlideState.canWallSlide(player, context)) {
             return StateType.WALL_SLIDE.getState();
         }
-        if ((context.isLowerCenter() || !context.isHasLedge() || Minecraft.getInstance().options.keyShift.isDown()) &&
+        if ((!context.isHasLedge() || Minecraft.getInstance().options.keyShift.isDown()) &&
                 AirborneState.canAirborne(player, context)) {
             return StateType.AIRBORNE.getState();
         }
-        if ((context.isLowerCenter() || !context.isHasLedge() || Minecraft.getInstance().options.keyShift.isDown()) &&
+        if ((!context.isHasLedge() || Minecraft.getInstance().options.keyShift.isDown()) &&
                 WalkState.canWalk(player, context)) {
             return StateType.WALK.getState();
         }

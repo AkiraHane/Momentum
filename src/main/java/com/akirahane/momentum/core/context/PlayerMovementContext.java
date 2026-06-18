@@ -56,6 +56,8 @@ public class PlayerMovementContext {
     private boolean noJump = false;
     // 是否有边缘
     private boolean hasLedge = false;
+    // 眼睛到下巴的前方是否有可抓取墙壁
+    private boolean hasFaceWall = false;
     // 是否双击UP DOWN LEFT RIGHT JUMP
     private boolean doubleClickUp = false;
     private boolean doubleClickDown = false;
@@ -384,7 +386,8 @@ public class PlayerMovementContext {
                 eyeY,
                 box.maxZ + reach
         );
-        this.hasLedge = level.noCollision(player, ledgeBox) && !level.noCollision(player, chinBox);
+        this.hasFaceWall = !level.noCollision(player, chinBox);
+        this.hasLedge = level.noCollision(player, ledgeBox) && this.hasFaceWall;
         this.wallDirection = bestDir;
         this.wallNormal = new Vec3(bestDir.getStepX(), 0, bestDir.getStepZ());
         this.lookWallAngle = bestLookAngle;
