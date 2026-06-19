@@ -18,10 +18,9 @@ public class WallKickState extends BaseState {
     public static final String WALL_KICK = "wall_kick";
 
     public static boolean canWallKick(Player player, PlayerMovementContext context) {
-        return context.isHasLedge() &&
-                context.getWallDirection() != null &&
-                !Vec3.ZERO.equals(context.getInputVec()) && Mth.abs(context.getInputWallAngle()) > 90 &&
-                !Minecraft.getInstance().options.keyJump.isDown();
+        return context.getWallDirection() != null &&
+                !Vec3.ZERO.equals(context.getInputVec()) && Mth.abs(context.getInputWallAngle()) >= 90 &&
+                Minecraft.getInstance().options.keyJump.isDown();
     }
     @Override
     public BaseState evaluate(Player player, PlayerMovementContext context) {

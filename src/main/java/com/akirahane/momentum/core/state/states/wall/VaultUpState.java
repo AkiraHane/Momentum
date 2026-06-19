@@ -9,7 +9,9 @@ import com.akirahane.momentum.core.state.states.ground.WalkState;
 import com.akirahane.momentum.core.state.states.special.DodgeState;
 import com.akirahane.momentum.core.state.states.water.SwimState;
 import net.minecraft.client.Minecraft;
+import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.phys.Vec3;
 
 import static com.akirahane.momentum.core.state.states.OriginalState.canOriginal;
 
@@ -17,6 +19,7 @@ public class VaultUpState extends BaseState {
 
     public static boolean canVaultUp(Player player, PlayerMovementContext context) {
         return context.isHasLedge() &&
+                !Vec3.ZERO.equals(context.getInputVec()) && Mth.abs(context.getInputWallAngle()) < 90 &&
                 Minecraft.getInstance().options.keyJump.isDown();
     }
 
