@@ -88,9 +88,9 @@ public class PlayerMovementContext {
     // 向墙的法向量
     Vec3 wallNormal = Vec3.ZERO;
     // 向墙视线角度
-    float lookWallAngle = Float.MAX_VALUE;
+    float lookWallAngle = 360F;
     // 向墙输入角度
-    float inputWallAngle = Float.MAX_VALUE;
+    float inputWallAngle = 360F;
     // 跳跃最高速度(到达这个速度停止继续加速, 但不会减速)
     private double jumpLimitSpeed = 0;
     // 跳跃加速强度(同时吃速度属性和跳跃提升属性)
@@ -344,8 +344,8 @@ public class PlayerMovementContext {
         Vec3 inputNorm = hasInput ? inputVec.normalize() : Vec3.ZERO;
 
         Direction bestDir = null;
-        float bestLookAngle = Float.MAX_VALUE;
-        float bestInputAngle = Float.MAX_VALUE;
+        float bestLookAngle = 360F;
+        float bestInputAngle = 360F;
 
         for (Direction dir : HORIZONTALS) {
             AABB expanded = box.expandTowards(
@@ -372,8 +372,8 @@ public class PlayerMovementContext {
             this.hasLedge = false;
             this.wallDirection = null;
             this.wallNormal = Vec3.ZERO;
-            this.lookWallAngle = Float.MAX_VALUE;
-            this.inputWallAngle = Float.MAX_VALUE;
+            this.lookWallAngle = 360F;
+            this.inputWallAngle = 360F;
             return;
         }
 
@@ -438,7 +438,7 @@ public class PlayerMovementContext {
         ).normalize();
 
         Direction bestDir = null;
-        float bestLookAngle = Float.MAX_VALUE;
+        float bestLookAngle = 360F;
 
         for (Direction dir : HORIZONTALS) {
             AABB expanded = box.expandTowards(
@@ -458,7 +458,7 @@ public class PlayerMovementContext {
 
         if (bestDir == null) {
             this.setWallDirection(null);
-            this.setLookWallAngle(Float.MAX_VALUE);
+            this.setLookWallAngle(360F);
             this.setWallNormal(Vec3.ZERO);
             return;
         }
