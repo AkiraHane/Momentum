@@ -12,6 +12,7 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.phys.Vec3;
 
 import static com.akirahane.momentum.core.state.states.OriginalState.canOriginal;
 import static com.akirahane.momentum.core.state.states.air.AirborneState.canAirborne;
@@ -28,7 +29,7 @@ public class WallSlideState extends BaseState {
         return !player.onGround() &&
                 context.getWallDirection() != null &&
                 context.isHasFaceWall() &&
-                Mth.abs(context.getInputWallAngle()) < 90 &&
+                !Vec3.ZERO.equals(context.getInputVec()) && Mth.abs(context.getInputWallAngle()) < 90 &&
                 Mth.abs(context.getLookWallAngle()) < 45;
     }
 

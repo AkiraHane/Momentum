@@ -9,6 +9,7 @@ import com.akirahane.momentum.core.state.states.water.SwimState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.phys.Vec3;
 
 import static com.akirahane.momentum.core.state.states.OriginalState.canOriginal;
 
@@ -19,7 +20,7 @@ public class WallKickState extends BaseState {
     public static boolean canWallKick(Player player, PlayerMovementContext context) {
         return context.isHasLedge() &&
                 context.getWallDirection() != null &&
-                Mth.abs(context.getInputWallAngle()) > 90 &&
+                !Vec3.ZERO.equals(context.getInputVec()) && Mth.abs(context.getInputWallAngle()) > 90 &&
                 !Minecraft.getInstance().options.keyJump.isDown();
     }
     @Override

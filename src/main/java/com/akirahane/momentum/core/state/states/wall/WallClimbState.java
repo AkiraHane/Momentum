@@ -26,7 +26,7 @@ public class WallClimbState extends BaseState {
                 context.getWallDirection() != null &&
                         context.isHasFaceWall() &&
                         Minecraft.getInstance().options.keyJump.isDown() &&
-                        Mth.abs(context.getInputWallAngle()) < 90 &&
+                        !Vec3.ZERO.equals(context.getInputVec()) && Mth.abs(context.getInputWallAngle()) < 90 &&
                         Mth.abs(context.getLookWallAngle()) < 45 &&
                         context.getSpeed().y > 0
         );
