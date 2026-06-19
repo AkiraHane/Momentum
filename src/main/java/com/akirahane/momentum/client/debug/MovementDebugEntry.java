@@ -91,7 +91,8 @@ public class MovementDebugEntry implements DebugScreenEntry {
 //            displayer.addToGroup(group, String.format("[Momentum] IsSwimming: %s", mocha.eval("query.is_swimming")));
 //            // math.mod(query.head_y_rotation - query.body_y_rotation, 360)
 //            displayer.addToGroup(group, String.format("[Momentum] HeadYRotation - BodyYRotation: %.4f", mocha.eval("query.head_y_rotation - query.body_y_rotation")));
-//            displayer.addToGroup(group, String.format("[Momentum] HeadYRotation - BodyYRotation: %.4f", mocha.eval("math.min_angle_180(-90, query.head_y_rotation)")));
+            displayer.addToGroup(group, String.format("[Momentum] get_movement_y_speed: %.4f", mocha.eval("variable.get_movement_y_speed()")));
+            displayer.addToGroup(group, String.format("[Momentum] get_movement_speed: %.4f", mocha.eval("variable.get_movement_speed()")));
         }
     }
 }

@@ -16,8 +16,9 @@ import net.minecraft.world.phys.Vec3;
 import static com.akirahane.momentum.core.state.states.OriginalState.canOriginal;
 
 public class WallKickState extends BaseState {
-    // 动画名称
-    public static final String WALL_KICK = "wall_kick";
+    // 跳跃
+    public static String WALL_JUMP_LEFT = "wall_jump_left";
+    public static String WALL_JUMP_RIGHT = "wall_jump_right";
 
     public static boolean canWallKick(Player player, PlayerMovementContext context) {
         return context.getWallDirection() != null &&
@@ -27,7 +28,12 @@ public class WallKickState extends BaseState {
 
     @Override
     public void onEnter(Player player, PlayerMovementContext context) {
-        super.onEnter(player, context);
+        if (context.isLeftFootJump()) {
+            playStateAnimation(player, WALL_JUMP_LEFT, context);
+        } else {
+            playStateAnimation(player, WALL_JUMP_RIGHT, context);
+        }
+        context.setLeftFootJump(!context.isLeftFootJump());
         player.setDeltaMovement(
                 context.getInputVec().x * 0.3,
                 0.6,

@@ -66,6 +66,8 @@ public class PlayerMovementContext {
     private boolean doubleClickJump = false;
     // 是否进入受身
     private boolean toBreakFallState = false;
+    // 当前是否轮到左脚跳
+    private boolean leftFootJump = true;
 
 
     // 移动速度
@@ -233,8 +235,16 @@ public class PlayerMovementContext {
             });
             // clamp
             math.setFunction("clamp", Mth::clamp);
+            // min
+            math.setFunction("min", Math::min);
         } else {
             LOGGER.warn("Failed to bind math.min_angle_180 to Mocha");
+        }
+        value = this.mocha.scope().get("variable");
+        if (value instanceof ObjectValue variable) {
+            variable.setFunction("get_movement_speed", () -> (float) this.getSpeed().horizontalDistance());
+            // y speed
+            variable.setFunction("get_movement_y_speed", () -> (float) this.getSpeed().y());
         }
     }
 

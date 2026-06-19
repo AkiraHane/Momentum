@@ -49,7 +49,7 @@ public class AirborneState extends BaseState {
         if (WallRunState.canWallRun(player, context)) {
             return StateType.WALL_RUN.getState();
         }
-        if (WallKickState.canWallKick(player, context)){
+        if (WallKickState.canWallKick(player, context)) {
             return StateType.WALL_KICK.getState();
         }
         if (WallClimbState.canWallClimb(player, context)) {
@@ -69,9 +69,6 @@ public class AirborneState extends BaseState {
 
     @Override
     public void onEnter(Player player, PlayerMovementContext context) {
-        if (context.getSpeed().y > 0){
-            playStateAnimation(player, IDLE, context);
-        }
         context.addPermanentEffect(MomentumEffectType.LIMIT_ACCELERATION_SPEED, AIR_LIMIT_ACCELERATION);
         context.setJumpCooldown(15);
 
@@ -92,7 +89,7 @@ public class AirborneState extends BaseState {
             float t = (float) ((player.fallDistance - 3.0f) / (70.0f - 3.0f));
             float speed = Math.clamp(t, 0.0f, 1.0f) * 1.5F + 0.5F;
             playStateAnimation(player, FALL, context, 20, speed);
-        } else {
+        } else if (FALL.equals(context.getCurrentAnimationName())){
             playStateAnimation(player, IDLE, context);
         }
     }
