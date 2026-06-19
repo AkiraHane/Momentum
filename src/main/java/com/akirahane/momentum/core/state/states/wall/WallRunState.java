@@ -18,7 +18,7 @@ public class WallRunState extends BaseState {
     public static boolean canWallRun(Player player, PlayerMovementContext context) {
         return !player.onClimbable() &&
                 context.isHasJetBooster() &&
-                context.isHasFaceWall() &&
+                context.getWallDirection() != null &&
                 Mth.abs(context.getInputWallAngle()) < 90 &&
                 Mth.abs(context.getLookWallAngle()) > 45 &&
                 Minecraft.getInstance().options.keyJump.isDown();
