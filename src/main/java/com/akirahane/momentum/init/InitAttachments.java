@@ -2,6 +2,7 @@ package com.akirahane.momentum.init;
 
 import com.akirahane.momentum.core.state.MovementStateMachine;
 import com.mojang.serialization.Codec;
+import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.world.entity.player.Player;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.attachment.AttachmentType;
@@ -22,6 +23,7 @@ public class InitAttachments {
                     () -> AttachmentType.builder(() -> true)
                             .serialize(Codec.BOOL.fieldOf("momentum_enabled"))
                             .copyOnDeath()
+                            .sync(ByteBufCodecs.BOOL.cast())
                             .build()
             );
     public static final Supplier<AttachmentType<@NotNull MovementStateMachine>> MOVEMENT_STATE =

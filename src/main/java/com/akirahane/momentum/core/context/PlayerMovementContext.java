@@ -258,7 +258,7 @@ public class PlayerMovementContext {
         double moveSpeed = player.getAttributeValue(Attributes.MOVEMENT_SPEED);
         double jumpStrength = player.getJumpBoostPower();
         this.jumpLimitSpeed = moveSpeed * (1 + jumpStrength) * 3;
-        this.jumpAcceleration = jumpCooldown > 0 ? -moveSpeed : moveSpeed * (1 + jumpStrength) * 1.2;
+        this.jumpAcceleration = jumpCooldown > 0 ? 0.2 : moveSpeed * (1 + jumpStrength) * 1.2;
         this.setWorldInputVec(player);
         this.detectWall(player);
     }

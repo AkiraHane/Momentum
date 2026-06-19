@@ -4,7 +4,6 @@ import com.akirahane.momentum.Momentum;
 import com.akirahane.momentum.core.state.MovementStateMachine;
 import com.akirahane.momentum.network.StateBroadcastPacket;
 import com.akirahane.momentum.network.StateTransitionPacket;
-import com.akirahane.momentum.network.SyncMomentumEnabledPacket;
 import com.akirahane.momentum.network.ToggleMomentumPacket;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
@@ -12,7 +11,6 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.neoforge.network.PacketDistributor;
 import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
 import net.neoforged.neoforge.network.registration.PayloadRegistrar;
 
@@ -31,24 +29,15 @@ public class InitNetwork {
                     Player player = context.player();
                     boolean current = !player.getData(InitAttachments.MOMENTUM_ENABLED);
                     player.setData(InitAttachments.MOMENTUM_ENABLED, current);
-                    // 同步给客户端
+                    // 发一个提示消息给玩家
                     if (player instanceof ServerPlayer sp) {
-                        PacketDistributor.sendToPlayer(sp, new SyncMomentumEnabledPacket(current));
+                        sp.sendSystemMessage(
+                                Component.translatable(current
+                                        ? "message.momentum.momentum_enabled"
+                                        : "message.momentum.momentum_disabled"),
+                                true
+                        );
                     }
-                }
-        );
-
-        registrar.playToClient(
-                SyncMomentumEnabledPacket.TYPE,
-                SyncMomentumEnabledPacket.STREAM_CODEC,
-                (packet, context) -> {
-                    Player player = context.player();
-                    player.setData(InitAttachments.MOMENTUM_ENABLED, packet.enabled());
-                    player.sendOverlayMessage(
-                            Component.translatable(packet.enabled()
-                                    ? "message.momentum.momentum_enabled"
-                                    : "message.momentum.momentum_disabled")
-                    );
                 }
         );
 

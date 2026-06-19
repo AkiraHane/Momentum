@@ -6,8 +6,8 @@ import com.akirahane.momentum.init.InitAttachments;
 import com.akirahane.momentum.init.InitItems;
 import com.akirahane.momentum.config.ServerConfig;
 import com.akirahane.momentum.network.StateBroadcastPacket;
-import com.akirahane.momentum.network.SyncMomentumEnabledPacket;
 import com.mojang.logging.LogUtils;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
@@ -43,8 +43,11 @@ public class Momentum {
     @SubscribeEvent
     public static void onPlayerLogin(PlayerEvent.PlayerLoggedInEvent event) {
         if (event.getEntity() instanceof ServerPlayer player) {
-            PacketDistributor.sendToPlayer(player, new SyncMomentumEnabledPacket(
-                    player.getData(InitAttachments.MOMENTUM_ENABLED))
+            player.sendSystemMessage(
+                    Component.translatable(player.getData(InitAttachments.MOMENTUM_ENABLED)
+                            ? "message.momentum.momentum_enabled"
+                            : "message.momentum.momentum_disabled"),
+                    true
             );
         }
     }
