@@ -1413,6 +1413,9 @@
 				"torso": {
 					"rotation": [0, 0, -17.5]
 				},
+				"head": {
+					"rotation": ["-query.head_x_rotation", "-math.min_angle_180(-90, query.head_y_rotation)", -10]
+				},
 				"right_arm": {
 					"rotation": [7.5, 0, 20],
 					"position": [1, -2, 0]
@@ -1450,6 +1453,9 @@
 				},
 				"torso": {
 					"rotation": [0, 0, 17.5]
+				},
+				"head": {
+					"rotation": ["-query.head_x_rotation", "-math.min_angle_180(90, query.head_y_rotation)", 10]
 				},
 				"right_arm": {
 					"rotation": [-120, 90, 0],
