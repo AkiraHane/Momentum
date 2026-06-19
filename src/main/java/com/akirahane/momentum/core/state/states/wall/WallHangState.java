@@ -55,6 +55,9 @@ public class WallHangState extends BaseState {
         if (WallRunState.canWallRun(player, context)) {
             return StateType.WALL_RUN.getState();
         }
+        if (WallKickState.canWallKick(player, context)){
+            return StateType.WALL_KICK.getState();
+        }
         if (canVaultIn(player, context)) {
             return StateType.VAULT_IN.getState();
         }

@@ -1,13 +1,11 @@
 package com.akirahane.momentum.core.state.states.wall;
 
-import com.akirahane.momentum.config.ServerConfig;
 import com.akirahane.momentum.core.context.PlayerMovementContext;
 import com.akirahane.momentum.core.state.StateType;
 import com.akirahane.momentum.core.state.BaseState;
 import com.akirahane.momentum.core.state.states.ground.ProneState;
 import com.akirahane.momentum.core.state.states.special.DodgeState;
 import com.akirahane.momentum.core.state.states.water.SwimState;
-import net.minecraft.client.Minecraft;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
@@ -52,6 +50,9 @@ public class WallSlideState extends BaseState {
         }
         if (canWallRun(player, context)) {
             return StateType.WALL_RUN.getState();
+        }
+        if (WallKickState.canWallKick(player, context)){
+            return StateType.WALL_KICK.getState();
         }
         if (canWallClimb(player, context)) {
             return StateType.WALL_CLIMB.getState();

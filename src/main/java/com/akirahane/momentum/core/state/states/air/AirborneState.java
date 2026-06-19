@@ -7,6 +7,7 @@ import com.akirahane.momentum.core.state.BaseState;
 import com.akirahane.momentum.core.state.states.ground.ProneState;
 import com.akirahane.momentum.core.state.states.special.DodgeState;
 import com.akirahane.momentum.core.state.states.wall.WallClimbState;
+import com.akirahane.momentum.core.state.states.wall.WallKickState;
 import com.akirahane.momentum.core.state.states.wall.WallRunState;
 import com.akirahane.momentum.core.state.states.wall.WallSlideState;
 import com.akirahane.momentum.core.state.states.water.SwimState;
@@ -47,6 +48,9 @@ public class AirborneState extends BaseState {
         }
         if (WallRunState.canWallRun(player, context)) {
             return StateType.WALL_RUN.getState();
+        }
+        if (WallKickState.canWallKick(player, context)){
+            return StateType.WALL_KICK.getState();
         }
         if (WallClimbState.canWallClimb(player, context)) {
             return StateType.WALL_CLIMB.getState();

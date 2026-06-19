@@ -39,6 +39,9 @@ public class WallRunState extends BaseState {
         if (ProneState.canProne(player, context)) {
             return StateType.PRONE.getState();
         }
+        if (WallKickState.canWallKick(player, context)){
+            return StateType.WALL_KICK.getState();
+        }
         if (AirborneState.canAirborne(player, context)) {
             return StateType.AIRBORNE.getState();
         }

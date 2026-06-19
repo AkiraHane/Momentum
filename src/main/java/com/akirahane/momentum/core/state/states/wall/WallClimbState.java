@@ -53,6 +53,9 @@ public class WallClimbState extends BaseState {
         if (WallRunState.canWallRun(player, context)) {
             return StateType.WALL_RUN.getState();
         }
+        if (WallKickState.canWallKick(player, context)){
+            return StateType.WALL_KICK.getState();
+        }
         if (WallClimbState.canWallClimb(player, context)) {
             return StateType.WALL_CLIMB.getState();
         }
