@@ -3,12 +3,10 @@ package com.akirahane.momentum.core.state.states.water;
 import com.akirahane.momentum.core.context.PlayerMovementContext;
 import com.akirahane.momentum.core.state.StateType;
 import com.akirahane.momentum.core.state.BaseState;
-import com.akirahane.momentum.core.state.states.air.AirborneState;
-import com.akirahane.momentum.core.state.states.ground.WalkState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.entity.player.Player;
 
+import static com.akirahane.momentum.client.input.LowerCenterKey.LOWER_CENTER;
 import static com.akirahane.momentum.core.state.states.OriginalState.canOriginal;
 import static com.akirahane.momentum.core.state.states.air.AirborneState.canAirborne;
 import static com.akirahane.momentum.core.state.states.ground.WalkState.canWalk;
@@ -16,7 +14,7 @@ import static com.akirahane.momentum.core.state.states.ground.WalkState.canWalk;
 public class SwimState extends BaseState {
 
     public static boolean canSwim(Player player, PlayerMovementContext context) {
-        return (context.isLowerCenter() || player.isSprinting() && player.isUnderWater()) &&
+        return (LOWER_CENTER.get().isDown() || player.isSprinting() && player.isUnderWater()) &&
                 player.isInWater() &&
                 Minecraft.getInstance().options.keyUp.isDown();
     }

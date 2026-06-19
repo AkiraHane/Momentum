@@ -30,7 +30,9 @@ public enum StateType {
     WALL_SLIDE(new WallSlideState()),
     WALL_RUN(new WallRunState()),
     WALL_HANG(new WallHangState()),
-    VAULT(new VaultState());
+    VAULT_UP(new VaultUpState()),
+    VAULT_IN(new VaultInState()),
+    ;
     // 日志
     static final Logger LOGGER = LogUtils.getLogger();
 

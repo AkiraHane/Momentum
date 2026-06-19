@@ -4,6 +4,7 @@ import com.akirahane.momentum.core.context.PlayerMovementContext;
 import com.akirahane.momentum.core.effect.MomentumEffectType;
 import com.akirahane.momentum.core.state.StateType;
 import com.akirahane.momentum.core.state.BaseState;
+import com.akirahane.momentum.core.state.states.ground.ProneState;
 import com.akirahane.momentum.core.state.states.special.DodgeState;
 import com.akirahane.momentum.core.state.states.wall.WallClimbState;
 import com.akirahane.momentum.core.state.states.wall.WallRunState;
@@ -18,6 +19,7 @@ import static com.akirahane.momentum.core.context.PlayerMovementContext.AIR_LIMI
 import static com.akirahane.momentum.core.state.states.OriginalState.canOriginal;
 import static com.akirahane.momentum.core.state.states.air.BreakFallReadyState.canBreakFallReady;
 import static com.akirahane.momentum.core.state.states.ground.WalkState.canWalk;
+import static com.akirahane.momentum.core.state.states.wall.WallHangState.canWallHang;
 
 public class AirborneState extends BaseState {
     // 动画名称
@@ -35,6 +37,15 @@ public class AirborneState extends BaseState {
         if (DodgeState.canDodge(player, context)) {
             return StateType.DODGE.getState();
         }
+        if (SwimState.canSwim(player, context)) {
+            return StateType.SWIM.getState();
+        }
+        if (ProneState.canProne(player, context)) {
+            return StateType.PRONE.getState();
+        }
+        if (canWallHang(player, context)) {
+            return StateType.WALL_HANG.getState();
+        }
         if (WallRunState.canWallRun(player, context)) {
             return StateType.WALL_RUN.getState();
         }
@@ -43,9 +54,6 @@ public class AirborneState extends BaseState {
         }
         if (WallSlideState.canWallSlide(player, context)) {
             return StateType.WALL_SLIDE.getState();
-        }
-        if (SwimState.canSwim(player, context)) {
-            return StateType.SWIM.getState();
         }
         if (canBreakFallReady(player, context)) {
             return StateType.BREAK_FALL_READY.getState();
@@ -58,6 +66,9 @@ public class AirborneState extends BaseState {
 
     @Override
     public void onEnter(Player player, PlayerMovementContext context) {
+        if (context.getSpeed().y > 0){
+            playStateAnimation(player, IDLE, context);
+        }
         context.addPermanentEffect(MomentumEffectType.ACCELERATION, AIR_ACCELERATION);
         context.addPermanentEffect(MomentumEffectType.LIMIT_ACCELERATION_SPEED, AIR_LIMIT_ACCELERATION);
         context.setJumpCooldown(15);
@@ -75,7 +86,7 @@ public class AirborneState extends BaseState {
 
     @Override
     public void clientTickRemote(Player player, PlayerMovementContext context) {
-        if (player.fallDistance > player.getAttributeValue(Attributes.SAFE_FALL_DISTANCE)) {
+        if (player.fallDistance > player.getAttributeValue(Attributes.SAFE_FALL_DISTANCE) * 2) {
             float t = (float) ((player.fallDistance - 3.0f) / (70.0f - 3.0f));
             float speed = Math.clamp(t, 0.0f, 1.0f) * 1.5F + 0.5F;
             playStateAnimation(player, FALL, context, 20, speed);

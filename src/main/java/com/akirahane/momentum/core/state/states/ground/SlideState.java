@@ -7,12 +7,15 @@ import com.akirahane.momentum.core.state.BaseState;
 import com.akirahane.momentum.core.context.PlayerMovementContext;
 import com.akirahane.momentum.core.state.states.air.AirborneState;
 import com.akirahane.momentum.core.state.states.special.DodgeState;
+import com.akirahane.momentum.core.state.states.water.SwimState;
 import com.akirahane.momentum.mixin.LivingEntityAccessor;
 import com.akirahane.momentum.config.ServerConfig;
+import net.minecraft.client.Minecraft;
 import net.minecraft.world.entity.Pose;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
 
+import static com.akirahane.momentum.client.input.LowerCenterKey.LOWER_CENTER;
 import static com.akirahane.momentum.core.MomentumUtils.canPlayerFitAtPose;
 import static com.akirahane.momentum.core.effect.MomentumEffect.EffectType.LOCAL_VALUE;
 import static com.akirahane.momentum.core.state.states.OriginalState.canOriginal;
@@ -28,7 +31,7 @@ public class SlideState extends BaseState {
 
     public static boolean canSlide(Player player, PlayerMovementContext context) {
         return player.onGround() &&
-                context.isLowerCenter() &&
+                LOWER_CENTER.get().isDown() &&
                 player.isSprinting() &&
                 canSlideSpeedCheck(player, context);
     }
@@ -45,18 +48,22 @@ public class SlideState extends BaseState {
         context.addPermanentEffect(MomentumEffectType.FRICTION, context.SLIDE_FRICTION);
         context.addEffect(MomentumEffectType.BLOCK_FRICTION, context.SLIDE_BLOCK_FRICTION, JUMP_DECELERATION_WINDOW);
 
-        if (context.getSlideCooldown() == 0) {
-            Vec3 velocity = player.getDeltaMovement();
-            float jumpPower = ((LivingEntityAccessor) player).invokeGetJumpPower();
-            LOGGER.debug("player.getJumpPower() {}", jumpPower);
-            player.addDeltaMovement(
-                    new Vec3(
-                            velocity.x * jumpPower / velocity.horizontalDistance(),
-                            0,
-                            velocity.z * jumpPower / velocity.horizontalDistance()
-                    )
-            );
+        Vec3 velocity = player.getDeltaMovement();
+        float jumpPower = ((LivingEntityAccessor) player).invokeGetJumpPower();
+        LOGGER.debug("player.getJumpPower() {}", jumpPower);
+        int slideAccelerationCooldown = ServerConfig.SLIDE_ACCELERATION_COOLDOWN.get();
+        if (context.getSlideCooldown() != 0) {
+            jumpPower /= 2;
+            jumpPower *= ((float) (slideAccelerationCooldown - context.getSlideCooldown()) / slideAccelerationCooldown);
         }
+
+        player.addDeltaMovement(
+                new Vec3(
+                        velocity.x * jumpPower / velocity.horizontalDistance(),
+                        0,
+                        velocity.z * jumpPower / velocity.horizontalDistance()
+                )
+        );
         context.setSlideCooldown(ServerConfig.SLIDE_ACCELERATION_COOLDOWN.get());
         playStateAnimation(player, SLIDE, context, 6, 1.0f);
     }
@@ -91,6 +98,9 @@ public class SlideState extends BaseState {
         if (DodgeState.canDodge(player, context)) {
             return StateType.DODGE.getState();
         }
+        if (SwimState.canSwim(player, context)) {
+            return StateType.SWIM.getState();
+        }
         if (canBreakFallReady(player, context)) {
             return StateType.BREAK_FALL_READY.getState();
         }
@@ -98,10 +108,10 @@ public class SlideState extends BaseState {
             return StateType.AIRBORNE.getState();
         }
         boolean canCrouching = canPlayerFitAtPose(player, Pose.CROUCHING);
-        if (!context.isLowerCenter() && canCrouching) {
+        if (!LOWER_CENTER.get().isDown() && canCrouching) {
             return StateType.WALK.getState();
         }
-        if (!context.isLowerCenter()){
+        if (!LOWER_CENTER.get().isDown()) {
             return StateType.PRONE.getState();
         }
         if (context.getSpeed().horizontalDistance() * 20 <= ServerConfig.MIN_SLIDE_SPEED.get() / 2) {

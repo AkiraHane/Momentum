@@ -4,10 +4,13 @@ import com.akirahane.momentum.core.context.PlayerMovementContext;
 import com.akirahane.momentum.core.effect.MomentumEffectType;
 import com.akirahane.momentum.core.state.BaseState;
 import com.akirahane.momentum.core.state.StateType;
-import com.akirahane.momentum.core.state.states.ground.SlideState;
+import com.akirahane.momentum.core.state.states.ground.ProneState;
+import com.akirahane.momentum.core.state.states.special.DodgeState;
+import com.akirahane.momentum.core.state.states.water.SwimState;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
 
+import static com.akirahane.momentum.client.input.LowerCenterKey.LOWER_CENTER;
 import static com.akirahane.momentum.core.context.PlayerMovementContext.AIR_ACCELERATION;
 import static com.akirahane.momentum.core.context.PlayerMovementContext.AIR_LIMIT_ACCELERATION;
 import static com.akirahane.momentum.core.state.states.OriginalState.canOriginal;
@@ -24,7 +27,7 @@ public class BreakFallReadyState extends BaseState {
     public static String BREAK_FALL_READY = "break_fall_ready";
 
     public static boolean canBreakFallReady(Player player, PlayerMovementContext context) {
-        return !player.onGround() && context.isLowerCenter();
+        return !player.onGround() && LOWER_CENTER.get().isDown();
     }
 
     @Override
@@ -32,13 +35,16 @@ public class BreakFallReadyState extends BaseState {
         if (canOriginal(player, context)) {
             return StateType.ORIGINAL.getState();
         }
-        if (canDodge(player, context)) {
+        if (DodgeState.canDodge(player, context)) {
             return StateType.DODGE.getState();
         }
-        if (canSwim(player, context)) {
+        if (SwimState.canSwim(player, context)) {
             return StateType.SWIM.getState();
         }
-        if (canAirborne(player, context) && !context.isLowerCenter()) {
+        if (ProneState.canProne(player, context)) {
+            return StateType.PRONE.getState();
+        }
+        if (canAirborne(player, context) && !LOWER_CENTER.get().isDown()) {
             return StateType.AIRBORNE.getState();
         }
         if (canSlide(player, context)) {

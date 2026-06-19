@@ -13,13 +13,29 @@ import net.minecraft.world.entity.player.Player;
 
 import static com.akirahane.momentum.core.state.states.OriginalState.canOriginal;
 
-public class WallRunState extends BaseState {
-    public static boolean canWallRun(Player player, PlayerMovementContext context) {
-        return !player.onClimbable() &&
-                context.isHasJetBooster() &&
-                context.getInputWallAngle() < 90 &&
-                context.getLookWallAngle() > 45 &&
+public class VaultUpState extends BaseState {
+    // 动画名称
+    public static final String VAULT_UP = "vault_up";
+
+    public static boolean canVaultUp(Player player, PlayerMovementContext context) {
+        return context.isHasLedge() &&
                 Minecraft.getInstance().options.keyJump.isDown();
+    }
+
+    @Override
+    public void onEnter(Player player, PlayerMovementContext context) {
+        super.onEnter(player, context);
+        context.setVaultTimer(6);
+        player.setDeltaMovement(
+                0,
+                0.6,
+                0
+        );
+    }
+
+    @Override
+    public void onExit(Player player, PlayerMovementContext context) {
+        player.setForcedPose(null);
     }
 
     @Override
@@ -30,11 +46,23 @@ public class WallRunState extends BaseState {
         if (DodgeState.canDodge(player, context)) {
             return StateType.DODGE.getState();
         }
+        if (context.getVaultTimer() > 0) {
+            return StateType.VAULT_UP.getState();
+        }
         if (SwimState.canSwim(player, context)) {
             return StateType.SWIM.getState();
         }
         if (ProneState.canProne(player, context)) {
             return StateType.PRONE.getState();
+        }
+        if (WallRunState.canWallRun(player, context)) {
+            return StateType.WALL_RUN.getState();
+        }
+        if (WallClimbState.canWallClimb(player, context)) {
+            return StateType.WALL_CLIMB.getState();
+        }
+        if (WallSlideState.canWallSlide(player, context)) {
+            return StateType.WALL_SLIDE.getState();
         }
         if (AirborneState.canAirborne(player, context)) {
             return StateType.AIRBORNE.getState();
@@ -42,11 +70,11 @@ public class WallRunState extends BaseState {
         if (WalkState.canWalk(player, context)) {
             return StateType.WALK.getState();
         }
-        return StateType.WALL_SLIDE.getState();
+        return StateType.VAULT_UP.getState();
     }
 
     @Override
     public StateType getStateType() {
-        return StateType.WALL_RUN;
+        return StateType.VAULT_UP;
     }
 }

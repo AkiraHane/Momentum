@@ -4,7 +4,11 @@ import com.akirahane.momentum.core.context.PlayerMovementContext;
 import com.akirahane.momentum.core.state.StateType;
 import com.akirahane.momentum.core.state.BaseState;
 import com.akirahane.momentum.core.state.states.air.AirborneState;
+import com.akirahane.momentum.core.state.states.ground.ProneState;
 import com.akirahane.momentum.core.state.states.ground.WalkState;
+import com.akirahane.momentum.core.state.states.special.DodgeState;
+import com.akirahane.momentum.core.state.states.water.SwimState;
+import net.minecraft.client.Minecraft;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
@@ -20,6 +24,7 @@ public class WallClimbState extends BaseState {
         return player.onClimbable() || (
                 context.getWallDirection() != null &&
                         context.isHasFaceWall() &&
+                        Minecraft.getInstance().options.keyJump.isDown() &&
                         context.getInputWallAngle() < 90 &&
                         context.getInputWallAngle() >= 0 &&
                         context.getLookWallAngle() < 45 &&
@@ -32,6 +37,15 @@ public class WallClimbState extends BaseState {
     public BaseState evaluate(Player player, PlayerMovementContext context) {
         if (canOriginal(player, context)) {
             return StateType.ORIGINAL.getState();
+        }
+        if (DodgeState.canDodge(player, context)) {
+            return StateType.DODGE.getState();
+        }
+        if (SwimState.canSwim(player, context)) {
+            return StateType.SWIM.getState();
+        }
+        if (ProneState.canProne(player, context)) {
+            return StateType.PRONE.getState();
         }
         if (WallHangState.canWallHang(player, context)) {
             return StateType.WALL_HANG.getState();
@@ -61,7 +75,7 @@ public class WallClimbState extends BaseState {
         if (instance != null && instance.getModifier(WALL_GRAVITY_ID) == null) {
             instance.addOrReplacePermanentModifier(new AttributeModifier(
                     WALL_GRAVITY_ID,
-                    -0.9,
+                    -0.8,
                     AttributeModifier.Operation.ADD_MULTIPLIED_BASE
             ));
         }

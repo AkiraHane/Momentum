@@ -5,7 +5,10 @@ import com.akirahane.momentum.core.effect.MomentumEffectType;
 import com.akirahane.momentum.core.state.StateType;
 import com.akirahane.momentum.core.state.BaseState;
 import com.akirahane.momentum.core.state.states.air.AirborneState;
+import com.akirahane.momentum.core.state.states.ground.ProneState;
 import com.akirahane.momentum.core.state.states.ground.WalkState;
+import com.akirahane.momentum.core.state.states.special.DodgeState;
+import com.akirahane.momentum.core.state.states.water.SwimState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
@@ -14,6 +17,8 @@ import net.minecraft.world.phys.Vec3;
 
 import static com.akirahane.momentum.core.context.PlayerMovementContext.WALL_FRICTION;
 import static com.akirahane.momentum.core.state.states.OriginalState.canOriginal;
+import static com.akirahane.momentum.core.state.states.wall.VaultInState.canVaultIn;
+import static com.akirahane.momentum.core.state.states.wall.VaultUpState.canVaultUp;
 
 public class WallHangState extends BaseState {
     // 动画名称
@@ -23,8 +28,10 @@ public class WallHangState extends BaseState {
 
     public static boolean canWallHang(Player player, PlayerMovementContext context) {
         return context.isHasLedge() &&
+                context.getWallDirection() != null &&
+                context.getInputWallAngle() < 90 &&
                 !Minecraft.getInstance().options.keyShift.isDown() &&
-                player.fallDistance <= player.getAttributeValue(Attributes.SAFE_FALL_DISTANCE) * 3;
+                player.fallDistance <= player.getAttributeValue(Attributes.SAFE_FALL_DISTANCE) * 2;
 
     }
 
@@ -33,14 +40,23 @@ public class WallHangState extends BaseState {
         if (canOriginal(player, context)) {
             return StateType.ORIGINAL.getState();
         }
+        if (DodgeState.canDodge(player, context)) {
+            return StateType.DODGE.getState();
+        }
+        if (SwimState.canSwim(player, context)) {
+            return StateType.SWIM.getState();
+        }
+        if (ProneState.canProne(player, context)) {
+            return StateType.PRONE.getState();
+        }
         if (WallRunState.canWallRun(player, context)) {
             return StateType.WALL_RUN.getState();
         }
-        if (WallClimbState.canWallClimb(player, context)) {
-            return StateType.WALL_CLIMB.getState();
+        if (canVaultIn(player, context)) {
+            return StateType.VAULT_IN.getState();
         }
-        if (WallSlideState.canWallSlide(player, context)) {
-            return StateType.WALL_SLIDE.getState();
+        if (canVaultUp(player, context)) {
+            return StateType.VAULT_UP.getState();
         }
         if ((!context.isHasLedge() || Minecraft.getInstance().options.keyShift.isDown()) &&
                 AirborneState.canAirborne(player, context)) {
@@ -80,12 +96,12 @@ public class WallHangState extends BaseState {
         Vec3 forward = new Vec3(-Math.sin(Math.toRadians(yaw)), 0, Math.cos(Math.toRadians(yaw)));
         float strafe = (float) (forward.x * context.getSpeed().z - forward.z * context.getSpeed().x);
         float speed = (float) context.getSpeed().horizontalDistance() * 20;
-        if (strafe > 0) {
-            playStateAnimation(player, WALL_HANG_RIGHT, context, 4, speed);
-        } else if (strafe < 0) {
-            playStateAnimation(player, WALL_HANG_LEFT, context, 4, speed);
+        if (strafe > 0.02) {
+            playStateAnimation(player, WALL_HANG_RIGHT, context, 2, speed);
+        } else if (strafe < -0.02) {
+            playStateAnimation(player, WALL_HANG_LEFT, context, 2, speed);
         } else {
-            playStateAnimation(player, WALL_HANG, context, 4, 1);
+            playStateAnimation(player, WALL_HANG, context, 2, 1);
         }
         // 等于0不需要处理, 直接暂停了
     }

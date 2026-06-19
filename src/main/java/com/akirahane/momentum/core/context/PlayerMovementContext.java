@@ -44,8 +44,6 @@ public class PlayerMovementContext {
     MochaEngine<AnimationController> mocha;
 
     // 标志位
-    // 是否降低重心
-    private boolean lowerCenter = false;
     // 是否装备喷射器
     private boolean hasJetBooster = false;
     // 是否能进行机动
@@ -236,6 +234,7 @@ public class PlayerMovementContext {
         if (this.slideCooldown > 0) this.slideCooldown--;
         if (this.breakFallTimer > 0) this.breakFallTimer--;
         if (this.dodgeTimer > 0) this.dodgeTimer--;
+        if (this.vaultTimer > 0) this.vaultTimer--;
         if (this.jumpCooldown > 0) this.jumpCooldown--;
         if (this.breakFallReadyCount > 0) this.breakFallReadyCount--;
         boolean newHasJetBooster = checkBoosterEquipped(player);
@@ -356,6 +355,7 @@ public class PlayerMovementContext {
             }
         }
         if (bestDir == null) {
+            this.hasFaceWall = false;
             this.hasLedge = false;
             this.wallDirection = null;
             this.wallNormal = Vec3.ZERO;
@@ -379,12 +379,12 @@ public class PlayerMovementContext {
                 box.maxZ + bestDir.getStepZ() * reach
         );
         AABB chinBox = new AABB(
-                box.minX - reach,
+                box.minX + bestDir.getStepX() * reach,
                 chinY,
-                box.minZ - reach,
-                box.maxX + reach,
+                box.minZ + bestDir.getStepZ() * reach,
+                box.maxX + bestDir.getStepX() * reach,
                 eyeY,
-                box.maxZ + reach
+                box.maxZ + bestDir.getStepZ() * reach
         );
         this.hasFaceWall = !level.noCollision(player, chinBox);
         this.hasLedge = level.noCollision(player, ledgeBox) && this.hasFaceWall;

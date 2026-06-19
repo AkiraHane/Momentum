@@ -265,15 +265,6 @@ public abstract class LivingEntityMixin extends Entity implements Attackable, Wa
                 // 平滑过渡到目标角度
                 float diff = Mth.wrapDegrees(targetBodyRot - this.yBodyRot);
                 this.yBodyRot += diff * 0.3f;
-
-                // 限制头部偏转
-                float headDiff = Mth.wrapDegrees(player.getYRot() - this.yBodyRot);
-                float maxAngle = 70.0f;
-                if (headDiff > maxAngle) {
-                    this.yBodyRot = player.getYRot() - maxAngle;
-                } else if (headDiff < -maxAngle) {
-                    this.yBodyRot = player.getYRot() + maxAngle;
-                }
             }
 
             ci.cancel();

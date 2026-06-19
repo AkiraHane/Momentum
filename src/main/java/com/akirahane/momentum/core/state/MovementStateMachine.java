@@ -37,11 +37,9 @@ public class MovementStateMachine {
     public BaseState clientTick(Player player) {
         handleEffect();
         BaseState org = currentState;
-        BaseState next = currentState.evaluate(player, context);
-        transition(next, player);
         context.clientTick(player);
         currentState.clientTick(player, context);
-        next = currentState.evaluate(player, context);
+        BaseState next = currentState.evaluate(player, context);
         transition(next, player);
         if (!org.equals(next)) {
             return next;
