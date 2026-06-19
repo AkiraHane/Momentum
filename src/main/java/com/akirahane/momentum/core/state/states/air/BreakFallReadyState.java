@@ -11,7 +11,6 @@ import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
 
 import static com.akirahane.momentum.client.input.LowerCenterKey.LOWER_CENTER;
-import static com.akirahane.momentum.core.context.PlayerMovementContext.AIR_ACCELERATION;
 import static com.akirahane.momentum.core.context.PlayerMovementContext.AIR_LIMIT_ACCELERATION;
 import static com.akirahane.momentum.core.state.states.OriginalState.canOriginal;
 import static com.akirahane.momentum.core.state.states.air.AirborneState.FALL;
@@ -19,8 +18,6 @@ import static com.akirahane.momentum.core.state.states.air.AirborneState.canAirb
 import static com.akirahane.momentum.core.state.states.ground.SlideState.*;
 import static com.akirahane.momentum.core.state.states.ground.WalkState.canWalk;
 import static com.akirahane.momentum.core.state.states.special.BreakFallState.canBreakFall;
-import static com.akirahane.momentum.core.state.states.special.DodgeState.canDodge;
-import static com.akirahane.momentum.core.state.states.water.SwimState.canSwim;
 
 public class BreakFallReadyState extends BaseState {
     // 动画名称
@@ -62,7 +59,6 @@ public class BreakFallReadyState extends BaseState {
     @Override
     public void onEnter(Player player, PlayerMovementContext context) {
         context.setBreakFallReadyCount(6);
-        context.addPermanentEffect(MomentumEffectType.ACCELERATION, AIR_ACCELERATION);
         context.addPermanentEffect(MomentumEffectType.LIMIT_ACCELERATION_SPEED, AIR_LIMIT_ACCELERATION);
         context.setJumpCooldown(15);
     }
@@ -87,7 +83,6 @@ public class BreakFallReadyState extends BaseState {
     public void onExit(Player player, PlayerMovementContext context) {
         context.setBreakFallReadyCount(-1);
         context.setToBreakFallState(false);
-        context.removeEffect(MomentumEffectType.ACCELERATION, AIR_ACCELERATION);
         context.removeEffect(MomentumEffectType.LIMIT_ACCELERATION_SPEED, AIR_LIMIT_ACCELERATION);
     }
 

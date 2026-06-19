@@ -14,7 +14,6 @@ import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
 
 import static com.akirahane.momentum.core.MomentumUtils.isDivingEdge;
-import static com.akirahane.momentum.core.context.PlayerMovementContext.AIR_ACCELERATION;
 import static com.akirahane.momentum.core.context.PlayerMovementContext.AIR_LIMIT_ACCELERATION;
 import static com.akirahane.momentum.core.state.states.OriginalState.canOriginal;
 import static com.akirahane.momentum.core.state.states.air.BreakFallReadyState.canBreakFallReady;
@@ -69,7 +68,6 @@ public class AirborneState extends BaseState {
         if (context.getSpeed().y > 0){
             playStateAnimation(player, IDLE, context);
         }
-        context.addPermanentEffect(MomentumEffectType.ACCELERATION, AIR_ACCELERATION);
         context.addPermanentEffect(MomentumEffectType.LIMIT_ACCELERATION_SPEED, AIR_LIMIT_ACCELERATION);
         context.setJumpCooldown(15);
 
@@ -97,7 +95,6 @@ public class AirborneState extends BaseState {
 
     @Override
     public void onExit(Player player, PlayerMovementContext context) {
-        context.removeEffect(MomentumEffectType.ACCELERATION, AIR_ACCELERATION);
         context.removeEffect(MomentumEffectType.LIMIT_ACCELERATION_SPEED, AIR_LIMIT_ACCELERATION);
     }
 

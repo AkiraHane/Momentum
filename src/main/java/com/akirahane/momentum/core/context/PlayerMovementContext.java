@@ -177,13 +177,6 @@ public class PlayerMovementContext {
             0
     );
 
-    public static MomentumEffect AIR_ACCELERATION = new MomentumEffect(
-            new Vec3(0.06, 1, 0.06),
-            Vec3.ZERO,
-            MULTIPLIER,
-            -1
-    );
-
     public static MomentumEffect AIR_LIMIT_ACCELERATION = new MomentumEffect(
             new Vec3(0.3, Float.MAX_VALUE, 0.3),
             Vec3.ZERO,
