@@ -106,17 +106,17 @@ public class WallHangState extends BaseState {
         } else {
             if (Mth.abs(context.getLookWallAngle()) < 45) {
                 playStateAnimation(player, WALL_HANG, context, 2, 1);
-            } else if (context.getLookWallAngle() > 70) {
+            } else if (context.getLookWallAngle() < -70) {
                 if (WALL_HANG_LOOK_LEFT.equals(context.getCurrentAnimationName())) {
-                    playStateAnimation(player, WALL_HANG, context, 2, 1);
+                    playStateAnimation(player, WALL_HANG, context, 4, 1);
                 } else {
-                    playStateAnimation(player, WALL_HANG_LOOK_RIGHT, context, 2, 1);
+                    playStateAnimation(player, WALL_HANG_LOOK_RIGHT, context, 4, 1);
                 }
-            } else if (context.getLookWallAngle() < -70){
+            } else if (context.getLookWallAngle() > 70){
                 if (WALL_HANG_LOOK_RIGHT.equals(context.getCurrentAnimationName())) {
-                    playStateAnimation(player, WALL_HANG, context, 2, 1);
+                    playStateAnimation(player, WALL_HANG, context, 4, 1);
                 } else {
-                    playStateAnimation(player, WALL_HANG_LOOK_LEFT, context, 2, 1);
+                    playStateAnimation(player, WALL_HANG_LOOK_LEFT, context, 4, 1);
                 }
             }
         }

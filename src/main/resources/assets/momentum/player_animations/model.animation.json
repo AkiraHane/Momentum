@@ -1405,7 +1405,7 @@
 					},
 					"position": {
 						"0.0": {
-							"post": [5, 0, 10],
+							"post": [5, 0, 9],
 							"lerp_mode": "catmullrom"
 						}
 					}
@@ -1418,7 +1418,7 @@
 					"position": [1, -2, 0]
 				},
 				"left_arm": {
-					"rotation": [-130, -90, 0],
+					"rotation": [-120, -90, 0],
 					"position": [1, 2, -1]
 				},
 				"right_leg": {
@@ -1443,7 +1443,7 @@
 					},
 					"position": {
 						"0.0": {
-							"post": [-5, 0, 10],
+							"post": [-5, 0, 9],
 							"lerp_mode": "catmullrom"
 						}
 					}
@@ -1452,7 +1452,7 @@
 					"rotation": [0, 0, 17.5]
 				},
 				"right_arm": {
-					"rotation": [-130, 90, 0],
+					"rotation": [-120, 90, 0],
 					"position": [-1, 2, -1]
 				},
 				"left_arm": {
