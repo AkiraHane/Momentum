@@ -23,6 +23,7 @@ import net.minecraft.world.phys.Vec3;
 import org.slf4j.Logger;
 import team.unnamed.mocha.MochaEngine;
 import team.unnamed.mocha.runtime.value.ObjectValue;
+import team.unnamed.mocha.runtime.value.Value;
 
 import java.util.*;
 
@@ -87,9 +88,9 @@ public class PlayerMovementContext {
     // 向墙的法向量
     Vec3 wallNormal = Vec3.ZERO;
     // 向墙视线角度
-    float lookWallAngle = 0;
+    float lookWallAngle = Float.MAX_VALUE;
     // 向墙输入角度
-    float inputWallAngle = 0;
+    float inputWallAngle = Float.MAX_VALUE;
     // 跳跃最高速度(到达这个速度停止继续加速, 但不会减速)
     private double jumpLimitSpeed = 0;
     // 跳跃加速强度(同时吃速度属性和跳跃提升属性)
@@ -211,8 +212,27 @@ public class PlayerMovementContext {
     }
 
     private void bindVariables() {
-        ObjectValue math = (ObjectValue) this.mocha.scope().get("math");
-        math.setFunction("mod", (a, b) -> a % b);
+        Value value = this.mocha.scope().get("math");
+        if (value instanceof ObjectValue math) {
+            math.setFunction("min_angle_180", (a, b) -> {
+                double diff = b - a;
+                // 用取模运算将差值初步约束到 (-360°, 360°)
+                diff = diff % 360.0;
+                // 进一步规范化到目标区间
+                if (diff < -180.0) {
+                    diff += 360.0;
+                } else if (diff > 180.0) {
+                    diff -= 360.0;
+                }
+                // 处理边界：当结果为 -180° 时，可统一返回 180°（因为几何意义等价）
+                if (diff == -180.0) {
+                    diff = 180.0;
+                }
+                return (float) diff;
+            });
+        } else {
+            LOGGER.warn("Failed to bind math.min_angle_180 to Mocha");
+        }
     }
 
     public void resetEffect() {
@@ -325,7 +345,7 @@ public class PlayerMovementContext {
 
         Direction bestDir = null;
         float bestLookAngle = Float.MAX_VALUE;
-        float bestInputAngle = -1;
+        float bestInputAngle = Float.MAX_VALUE;
 
         for (Direction dir : HORIZONTALS) {
             AABB expanded = box.expandTowards(
@@ -336,15 +356,15 @@ public class PlayerMovementContext {
 
             if (!level.noCollision(player, expanded)) {
                 Vec3 wallNormal = new Vec3(dir.getStepX(), 0, dir.getStepZ());
-                float lookAngle = (float) Math.toDegrees(Math.acos(lookVec.dot(wallNormal)));
-
-                if (lookAngle < bestLookAngle) {
-                    bestLookAngle = lookAngle;
-                    bestDir = dir;
-                    bestInputAngle = hasInput
-                            ? (float) Math.toDegrees(Math.acos(inputNorm.dot(wallNormal)))
-                            : -1;
+                double cross = lookVec.x * wallNormal.z - lookVec.z * wallNormal.x;
+                double dot = lookVec.dot(wallNormal);
+                bestLookAngle = (float) Math.toDegrees(Math.atan2(cross, dot));
+                if (hasInput){
+                    cross = inputVec.x * wallNormal.z - inputVec.z * wallNormal.x;
+                    dot = inputVec.dot(wallNormal);
+                    bestInputAngle = (float) Math.toDegrees(Math.atan2(cross, dot));
                 }
+                bestDir = dir;
             }
         }
         if (bestDir == null) {
@@ -352,8 +372,8 @@ public class PlayerMovementContext {
             this.hasLedge = false;
             this.wallDirection = null;
             this.wallNormal = Vec3.ZERO;
-            this.lookWallAngle = -1;
-            this.inputWallAngle = -1;
+            this.lookWallAngle = Float.MAX_VALUE;
+            this.inputWallAngle = Float.MAX_VALUE;
             return;
         }
 
@@ -429,18 +449,16 @@ public class PlayerMovementContext {
 
             if (!level.noCollision(player, expanded)) {
                 Vec3 wallNormal = new Vec3(dir.getStepX(), 0, dir.getStepZ());
-                float lookAngle = (float) Math.toDegrees(Math.acos(lookVec.dot(wallNormal)));
-
-                if (lookAngle < bestLookAngle) {
-                    bestLookAngle = lookAngle;
-                    bestDir = dir;
-                }
+                double cross = lookVec.x * wallNormal.z - lookVec.z * wallNormal.x;
+                double dot = lookVec.dot(wallNormal);
+                bestLookAngle = (float) Math.toDegrees(Math.atan2(cross, dot));
+                bestDir = dir;
             }
         }
 
         if (bestDir == null) {
             this.setWallDirection(null);
-            this.setLookWallAngle(-1);
+            this.setLookWallAngle(Float.MAX_VALUE);
             this.setWallNormal(Vec3.ZERO);
             return;
         }

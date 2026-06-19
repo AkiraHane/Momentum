@@ -30,6 +30,7 @@ public enum StateType {
     WALL_SLIDE(new WallSlideState()),
     WALL_RUN(new WallRunState()),
     WALL_HANG(new WallHangState()),
+    WALL_KICK(new WallKickState()),
     VAULT_UP(new VaultUpState()),
     VAULT_IN(new VaultInState()),
     ;

@@ -1,11 +1,9 @@
 package com.akirahane.momentum.core.state.states.wall;
 
 import com.akirahane.momentum.core.context.PlayerMovementContext;
-import com.akirahane.momentum.core.state.StateType;
 import com.akirahane.momentum.core.state.BaseState;
-import com.akirahane.momentum.core.state.states.air.AirborneState;
+import com.akirahane.momentum.core.state.StateType;
 import com.akirahane.momentum.core.state.states.ground.ProneState;
-import com.akirahane.momentum.core.state.states.ground.WalkState;
 import com.akirahane.momentum.core.state.states.special.DodgeState;
 import com.akirahane.momentum.core.state.states.water.SwimState;
 import net.minecraft.client.Minecraft;
@@ -14,16 +12,16 @@ import net.minecraft.world.entity.player.Player;
 
 import static com.akirahane.momentum.core.state.states.OriginalState.canOriginal;
 
-public class WallRunState extends BaseState {
-    public static boolean canWallRun(Player player, PlayerMovementContext context) {
-        return !player.onClimbable() &&
-                context.isHasJetBooster() &&
-                context.isHasFaceWall() &&
-                Mth.abs(context.getInputWallAngle()) < 90 &&
-                Mth.abs(context.getLookWallAngle()) > 45 &&
-                Minecraft.getInstance().options.keyJump.isDown();
-    }
+public class WallKickState extends BaseState {
+    // 动画名称
+    public static final String WALL_KICK = "wall_kick";
 
+    public static boolean canWallKick(Player player, PlayerMovementContext context) {
+        return context.isHasLedge() &&
+                context.getWallDirection() != null &&
+                Mth.abs(context.getInputWallAngle()) > 90 &&
+                !Minecraft.getInstance().options.keyJump.isDown();
+    }
     @Override
     public BaseState evaluate(Player player, PlayerMovementContext context) {
         if (canOriginal(player, context)) {
@@ -38,17 +36,21 @@ public class WallRunState extends BaseState {
         if (ProneState.canProne(player, context)) {
             return StateType.PRONE.getState();
         }
-        if (AirborneState.canAirborne(player, context)) {
-            return StateType.AIRBORNE.getState();
-        }
-        if (WalkState.canWalk(player, context)) {
-            return StateType.WALK.getState();
-        }
-        return StateType.WALL_SLIDE.getState();
+        return StateType.WALL_KICK.getState();
+    }
+
+    @Override
+    public void onEnter(Player player, PlayerMovementContext context) {
+        super.onEnter(player, context);
+    }
+
+    @Override
+    public void clientTickRemote(Player player, PlayerMovementContext context) {
+        super.clientTickRemote(player, context);
     }
 
     @Override
     public StateType getStateType() {
-        return StateType.WALL_RUN;
+        return StateType.WALL_KICK;
     }
 }

@@ -10,6 +10,7 @@ import com.akirahane.momentum.core.state.states.ground.WalkState;
 import com.akirahane.momentum.core.state.states.special.DodgeState;
 import com.akirahane.momentum.core.state.states.water.SwimState;
 import net.minecraft.client.Minecraft;
+import net.minecraft.util.Mth;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
@@ -23,13 +24,15 @@ import static com.akirahane.momentum.core.state.states.wall.VaultUpState.canVaul
 public class WallHangState extends BaseState {
     // 动画名称
     public static final String WALL_HANG = "wall_hang";
+    public static final String WALL_HANG_LOOK_RIGHT = "wall_hang_look_right";
+    public static final String WALL_HANG_LOOK_LEFT = "wall_hang_look_left";
     public static final String WALL_HANG_RIGHT = "wall_hang_right";
     public static final String WALL_HANG_LEFT = "wall_hang_left";
 
     public static boolean canWallHang(Player player, PlayerMovementContext context) {
         return context.isHasLedge() &&
                 context.getWallDirection() != null &&
-                context.getInputWallAngle() < 90 &&
+                Mth.abs(context.getInputWallAngle()) < 90 &&
                 !Minecraft.getInstance().options.keyShift.isDown() &&
                 player.fallDistance <= player.getAttributeValue(Attributes.SAFE_FALL_DISTANCE) * 2;
 
@@ -101,7 +104,21 @@ public class WallHangState extends BaseState {
         } else if (strafe < -0.02) {
             playStateAnimation(player, WALL_HANG_LEFT, context, 2, speed);
         } else {
-            playStateAnimation(player, WALL_HANG, context, 2, 1);
+            if (Mth.abs(context.getLookWallAngle()) < 45) {
+                playStateAnimation(player, WALL_HANG, context, 2, 1);
+            } else if (context.getLookWallAngle() > 70) {
+                if (WALL_HANG_LOOK_LEFT.equals(context.getCurrentAnimationName())) {
+                    playStateAnimation(player, WALL_HANG, context, 2, 1);
+                } else {
+                    playStateAnimation(player, WALL_HANG_LOOK_RIGHT, context, 2, 1);
+                }
+            } else if (context.getLookWallAngle() < -70){
+                if (WALL_HANG_LOOK_RIGHT.equals(context.getCurrentAnimationName())) {
+                    playStateAnimation(player, WALL_HANG, context, 2, 1);
+                } else {
+                    playStateAnimation(player, WALL_HANG_LOOK_LEFT, context, 2, 1);
+                }
+            }
         }
         // 等于0不需要处理, 直接暂停了
     }

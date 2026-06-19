@@ -14,8 +14,6 @@ import net.minecraft.world.entity.player.Player;
 import static com.akirahane.momentum.core.state.states.OriginalState.canOriginal;
 
 public class VaultUpState extends BaseState {
-    // 动画名称
-    public static final String VAULT_UP = "vault_up";
 
     public static boolean canVaultUp(Player player, PlayerMovementContext context) {
         return context.isHasLedge() &&

@@ -8,6 +8,7 @@ import com.akirahane.momentum.core.state.states.ground.ProneState;
 import com.akirahane.momentum.core.state.states.special.DodgeState;
 import com.akirahane.momentum.core.state.states.water.SwimState;
 import net.minecraft.client.Minecraft;
+import net.minecraft.util.Mth;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
@@ -27,9 +28,8 @@ public class WallSlideState extends BaseState {
         return !player.onGround() &&
                 context.getWallDirection() != null &&
                 context.isHasFaceWall() &&
-                context.getInputWallAngle() < 90 &&
-                context.getLookWallAngle() < 45 &&
-                context.getInputWallAngle() >= 0;
+                Mth.abs(context.getInputWallAngle()) < 90 &&
+                Mth.abs(context.getLookWallAngle()) < 45;
     }
 
     @Override

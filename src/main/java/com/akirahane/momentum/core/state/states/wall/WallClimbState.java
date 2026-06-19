@@ -9,6 +9,7 @@ import com.akirahane.momentum.core.state.states.ground.WalkState;
 import com.akirahane.momentum.core.state.states.special.DodgeState;
 import com.akirahane.momentum.core.state.states.water.SwimState;
 import net.minecraft.client.Minecraft;
+import net.minecraft.util.Mth;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
@@ -25,9 +26,8 @@ public class WallClimbState extends BaseState {
                 context.getWallDirection() != null &&
                         context.isHasFaceWall() &&
                         Minecraft.getInstance().options.keyJump.isDown() &&
-                        context.getInputWallAngle() < 90 &&
-                        context.getInputWallAngle() >= 0 &&
-                        context.getLookWallAngle() < 45 &&
+                        Mth.abs(context.getInputWallAngle()) < 90 &&
+                        Mth.abs(context.getLookWallAngle()) < 45 &&
                         context.getSpeed().y > 0
         );
 
