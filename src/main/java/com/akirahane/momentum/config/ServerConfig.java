@@ -47,6 +47,11 @@ public class ServerConfig {
             .comment("滑铲最低速度（米/秒）", "默认值: 4.0")
             .defineInRange("minSlideSpeed", 4.0, 1.0, 100.0);
 
+    // 墙跑最低速度
+    public static final ModConfigSpec.DoubleValue MIN_WALL_RUN_SPEED = BUILDER
+            .comment("墙跑最低速度（米/秒）", "默认值: 4.0")
+            .defineInRange("minWallRunSpeed", 4.0, 1.0, 100.0);
+
     // 滑铲加速冷却
     public static final ModConfigSpec.IntValue SLIDE_ACCELERATION_COOLDOWN = BUILDER
             .comment("滑铲加速冷却（tick）", "默认值: 40")

@@ -1,5 +1,6 @@
 package com.akirahane.momentum.core.state.states.wall;
 
+import com.akirahane.momentum.config.ServerConfig;
 import com.akirahane.momentum.core.context.PlayerMovementContext;
 import com.akirahane.momentum.core.state.StateType;
 import com.akirahane.momentum.core.state.BaseState;
@@ -10,19 +11,76 @@ import com.akirahane.momentum.core.state.states.special.DodgeState;
 import com.akirahane.momentum.core.state.states.water.SwimState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.util.Mth;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
 
 import static com.akirahane.momentum.core.state.states.OriginalState.canOriginal;
 
 public class WallRunState extends BaseState {
+    // 动画名称
+    public static String WALL_RUN_LEFT = "wall_run_left";
+    public static String WALL_RUN_RIGHT = "wall_run_right";
+
     public static boolean canWallRun(Player player, PlayerMovementContext context) {
-        return !player.onClimbable() &&
-                context.isHasJetBooster() &&
-                context.getWallDirection() != null &&
-                !Vec3.ZERO.equals(context.getInputVec()) && Mth.abs(context.getInputWallAngle()) < 90 &&
-                Mth.abs(context.getLookWallAngle()) > 45 &&
+        return context.getWallDirection() != null &&
+                !Vec3.ZERO.equals(context.getInputVec()) &&
+                Mth.abs(context.getInputWallAngle()) > 45 && Mth.abs(context.getInputWallAngle()) < 90 &&
+                canWallRunSpeedCheck(player, context) &&
+                Minecraft.getInstance().options.keyUp.isDown() &&
                 Minecraft.getInstance().options.keyJump.isDown();
+    }
+
+    public static boolean canWallRunSpeedCheck(Player player, PlayerMovementContext context) {
+        return context.getSpeed().horizontalDistance() * 20 > ServerConfig.MIN_WALL_RUN_SPEED.get();
+    }
+
+    @Override
+    public void onEnter(Player player, PlayerMovementContext context) {
+        Vec3 wallNormal = context.getWallNormal();
+        float inputWallAngle = context.getInputWallAngle();
+        playStateAnimation(player, inputWallAngle > 0 ? WALL_RUN_LEFT : WALL_RUN_RIGHT, context);
+        var instance = player.getAttribute(Attributes.GRAVITY);
+        if (instance != null && instance.getModifier(WALL_GRAVITY_ID) == null) {
+            instance.addOrReplacePermanentModifier(new AttributeModifier(
+                    WALL_GRAVITY_ID,
+                    -0.6,
+                    AttributeModifier.Operation.ADD_MULTIPLIED_BASE
+            ));
+        }
+        Vec3 currentMovement = player.getDeltaMovement();
+        context.setNoMoveInput(true);
+        Vec3 tangent = new Vec3(-wallNormal.z, 0, wallNormal.x);
+        double dot = currentMovement.x * tangent.x + currentMovement.z * tangent.z;
+        if (dot < 0) {
+            tangent = tangent.scale(-1);
+        }
+        player.setDeltaMovement(
+                tangent.x * context.getSpeed().horizontalDistance(),
+                player.getDeltaMovement().y,
+                tangent.z * context.getSpeed().horizontalDistance()
+        );
+    }
+
+    @Override
+    public void clientTick(Player player, PlayerMovementContext context) {
+        clientTickRemote(player, context);
+    }
+
+    @Override
+    public void clientTickRemote(Player player, PlayerMovementContext context) {
+        float speed = (float) Math.min(context.getSpeed().length() * 5, 5);
+        playStateAnimation(player, context.getCurrentAnimationName(), context, 0, speed);
+    }
+
+    @Override
+    public void onExit(Player player, PlayerMovementContext context) {
+        var instance = player.getAttribute(Attributes.GRAVITY);
+        if (instance != null) {
+            instance.removeModifier(WALL_GRAVITY_ID);
+        }
+        context.setNoMoveInput(false);
     }
 
     @Override
@@ -42,13 +100,17 @@ public class WallRunState extends BaseState {
         if (WallKickState.canWallKick(player, context)){
             return StateType.WALL_KICK.getState();
         }
-        if (AirborneState.canAirborne(player, context)) {
+        if ((
+                context.getWallDirection() == null ||
+                        !Minecraft.getInstance().options.keyUp.isDown() ||
+                        !canWallRunSpeedCheck(player, context)
+        ) && AirborneState.canAirborne(player, context)) {
             return StateType.AIRBORNE.getState();
         }
         if (WalkState.canWalk(player, context)) {
             return StateType.WALK.getState();
         }
-        return StateType.WALL_SLIDE.getState();
+        return StateType.WALL_RUN.getState();
     }
 
     @Override

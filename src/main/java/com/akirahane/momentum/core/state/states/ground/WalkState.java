@@ -38,9 +38,6 @@ public class WalkState extends BaseState {
         if (SwimState.canSwim(player, context)) {
             return StateType.SWIM.getState();
         }
-        if (WallRunState.canWallRun(player, context)) {
-            return StateType.WALL_RUN.getState();
-        }
         if (WallClimbState.canWallClimb(player, context)) {
             return StateType.WALL_CLIMB.getState();
         }

@@ -69,6 +69,10 @@ public class AirborneState extends BaseState {
 
     @Override
     public void onEnter(Player player, PlayerMovementContext context) {
+        if (!WallKickState.WALL_JUMP_RIGHT.equals(context.getCurrentAnimationName()) &&
+                !WallKickState.WALL_JUMP_LEFT.equals(context.getCurrentAnimationName())){
+            super.onEnter(player, context);
+        }
         context.addPermanentEffect(MomentumEffectType.LIMIT_ACCELERATION_SPEED, AIR_LIMIT_ACCELERATION);
         context.setJumpCooldown(15);
 

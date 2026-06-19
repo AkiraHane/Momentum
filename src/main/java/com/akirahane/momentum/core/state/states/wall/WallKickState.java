@@ -13,6 +13,7 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
 
+import static com.akirahane.momentum.core.context.PlayerMovementContext.JUMP;
 import static com.akirahane.momentum.core.state.states.OriginalState.canOriginal;
 
 public class WallKickState extends BaseState {
@@ -23,7 +24,7 @@ public class WallKickState extends BaseState {
     public static boolean canWallKick(Player player, PlayerMovementContext context) {
         return context.getWallDirection() != null &&
                 !Vec3.ZERO.equals(context.getInputVec()) && Mth.abs(context.getInputWallAngle()) >= 90 &&
-                Minecraft.getInstance().options.keyJump.isDown();
+                context.getInputBuffer()[context.getInputBufferIndex()].contains(JUMP);
     }
 
     @Override
@@ -34,10 +35,12 @@ public class WallKickState extends BaseState {
             playStateAnimation(player, WALL_JUMP_RIGHT, context);
         }
         context.setLeftFootJump(!context.isLeftFootJump());
-        player.setDeltaMovement(
-                context.getInputVec().x * 0.3,
-                0.6,
-                context.getInputVec().z * 0.3
+        player.addDeltaMovement(
+                new Vec3(
+                        context.getInputVec().x * 0.3,
+                        0.6,
+                        context.getInputVec().z * 0.3
+                )
         );
     }
     @Override

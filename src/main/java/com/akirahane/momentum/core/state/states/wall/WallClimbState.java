@@ -1,6 +1,7 @@
 package com.akirahane.momentum.core.state.states.wall;
 
 import com.akirahane.momentum.core.context.PlayerMovementContext;
+import com.akirahane.momentum.core.effect.MomentumEffectType;
 import com.akirahane.momentum.core.state.StateType;
 import com.akirahane.momentum.core.state.BaseState;
 import com.akirahane.momentum.core.state.states.air.AirborneState;
@@ -15,6 +16,8 @@ import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
 
+import static com.akirahane.momentum.core.context.PlayerMovementContext.AIR_ACCELERATION;
+import static com.akirahane.momentum.core.context.PlayerMovementContext.AIR_LIMIT_ACCELERATION;
 import static com.akirahane.momentum.core.state.states.OriginalState.canOriginal;
 
 public class WallClimbState extends BaseState {
@@ -26,7 +29,7 @@ public class WallClimbState extends BaseState {
                 context.getWallDirection() != null &&
                         context.isHasFaceWall() &&
                         Minecraft.getInstance().options.keyJump.isDown() &&
-                        !Vec3.ZERO.equals(context.getInputVec()) && Mth.abs(context.getInputWallAngle()) < 90 &&
+                        !Vec3.ZERO.equals(context.getInputVec()) && Mth.abs(context.getInputWallAngle()) < 45 &&
                         Mth.abs(context.getLookWallAngle()) < 45 &&
                         context.getSpeed().y > 0
         );
@@ -73,6 +76,8 @@ public class WallClimbState extends BaseState {
 
     @Override
     public void onEnter(Player player, PlayerMovementContext context) {
+        context.addPermanentEffect(MomentumEffectType.ACCELERATION, AIR_ACCELERATION);
+        context.addPermanentEffect(MomentumEffectType.LIMIT_ACCELERATION_SPEED, AIR_LIMIT_ACCELERATION);
         playStateAnimation(player, WALL_CLIMB, context);
         var instance = player.getAttribute(Attributes.GRAVITY);
         if (instance != null && instance.getModifier(WALL_GRAVITY_ID) == null) {
@@ -98,6 +103,8 @@ public class WallClimbState extends BaseState {
 
     @Override
     public void onExit(Player player, PlayerMovementContext context) {
+        context.removeEffect(MomentumEffectType.ACCELERATION, AIR_ACCELERATION);
+        context.removeEffect(MomentumEffectType.LIMIT_ACCELERATION_SPEED, AIR_LIMIT_ACCELERATION);
         var instance = player.getAttribute(Attributes.GRAVITY);
         if (instance != null) {
             instance.removeModifier(WALL_GRAVITY_ID);
