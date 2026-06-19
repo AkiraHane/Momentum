@@ -95,14 +95,13 @@ public class WallHangState extends BaseState {
 
     @Override
     public void clientTickRemote(Player player, PlayerMovementContext context) {
-        float yaw = player.getYRot();
-        Vec3 forward = new Vec3(-Math.sin(Math.toRadians(yaw)), 0, Math.cos(Math.toRadians(yaw)));
-        float strafe = (float) (forward.x * context.getSpeed().z - forward.z * context.getSpeed().x);
         float speed = (float) context.getSpeed().horizontalDistance() * 20;
-        if (strafe > 0.02) {
-            playStateAnimation(player, WALL_HANG_RIGHT, context, 2, speed);
-        } else if (strafe < -0.02) {
-            playStateAnimation(player, WALL_HANG_LEFT, context, 2, speed);
+        if (speed > 0.02) {
+            if (context.getInputWallAngle() < 0){
+                playStateAnimation(player, WALL_HANG_RIGHT, context, 2, speed);
+            } else {
+                playStateAnimation(player, WALL_HANG_LEFT, context, 2, speed);
+            }
         } else {
             if (Mth.abs(context.getLookWallAngle()) < 45) {
                 playStateAnimation(player, WALL_HANG, context, 2, 1);

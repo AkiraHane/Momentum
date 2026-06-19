@@ -14,6 +14,7 @@ import lombok.Getter;
 import lombok.Setter;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.Direction;
+import net.minecraft.util.Mth;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
@@ -230,6 +231,8 @@ public class PlayerMovementContext {
                 }
                 return (float) diff;
             });
+            // clamp
+            math.setFunction("clamp", Mth::clamp);
         } else {
             LOGGER.warn("Failed to bind math.min_angle_180 to Mocha");
         }
