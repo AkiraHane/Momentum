@@ -10,6 +10,7 @@ import net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent;
 
 import static com.akirahane.momentum.client.input.ChangeMomentumKey.CHANGE_MOMENTUM_KEY_MAPPING;
 import static com.akirahane.momentum.client.input.LowerCenterKey.LOWER_CENTER;
+import static com.akirahane.momentum.client.input.ToggleHintKey.TOGGLE_HINT_KEY_MAPPING;
 
 // 可以使用 EventBusSubscriber 来自动注册类中所有带有 @SubscribeEvent 注解的静态方法
 @EventBusSubscriber(modid = Momentum.MODID, value = Dist.CLIENT)
@@ -25,5 +26,7 @@ public class InitKeyMappings {
         // 注册按键绑定
         event.register(LOWER_CENTER.get());
         event.register(CHANGE_MOMENTUM_KEY_MAPPING.get());
+        event.register(TOGGLE_HINT_KEY_MAPPING.get());
+
     }
 }

@@ -10,6 +10,7 @@ import com.mojang.logging.LogUtils;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
 import net.neoforged.bus.api.EventPriority;
 import net.neoforged.bus.api.IEventBus;
@@ -86,14 +87,22 @@ public class Momentum {
         float distance = (float) event.getDistance();
         float multiplier = event.getDamageMultiplier();
 
+        if (stateMachine.getContext().isHasJetBooster()){
+            distance -= 12;
+            multiplier *= 0.5F;
+        }
         if (stateMachine.getContext().getBreakFallReadyCount() > 0) {
             distance -= 6;
             multiplier *= 0.3F;
-            stateMachine.getContext().setToBreakFallState(true);
+            if (event.getDistance() > Math.min(4, player.getAttributeValue(Attributes.SAFE_FALL_DISTANCE))){
+                stateMachine.getContext().setToBreakFallState(true);
+            }
         } else if (stateMachine.getContext().getBreakFallReadyCount() == 0) {
             distance -= 3;
             multiplier *= 0.6F;
-            stateMachine.getContext().setToBreakFallState(true);
+            if (event.getDistance() > Math.min(4, player.getAttributeValue(Attributes.SAFE_FALL_DISTANCE))){
+                stateMachine.getContext().setToBreakFallState(true);
+            }
         }
 
         event.setDistance(Math.max(0, distance));

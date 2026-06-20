@@ -81,7 +81,7 @@ public abstract class EntityMixin {
         // =================== 内容 ===================
 
         // 已经上坡则不需要下坡
-        if (cir.getReturnValue().y >= 0) {
+        if (cir.getReturnValue().y > 0) {
             setSlideAcceleration(movement, cir.getReturnValue().y, stateMachine);
             return;
         }
@@ -129,6 +129,9 @@ public abstract class EntityMixin {
             float[] candidateStepDownHeights = momentum$collectCandidateStepDownHeights(aabb, colliders, -maxDownStep, stepHeightToSkip, this.maxUpStep());
 
             for (float candidateStepDHeight : candidateStepDownHeights) {
+                if (candidateStepDHeight == 0){
+                    continue;
+                }
                 Vec3 stepFromGround = momentum$collideWithShapesDown(new Vec3(movement.x, candidateStepDHeight, movement.z), aabb, colliders);
                 if (stepFromGround.horizontalDistanceSqr() > 0) {
                     cir.setReturnValue(stepFromGround);

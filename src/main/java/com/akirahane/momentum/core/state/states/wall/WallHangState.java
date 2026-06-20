@@ -1,12 +1,18 @@
 package com.akirahane.momentum.core.state.states.wall;
 
+import com.akirahane.momentum.client.hud.HintManager;
+import com.akirahane.momentum.client.hud.WallHangHints;
 import com.akirahane.momentum.core.context.PlayerMovementContext;
 import com.akirahane.momentum.core.effect.MomentumEffectType;
 import com.akirahane.momentum.core.state.StateType;
 import com.akirahane.momentum.core.state.BaseState;
+import com.akirahane.momentum.core.state.states.OriginalState;
 import com.akirahane.momentum.core.state.states.air.AirborneState;
+import com.akirahane.momentum.core.state.states.air.BreakFallReadyState;
 import com.akirahane.momentum.core.state.states.ground.ProneState;
+import com.akirahane.momentum.core.state.states.ground.SlideState;
 import com.akirahane.momentum.core.state.states.ground.WalkState;
+import com.akirahane.momentum.core.state.states.special.BreakFallState;
 import com.akirahane.momentum.core.state.states.special.DodgeState;
 import com.akirahane.momentum.core.state.states.water.SwimState;
 import net.minecraft.client.Minecraft;
@@ -16,12 +22,12 @@ import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
 
+import static com.akirahane.momentum.core.context.PlayerMovementContext.STEP;
 import static com.akirahane.momentum.core.context.PlayerMovementContext.WALL_FRICTION;
-import static com.akirahane.momentum.core.state.states.OriginalState.canOriginal;
-import static com.akirahane.momentum.core.state.states.wall.VaultInState.canVaultIn;
-import static com.akirahane.momentum.core.state.states.wall.VaultUpState.canVaultUp;
 
 public class WallHangState extends BaseState {
+
+    private static final int SOUND_TICK = 10;
     // 动画名称
     public static final String WALL_HANG = "wall_hang";
     public static final String WALL_HANG_LOOK_RIGHT = "wall_hang_look_right";
@@ -31,23 +37,37 @@ public class WallHangState extends BaseState {
 
     public static boolean canWallHang(Player player, PlayerMovementContext context) {
         return context.isHasLedge() &&
-                context.getWallDirection() != null &&
+                !Vec3.ZERO.equals(context.getWallNormal()) &&
                 !Vec3.ZERO.equals(context.getInputVec()) && Mth.abs(context.getInputWallAngle()) < 90 &&
-                !Minecraft.getInstance().options.keyShift.isDown() &&
-                player.fallDistance <= player.getAttributeValue(Attributes.SAFE_FALL_DISTANCE) * 2;
+                player.fallDistance <= player.getAttributeValue(Attributes.SAFE_FALL_DISTANCE) * 2 &&
+                !checkKey(player, context);
+    }
 
+    public static boolean checkKey(Player player, PlayerMovementContext context) {
+        HintManager.add(WallHangHints.WALL_HANG);
+        return Minecraft.getInstance().options.keyShift.isDown();
     }
 
     @Override
     public BaseState evaluate(Player player, PlayerMovementContext context) {
-        if (canOriginal(player, context)) {
+        HintManager.clear();
+        if (OriginalState.canOriginal(player, context)) {
             return StateType.ORIGINAL.getState();
         }
         if (DodgeState.canDodge(player, context)) {
             return StateType.DODGE.getState();
         }
+        if (BreakFallState.canBreakFall(player, context)) {
+            return StateType.BREAK_FALL.getState();
+        }
+        if (VaultInState.canVaultIn(player, context)) {
+            return StateType.VAULT_IN.getState();
+        }
         if (SwimState.canSwim(player, context)) {
             return StateType.SWIM.getState();
+        }
+        if (SlideState.canSlide(player, context)) {
+            return StateType.SLIDE.getState();
         }
         if (ProneState.canProne(player, context)) {
             return StateType.PRONE.getState();
@@ -55,29 +75,38 @@ public class WallHangState extends BaseState {
         if (WallRunState.canWallRun(player, context)) {
             return StateType.WALL_RUN.getState();
         }
-        if (WallKickState.canWallKick(player, context)){
-            return StateType.WALL_KICK.getState();
-        }
-        if (canVaultIn(player, context)) {
-            return StateType.VAULT_IN.getState();
-        }
-        if (canVaultUp(player, context)) {
+        if (VaultUpState.canVaultUp(player, context)) {
             return StateType.VAULT_UP.getState();
         }
-        if ((!context.isHasLedge() || Minecraft.getInstance().options.keyShift.isDown()) &&
-                AirborneState.canAirborne(player, context)) {
+        if (WallKickState.canWallKick(player, context)) {
+            return StateType.WALL_KICK.getState();
+        }
+        if (context.isHasLedge() && !Vec3.ZERO.equals(context.getWallNormal()) && !checkKey(player, context)) {
+            return StateType.WALL_HANG.getState();
+        }
+        if (WallClimbState.canWallClimb(player, context)) {
+            return StateType.WALL_CLIMB.getState();
+        }
+        if (WallSlideState.canWallSlide(player, context)) {
+            return StateType.WALL_SLIDE.getState();
+        }
+        if (BreakFallReadyState.canBreakFallReady(player, context)) {
+            return StateType.BREAK_FALL_READY.getState();
+        }
+        if (AirborneState.canAirborne(player, context)) {
             return StateType.AIRBORNE.getState();
         }
-        if ((!context.isHasLedge() || Minecraft.getInstance().options.keyShift.isDown()) &&
-                WalkState.canWalk(player, context)) {
+        if (WalkState.canWalk(player, context)) {
             return StateType.WALK.getState();
         }
-        return StateType.WALL_HANG.getState();
+        // 到这里应该报错了, 但是可能会漏改, 所以先警告
+        LOGGER.warn("WallHangState evaluate error! 有状态没有覆盖!");
+        return super.evaluate(player, context);
     }
 
     @Override
     public void onEnter(Player player, PlayerMovementContext context) {
-        playStateAnimation(player, WALL_HANG, context);
+        playStateAnimation(player, WALL_HANG, context, 1, 1);
         var instance = player.getAttribute(Attributes.GRAVITY);
         if (instance != null && instance.getModifier(WALL_GRAVITY_ID) == null) {
             instance.addOrReplacePermanentModifier(new AttributeModifier(
@@ -89,23 +118,44 @@ public class WallHangState extends BaseState {
         player.setDeltaMovement(0, 0, 0);
         player.fallDistance = 0;
         context.addPermanentEffect(MomentumEffectType.FRICTION, WALL_FRICTION);
+        context.setNeedSoundTick(SOUND_TICK);
+        context.playWallSound(player, STEP, 0.15F, 1);
     }
 
     @Override
     public void clientTick(Player player, PlayerMovementContext context) {
-        clientTickRemote(player, context);
+        super.clientTick(player, context);
+        // 如果没有按后键, 给个向墙的速度防止失误掉落
+        if (!Minecraft.getInstance().options.keyDown.isDown()) {
+            Vec3 wallNormal = context.getWallNormal();
+            Vec3 currentMovement = player.getDeltaMovement();
+
+            // 给一个轻微的朝墙速度，防止玩家因为微小偏移脱离墙面
+            double pushStrength = 0.05;
+            player.setDeltaMovement(
+                    currentMovement.x + wallNormal.x * pushStrength,
+                    currentMovement.y,
+                    currentMovement.z + wallNormal.z * pushStrength
+            );
+        }
     }
 
     @Override
     public void clientTickRemote(Player player, PlayerMovementContext context) {
         float speed = (float) context.getSpeed().horizontalDistance() * 20;
-        if (speed > 0.02) {
-            if (context.getInputWallAngle() < 0){
+        if (speed > 0.05) {
+            if (context.getInputWallAngle() < 0) {
                 playStateAnimation(player, WALL_HANG_RIGHT, context, 2, speed);
             } else {
                 playStateAnimation(player, WALL_HANG_LEFT, context, 2, speed);
             }
+            context.setNeedSoundTick(context.getNeedSoundTick() - speed);
+            if (context.getNeedSoundTick() <= 0) {
+                context.playWallSound(player, STEP, 0.15F, 1);
+                context.setNeedSoundTick(context.getNeedSoundTick() + SOUND_TICK);
+            }
         } else {
+            context.setNeedSoundTick(SOUND_TICK);
             if (Mth.abs(context.getLookWallAngle()) < 45) {
                 playStateAnimation(player, WALL_HANG, context, 2, 1);
             } else if (context.getLookWallAngle() < -70) {
@@ -114,7 +164,7 @@ public class WallHangState extends BaseState {
                 } else {
                     playStateAnimation(player, WALL_HANG_LOOK_RIGHT, context, 4, 1);
                 }
-            } else if (context.getLookWallAngle() > 70){
+            } else if (context.getLookWallAngle() > 70) {
                 if (WALL_HANG_LOOK_RIGHT.equals(context.getCurrentAnimationName())) {
                     playStateAnimation(player, WALL_HANG, context, 4, 1);
                 } else {
@@ -127,6 +177,7 @@ public class WallHangState extends BaseState {
 
     @Override
     public void onExit(Player player, PlayerMovementContext context) {
+        super.onExit(player, context);
         var instance = player.getAttribute(Attributes.GRAVITY);
         if (instance != null) {
             instance.removeModifier(WALL_GRAVITY_ID);

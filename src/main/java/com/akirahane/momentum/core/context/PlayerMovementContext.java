@@ -13,11 +13,15 @@ import com.zigythebird.playeranimcore.animation.AnimationController;
 import lombok.Getter;
 import lombok.Setter;
 import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.sounds.SoundEvent;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.SoundType;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec2;
 import net.minecraft.world.phys.Vec3;
@@ -27,8 +31,8 @@ import team.unnamed.mocha.runtime.value.ObjectValue;
 import team.unnamed.mocha.runtime.value.Value;
 
 import java.util.*;
+import java.util.function.Function;
 
-import static com.akirahane.momentum.core.MomentumUtils.HORIZONTALS;
 import static com.akirahane.momentum.core.MomentumUtils.applyBoosterAttributes;
 import static com.akirahane.momentum.core.effect.MomentumEffect.EffectType.*;
 
@@ -40,6 +44,16 @@ public class PlayerMovementContext {
     protected static final Logger LOGGER = LogUtils.getLogger();
     // 键位
     public static final int UP = 0, DOWN = 1, LEFT = 2, RIGHT = 3, JUMP = 4;
+    // 音效
+//    HIT(SoundType::getHitSound),
+//    BREAK(SoundType::getBreakSound),
+//    PLACE(SoundType::getPlaceSound),
+//    FALL(SoundType::getFallSound);
+    public static final Function<SoundType, SoundEvent> STEP = SoundType::getStepSound,
+            HIT = SoundType::getHitSound,
+            BREAK = SoundType::getBreakSound,
+            PLACE = SoundType::getPlaceSound,
+            FALL = SoundType::getFallSound;
     // 动画控制器
     MomentumAnimationController controller;
     // 动画moLang
@@ -86,8 +100,6 @@ public class PlayerMovementContext {
     private final int dodgeInvincible = 10;
     // 移动向量
     private Vec3 inputVec = Vec3.ZERO;
-    // 交互的墙面方向
-    Direction wallDirection = null;
     // 向墙的法向量
     Vec3 wallNormal = Vec3.ZERO;
     // 向墙视线角度
@@ -102,6 +114,27 @@ public class PlayerMovementContext {
     private int jumpCooldown = 0;
     // 墙面方块摩擦力
     private float wallFriction = 0.6f;
+    // need sound tick = 0
+    private float needSoundTick = 0;
+    // 当前墙面重力变化倍率
+    private float gravityModify = 0;
+    // 跳跃动画播放速度
+    private float jumpAnimationSpeed = 1;
+    // 头身角度差
+    private float bodyHeadAngleDiff = 0F;
+    // 摄像头旋转角度
+    private float targetCameraRoll = 0F;
+    private float currentCameraRoll = 0F;
+    private float prevCameraRoll = 0F;
+
+    private float targetFovBonus = 0F;
+    private float currentFovBonus = 0F;
+    private float prevFovBonus = 0F;
+
+    private float momentumRollIntensity = 0F;  // 当前动作的最大倾斜角度
+    private float currentMomentumRoll = 0F;
+    private float prevMomentumRoll = 0F;
+
 
     // 当前播放的动画名称
     private String currentAnimationName = null;
@@ -116,6 +149,8 @@ public class PlayerMovementContext {
     private final Map<MomentumEffectType, Set<MomentumEffect>> pendingEffectPool = new HashMap<>();
     @SuppressWarnings("unchecked")
     private final HashSet<Integer>[] inputBuffer = new HashSet[inputBufferSize];
+    // 墙面方块列表
+    private final List<BlockPos> wallBlocks = new ArrayList<>();
 
     // 每tick要变动的效果
     // 跳跃计数 用于跳跃限速
@@ -126,6 +161,8 @@ public class PlayerMovementContext {
     private int breakFallTimer = 0;
     // 闪避计时器
     private int dodgeTimer = 0;
+    // 闪避冷却计时器
+    private int dodgeCooldown = 0;
     // 翻越计时器
     private int vaultTimer = 0;
     // 受身计数器
@@ -221,25 +258,15 @@ public class PlayerMovementContext {
         }
     }
 
+    // 用于检测跳变
+    private static double lastA = Double.NaN;
+    private static double lastB = Double.NaN;
+    private static double lastResult = Double.NaN;
+    private static long callCount = 0;
+
     private void bindVariables() {
         Value value = this.mocha.scope().get("math");
         if (value instanceof ObjectValue math) {
-            math.setFunction("min_angle_180", (a, b) -> {
-                double diff = b - a;
-                // 用取模运算将差值初步约束到 (-360°, 360°)
-                diff = diff % 360.0;
-                // 进一步规范化到目标区间
-                if (diff < -180.0) {
-                    diff += 360.0;
-                } else if (diff > 180.0) {
-                    diff -= 360.0;
-                }
-                // 处理边界：当结果为 -180° 时，可统一返回 180°（因为几何意义等价）
-                if (diff == -180.0) {
-                    diff = 180.0;
-                }
-                return (float) diff;
-            });
             // clamp
             math.setFunction("clamp", Mth::clamp);
             // min
@@ -252,6 +279,10 @@ public class PlayerMovementContext {
             variable.setFunction("get_movement_speed", () -> (float) this.getSpeed().horizontalDistance());
             // y speed
             variable.setFunction("get_movement_y_speed", () -> (float) this.getSpeed().y());
+            // y speed
+            variable.setFunction("stable_body_head_angle", this::getBodyHeadAngleDiff);
+        } else {
+            LOGGER.warn("Failed to bind variable.get_movement_speed to Mocha");
         }
     }
 
@@ -267,6 +298,7 @@ public class PlayerMovementContext {
         if (this.slideCooldown > 0) this.slideCooldown--;
         if (this.breakFallTimer > 0) this.breakFallTimer--;
         if (this.dodgeTimer > 0) this.dodgeTimer--;
+        if (this.dodgeCooldown > 0) this.dodgeCooldown--;
         if (this.vaultTimer > 0) this.vaultTimer--;
         if (this.jumpCooldown > 0) this.jumpCooldown--;
         if (this.breakFallReadyCount > 0) this.breakFallReadyCount--;
@@ -294,10 +326,103 @@ public class PlayerMovementContext {
         this.jumpAcceleration = jumpCooldown > 0 ? 0.2 : moveSpeed * (1 + jumpStrength) * 1.2;
         this.setWorldInputVec(player);
         this.detectWall(player);
+        this.bodyHeadAngleDiff = Mth.wrapDegrees(player.getYHeadRot() - player.yBodyRot);
+        this.tickCameraRoll();
+        this.tickFovBonus();
+        this.tickMomentumRoll(player);
     }
 
     public void clientTickRemote(Player player) {
+        this.bodyHeadAngleDiff = Mth.wrapDegrees(player.getYHeadRot() - player.yBodyRot);
         remoteDetectWall(player);
+    }
+
+    public void tickCameraRoll() {
+        prevCameraRoll = currentCameraRoll;
+
+        // 远离 0 时：稍慢，0.12
+        // 回归 0 时：更快，0.25
+        float smoothing = Math.abs(targetCameraRoll) > Math.abs(currentCameraRoll) ? 0.24F : 0.5F;
+
+        float diff = targetCameraRoll - currentCameraRoll;
+        currentCameraRoll += diff * smoothing;
+
+        if (Math.abs(currentCameraRoll - targetCameraRoll) < 0.01F) {
+            currentCameraRoll = targetCameraRoll;
+        }
+    }
+
+    public void tickFovBonus() {
+        prevFovBonus = currentFovBonus;
+        float diff = targetFovBonus - currentFovBonus;
+        currentFovBonus += diff * 0.15F;
+    }
+    public void tickMomentumRoll(Player player) {
+        prevMomentumRoll = currentMomentumRoll;
+
+        float targetRoll = 0F;
+
+        if (momentumRollIntensity != 0F) {
+            Vec3 velocity = player.getDeltaMovement();
+            double horizontalSpeed = velocity.horizontalDistance();
+
+            // 速度参数（每秒格数更直观）
+            double speedPerSec = horizontalSpeed * 20;
+            double minSpeed = 5.0;   // 最小速度阈值（每秒 4 格才开始有效果）
+            double maxSpeed = 21.0;  // 最大速度（达到这个速度倾斜满）
+
+            if (speedPerSec > minSpeed) {
+                // 归一化方向
+                Vec3 vDir = new Vec3(velocity.x, 0, velocity.z).normalize();
+                float yaw = player.getYRot();
+                Vec3 lookDir = new Vec3(
+                        -Math.sin(Math.toRadians(yaw)),
+                        0,
+                        Math.cos(Math.toRadians(yaw))
+                );
+
+                // 叉积 y = sin(夹角)，范围 [-1, 1]
+                double crossY = vDir.x * lookDir.z - vDir.z * lookDir.x;
+
+                // 角度偏差阈值：sin 值小于这个不触发
+                // sin(15°) ≈ 0.26，意味着夹角小于 15° 不触发
+                double angleThreshold = 0.26;
+
+                if (Math.abs(crossY) > angleThreshold) {
+                    // 重新映射：把 [threshold, 1] 映射到 [0, 1]，避免突变
+                    double sign = Math.signum(crossY);
+                    double mappedCross = (Math.abs(crossY) - angleThreshold) / (1.0 - angleThreshold);
+                    mappedCross = Math.min(1.0, mappedCross) * sign;
+
+                    // 速度因子：[minSpeed, maxSpeed] 线性映射到 [0, 1]
+                    float speedFactor = (float) Mth.clamp(
+                            (speedPerSec - minSpeed) / (maxSpeed - minSpeed),
+                            0.0, 1.0
+                    );
+
+                    targetRoll = (float) mappedCross * momentumRollIntensity * speedFactor;
+                }
+            }
+        }
+
+        // 平滑插值
+        float smoothing = 0.2F;
+        currentMomentumRoll = Mth.lerp(smoothing, currentMomentumRoll, targetRoll);
+
+        if (Math.abs(currentMomentumRoll) < 0.01F && targetRoll == 0F) {
+            currentMomentumRoll = 0F;
+        }
+    }
+
+    public float getRenderMomentumRoll(float partialTick) {
+        return Mth.lerp(partialTick, prevMomentumRoll, currentMomentumRoll);
+    }
+    public float getRenderCameraRoll(float partialTick) {
+        return Mth.lerp(partialTick, prevCameraRoll, currentCameraRoll);
+    }
+
+    public float getRenderFovBonus(float partialTick) {
+        return Mth.lerp(partialTick, prevFovBonus, currentFovBonus);
     }
 
     // 是否双击了某个键(两个true中至少隔一个false)
@@ -350,7 +475,7 @@ public class PlayerMovementContext {
     public void detectWall(Player player) {
         AABB box = player.getBoundingBox();
         Level level = player.level();
-        double reach = 0.2;
+        double reach = 0.3;
 
         float yaw = player.getYRot();
         Vec3 lookVec = new Vec3(
@@ -361,68 +486,129 @@ public class PlayerMovementContext {
 
         Vec3 inputVec = this.inputVec;
         boolean hasInput = inputVec.lengthSqr() > 0.001;
-        Vec3 inputNorm = hasInput ? inputVec.normalize() : Vec3.ZERO;
+        Vec3 inputNorm = hasInput ? inputVec.normalize() : lookVec;
 
-        Direction bestDir = null;
+        Vec3 bestNormal = null;
         float bestLookAngle = 360F;
         float bestInputAngle = 360F;
+        float bestAngleDiff = Float.MAX_VALUE;
 
-        for (Direction dir : HORIZONTALS) {
-            AABB expanded = box.expandTowards(
-                    dir.getStepX() * reach,
-                    0,
-                    dir.getStepZ() * reach
-            );
+        // 先检测四个正方向
+        Vec3[] cardinals = {
+                new Vec3(0, 0, -1),  // NORTH
+                new Vec3(0, 0, 1),   // SOUTH
+                new Vec3(1, 0, 0),   // EAST
+                new Vec3(-1, 0, 0),  // WEST
+        };
+
+        for (Vec3 normal : cardinals) {
+            AABB expanded = box.expandTowards(normal.x * reach, 0, normal.z * reach);
 
             if (!level.noCollision(player, expanded)) {
-                Vec3 wallNormal = new Vec3(dir.getStepX(), 0, dir.getStepZ());
-                double cross = lookVec.x * wallNormal.z - lookVec.z * wallNormal.x;
-                double dot = lookVec.dot(wallNormal);
-                bestLookAngle = (float) Math.toDegrees(Math.atan2(cross, dot));
-                if (hasInput){
-                    cross = inputVec.x * wallNormal.z - inputVec.z * wallNormal.x;
-                    dot = inputVec.dot(wallNormal);
-                    bestInputAngle = (float) Math.toDegrees(Math.atan2(cross, dot));
+                double dot = inputNorm.x * normal.x + inputNorm.z * normal.z;
+                float angleDiff = (float) Math.toDegrees(Math.acos(Math.min(1.0, Math.max(-1.0, dot))));
+
+                if (angleDiff < bestAngleDiff) {
+                    bestAngleDiff = angleDiff;
+                    bestNormal = normal;
+
+                    double cross = lookVec.x * normal.z - lookVec.z * normal.x;
+                    double lookDot = lookVec.dot(normal);
+                    bestLookAngle = (float) Math.toDegrees(Math.atan2(cross, lookDot));
+
+                    if (hasInput) {
+                        cross = inputVec.x * normal.z - inputVec.z * normal.x;
+                        double inputDot = inputVec.dot(normal);
+                        bestInputAngle = (float) Math.toDegrees(Math.atan2(cross, inputDot));
+                    }
+
+                    wallBlocks.clear();
+                    BlockPos.betweenClosedStream(expanded).forEach(pos -> {
+                        BlockState state = level.getBlockState(pos);
+                        if (!state.isAir()) {
+                            wallBlocks.add(pos.immutable());
+                        }
+                    });
                 }
-                bestDir = dir;
             }
         }
-        if (bestDir == null) {
+
+        // 正方向没有命中，再检测斜角
+        if (bestNormal == null) {
+            Vec3[] diagonals = {
+                    new Vec3(1, 0, 1).normalize(),
+                    new Vec3(1, 0, -1).normalize(),
+                    new Vec3(-1, 0, 1).normalize(),
+                    new Vec3(-1, 0, -1).normalize(),
+            };
+
+            for (Vec3 normal : diagonals) {
+                AABB expanded = box.expandTowards(normal.x * reach, 0, normal.z * reach);
+
+                if (!level.noCollision(player, expanded)) {
+                    double dot = inputNorm.x * normal.x + inputNorm.z * normal.z;
+                    float angleDiff = (float) Math.toDegrees(Math.acos(Math.min(1.0, Math.max(-1.0, dot))));
+
+                    if (angleDiff < bestAngleDiff) {
+                        bestAngleDiff = angleDiff;
+                        bestNormal = normal;
+
+                        double cross = lookVec.x * normal.z - lookVec.z * normal.x;
+                        double lookDot = lookVec.dot(normal);
+                        bestLookAngle = (float) Math.toDegrees(Math.atan2(cross, lookDot));
+
+                        if (hasInput) {
+                            cross = inputVec.x * normal.z - inputVec.z * normal.x;
+                            double inputDot = inputVec.dot(normal);
+                            bestInputAngle = (float) Math.toDegrees(Math.atan2(cross, inputDot));
+                        }
+
+                        wallBlocks.clear();
+                        BlockPos.betweenClosedStream(expanded).forEach(pos -> {
+                            BlockState state = level.getBlockState(pos);
+                            if (!state.isAir()) {
+                                wallBlocks.add(pos.immutable());
+                            }
+                        });
+                    }
+                }
+            }
+        }
+
+        if (bestNormal == null) {
             this.hasFaceWall = false;
             this.hasLedge = false;
-            this.wallDirection = null;
             this.wallNormal = Vec3.ZERO;
             this.lookWallAngle = 360F;
             this.inputWallAngle = 360F;
             return;
         }
 
-        // 眼睛到头顶做个碰撞箱判断凹槽
         double eyeY = player.getEyeY();
-        double topY = box.maxY; // 头顶
+        double topY = box.maxY;
         double headHalf = topY - eyeY;
         double chinY = eyeY - headHalf * 2;
-        // 碰撞箱从玩家位置向墙面方向偏移一格
+
         AABB ledgeBox = new AABB(
-                box.minX + bestDir.getStepX() * reach,
+                box.minX + bestNormal.x * reach,
                 eyeY,
-                box.minZ + bestDir.getStepZ() * reach,
-                box.maxX + bestDir.getStepX() * reach,
+                box.minZ + bestNormal.z * reach,
+                box.maxX + bestNormal.x * reach,
                 topY,
-                box.maxZ + bestDir.getStepZ() * reach
+                box.maxZ + bestNormal.z * reach
         );
         AABB chinBox = new AABB(
-                box.minX + bestDir.getStepX() * reach,
+                box.minX + bestNormal.x * reach,
                 chinY,
-                box.minZ + bestDir.getStepZ() * reach,
-                box.maxX + bestDir.getStepX() * reach,
+                box.minZ + bestNormal.z * reach,
+                box.maxX + bestNormal.x * reach,
                 eyeY,
-                box.maxZ + bestDir.getStepZ() * reach
+                box.maxZ + bestNormal.z * reach
         );
+
         this.hasFaceWall = !level.noCollision(player, chinBox);
         this.hasLedge = level.noCollision(player, ledgeBox) && this.hasFaceWall;
-        this.wallDirection = bestDir;
-        this.wallNormal = new Vec3(bestDir.getStepX(), 0, bestDir.getStepZ());
+        this.wallNormal = bestNormal;
         this.lookWallAngle = bestLookAngle;
         this.inputWallAngle = bestInputAngle;
     }
@@ -457,35 +643,86 @@ public class PlayerMovementContext {
                 Math.cos(Math.toRadians(yaw))
         ).normalize();
 
-        Direction bestDir = null;
+        Vec3 bestNormal = null;
         float bestLookAngle = 360F;
+        float bestAngleDiff = Float.MAX_VALUE;
 
-        for (Direction dir : HORIZONTALS) {
-            AABB expanded = box.expandTowards(
-                    dir.getStepX() * reach,
-                    0,
-                    dir.getStepZ() * reach
-            );
+        Vec3[] cardinals = {
+                new Vec3(0, 0, -1),
+                new Vec3(0, 0, 1),
+                new Vec3(1, 0, 0),
+                new Vec3(-1, 0, 0),
+        };
+
+        for (Vec3 normal : cardinals) {
+            AABB expanded = box.expandTowards(normal.x * reach, 0, normal.z * reach);
 
             if (!level.noCollision(player, expanded)) {
-                Vec3 wallNormal = new Vec3(dir.getStepX(), 0, dir.getStepZ());
-                double cross = lookVec.x * wallNormal.z - lookVec.z * wallNormal.x;
-                double dot = lookVec.dot(wallNormal);
-                bestLookAngle = (float) Math.toDegrees(Math.atan2(cross, dot));
-                bestDir = dir;
+                double dot = lookVec.x * normal.x + lookVec.z * normal.z;
+                float angleDiff = (float) Math.toDegrees(Math.acos(Math.min(1.0, Math.max(-1.0, dot))));
+
+                if (angleDiff < bestAngleDiff) {
+                    bestAngleDiff = angleDiff;
+                    bestNormal = normal;
+
+                    double cross = lookVec.x * normal.z - lookVec.z * normal.x;
+                    double lookDot = lookVec.dot(normal);
+                    bestLookAngle = (float) Math.toDegrees(Math.atan2(cross, lookDot));
+                }
             }
         }
 
-        if (bestDir == null) {
-            this.setWallDirection(null);
+        if (bestNormal == null) {
+            Vec3[] diagonals = {
+                    new Vec3(1, 0, 1).normalize(),
+                    new Vec3(1, 0, -1).normalize(),
+                    new Vec3(-1, 0, 1).normalize(),
+                    new Vec3(-1, 0, -1).normalize(),
+            };
+
+            for (Vec3 normal : diagonals) {
+                AABB expanded = box.expandTowards(normal.x * reach, 0, normal.z * reach);
+
+                if (!level.noCollision(player, expanded)) {
+                    double dot = lookVec.x * normal.x + lookVec.z * normal.z;
+                    float angleDiff = (float) Math.toDegrees(Math.acos(Math.min(1.0, Math.max(-1.0, dot))));
+
+                    if (angleDiff < bestAngleDiff) {
+                        bestAngleDiff = angleDiff;
+                        bestNormal = normal;
+
+                        double cross = lookVec.x * normal.z - lookVec.z * normal.x;
+                        double lookDot = lookVec.dot(normal);
+                        bestLookAngle = (float) Math.toDegrees(Math.atan2(cross, lookDot));
+                    }
+                }
+            }
+        }
+
+        if (bestNormal == null) {
             this.setLookWallAngle(360F);
             this.setWallNormal(Vec3.ZERO);
             return;
         }
 
-        this.setWallDirection(bestDir);
-        this.setWallNormal(new Vec3(bestDir.getStepX(), 0, bestDir.getStepZ()));
+        this.setWallNormal(bestNormal);
         this.setLookWallAngle(bestLookAngle);
+    }
+
+    public void playWallSound(Player player, Function<SoundType, SoundEvent> kind, float volumeMultiplier, float pitchMultiplier) {
+        if (wallBlocks.isEmpty()) return;
+
+        Level level = player.level();
+        BlockPos pos = wallBlocks.get(level.getRandom().nextInt(wallBlocks.size()));
+        BlockState state = level.getBlockState(pos);
+        if (state.isAir()) return;
+
+        SoundType soundType = state.getSoundType(level, pos, player);
+        player.playSound(
+                kind.apply(soundType),
+                soundType.getVolume() * volumeMultiplier,
+                soundType.getPitch() * pitchMultiplier
+        );
     }
 
     // 向指定效果添加永久buff

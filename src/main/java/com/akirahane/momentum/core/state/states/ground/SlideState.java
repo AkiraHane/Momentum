@@ -1,13 +1,12 @@
 package com.akirahane.momentum.core.state.states.ground;
 
+import com.akirahane.momentum.client.hud.HintManager;
+import com.akirahane.momentum.client.hud.WallHangHints;
 import com.akirahane.momentum.core.effect.MomentumEffect;
 import com.akirahane.momentum.core.effect.MomentumEffectType;
 import com.akirahane.momentum.core.state.StateType;
 import com.akirahane.momentum.core.state.BaseState;
 import com.akirahane.momentum.core.context.PlayerMovementContext;
-import com.akirahane.momentum.core.state.states.air.AirborneState;
-import com.akirahane.momentum.core.state.states.special.DodgeState;
-import com.akirahane.momentum.core.state.states.water.SwimState;
 import com.akirahane.momentum.mixin.LivingEntityAccessor;
 import com.akirahane.momentum.config.ServerConfig;
 import net.minecraft.world.entity.Pose;
@@ -15,10 +14,8 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
 
 import static com.akirahane.momentum.client.input.LowerCenterKey.LOWER_CENTER;
-import static com.akirahane.momentum.core.MomentumUtils.canPlayerFitAtPose;
 import static com.akirahane.momentum.core.effect.MomentumEffect.EffectType.LOCAL_VALUE;
-import static com.akirahane.momentum.core.state.states.OriginalState.canOriginal;
-import static com.akirahane.momentum.core.state.states.air.BreakFallReadyState.canBreakFallReady;
+import static net.minecraft.world.level.block.SoundType.GRASS;
 
 
 public class SlideState extends BaseState {
@@ -30,14 +27,20 @@ public class SlideState extends BaseState {
 
     public static boolean canSlide(Player player, PlayerMovementContext context) {
         return player.onGround() &&
-                LOWER_CENTER.get().isDown() &&
-                player.isSprinting() &&
-                canSlideSpeedCheck(player, context);
+                canSlideSpeedCheck(player, context) &&
+                checkKey(player, context);
     }
 
     public static boolean canSlideSpeedCheck(Player player, PlayerMovementContext context) {
-        return context.getSpeed().horizontalDistance() * 20 > ServerConfig.MIN_SLIDE_SPEED.get() &&
-                context.getOldSpeed().horizontalDistance() >= -context.getOldSpeed().y;
+        return context.getSpeed().horizontalDistance() * 20 >
+                (player.isSprinting() ? ServerConfig.MIN_SLIDE_SPEED.get() : ServerConfig.MIN_SLIDE_SPEED.get() * 2) &&
+                (context.getPendingEffectPool().get(MomentumEffectType.ACCELERATION).contains(context.SLIDE_ACCELERATION) ||
+                        context.getOldSpeed().horizontalDistance() >= -context.getOldSpeed().y);
+    }
+
+    public static boolean checkKey(Player player, PlayerMovementContext context) {
+        HintManager.add(WallHangHints.SLIDE);
+        return LOWER_CENTER.get().isDown();
     }
 
     @Override
@@ -63,11 +66,23 @@ public class SlideState extends BaseState {
                         velocity.z * jumpPower / velocity.horizontalDistance()
                 )
         );
-        context.setSlideCooldown(ServerConfig.SLIDE_ACCELERATION_COOLDOWN.get());
         playStateAnimation(player, SLIDE, context, 6, 1.0f);
+        context.setMomentumRollIntensity(15F);  // 滑铲最大倾斜 15°
+    }
+
+    @Override
+    public void clientTickRemote(Player player, PlayerMovementContext context) {
+        if (player.tickCount % 2 == 0) {
+            player.playSound(
+                    GRASS.getStepSound(),
+                    0.05F,
+                    1F
+            );
+        }
     }
 
     public void onExit(Player player, PlayerMovementContext context) {
+        super.onExit(player, context);
         if (JUMP_DECELERATION_WINDOW >= (ServerConfig.SLIDE_ACCELERATION_COOLDOWN.get() - context.getSlideCooldown())) {
             // 如果跳跃的时间小于冷却, 则增加移动方向的阻力
             context.addEffect(
@@ -87,36 +102,8 @@ public class SlideState extends BaseState {
         context.removeEffect(MomentumEffectType.BLOCK_FRICTION, context.SLIDE_BLOCK_FRICTION);
         player.setSprinting(false);
         context.setSlopeUnitVector(Vec3.ZERO);
-    }
-
-    @Override
-    public BaseState evaluate(Player player, PlayerMovementContext context) {
-        if (canOriginal(player, context)) {
-            return StateType.ORIGINAL.getState();
-        }
-        if (DodgeState.canDodge(player, context)) {
-            return StateType.DODGE.getState();
-        }
-        if (SwimState.canSwim(player, context)) {
-            return StateType.SWIM.getState();
-        }
-        if (canBreakFallReady(player, context)) {
-            return StateType.BREAK_FALL_READY.getState();
-        }
-        if (AirborneState.canAirborne(player, context)) {
-            return StateType.AIRBORNE.getState();
-        }
-        boolean canCrouching = canPlayerFitAtPose(player, Pose.CROUCHING);
-        if (!LOWER_CENTER.get().isDown() && canCrouching) {
-            return StateType.WALK.getState();
-        }
-        if (!LOWER_CENTER.get().isDown()) {
-            return StateType.PRONE.getState();
-        }
-        if (context.getSpeed().horizontalDistance() * 20 <= ServerConfig.MIN_SLIDE_SPEED.get() / 2) {
-            return StateType.PRONE.getState();
-        }
-        return StateType.SLIDE.getState();
+        context.setSlideCooldown(ServerConfig.SLIDE_ACCELERATION_COOLDOWN.get());
+        context.setMomentumRollIntensity(0F);  // 退出时关闭
     }
 
     @Override

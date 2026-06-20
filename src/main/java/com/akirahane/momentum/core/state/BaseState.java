@@ -1,7 +1,18 @@
 package com.akirahane.momentum.core.state;
 
 import com.akirahane.momentum.Momentum;
+import com.akirahane.momentum.client.hud.HintManager;
 import com.akirahane.momentum.core.context.PlayerMovementContext;
+import com.akirahane.momentum.core.state.states.OriginalState;
+import com.akirahane.momentum.core.state.states.air.AirborneState;
+import com.akirahane.momentum.core.state.states.air.BreakFallReadyState;
+import com.akirahane.momentum.core.state.states.ground.ProneState;
+import com.akirahane.momentum.core.state.states.ground.SlideState;
+import com.akirahane.momentum.core.state.states.ground.WalkState;
+import com.akirahane.momentum.core.state.states.special.BreakFallState;
+import com.akirahane.momentum.core.state.states.special.DodgeState;
+import com.akirahane.momentum.core.state.states.wall.*;
+import com.akirahane.momentum.core.state.states.water.SwimState;
 import com.mojang.logging.LogUtils;
 import com.zigythebird.playeranimcore.animation.layered.modifier.AbstractFadeModifier;
 import com.zigythebird.playeranimcore.easing.EasingType;
@@ -9,6 +20,8 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.player.Player;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
+
+import static com.akirahane.momentum.config.ServerConfig.*;
 
 public abstract class BaseState {
     // 日志
@@ -29,10 +42,19 @@ public abstract class BaseState {
 
     // 服务器和客户端都支持的功能
     public void serverTick(Player player, PlayerMovementContext context) {
+        if (MANEUVER_CONSUME_HUNGER.get()) {
+            float modify = MANEUVER_CONSUME_HUNGER_AMOUNT.get().floatValue();
+            if (context.isHasJetBooster()) {
+                modify *= (1 - BOOSTER_STAMINA_REDUCTION.get().floatValue());
+            }
+            player.getFoodData().addExhaustion(modify);
+        }
     }
 
     // 视觉效果和移动、状态转换相关内容
     public void clientTick(Player player, PlayerMovementContext context) {
+        serverTick(player, context);
+        clientTickRemote(player, context);
     }
 
     // 其他玩家要在客户端渲染视觉效果的所需数据
@@ -44,7 +66,59 @@ public abstract class BaseState {
     }
 
     // 状态转换检查
-    public abstract BaseState evaluate(Player player, PlayerMovementContext context);
+    public BaseState evaluate(Player player, PlayerMovementContext context) {
+        HintManager.clear();
+        if (OriginalState.canOriginal(player, context)) {
+            return StateType.ORIGINAL.getState();
+        }
+        if (DodgeState.canDodge(player, context)) {
+            return StateType.DODGE.getState();
+        }
+        if (BreakFallState.canBreakFall(player, context)) {
+            return StateType.BREAK_FALL.getState();
+        }
+        if (VaultInState.canVaultIn(player, context)) {
+            return StateType.VAULT_IN.getState();
+        }
+        if (SwimState.canSwim(player, context)) {
+            return StateType.SWIM.getState();
+        }
+        if (SlideState.canSlide(player, context)) {
+            return StateType.SLIDE.getState();
+        }
+        if (ProneState.canProne(player, context)) {
+            return StateType.PRONE.getState();
+        }
+        if (WallKickState.canWallKick(player, context)) {
+            return StateType.WALL_KICK.getState();
+        }
+        if (WallRunState.canWallRun(player, context)) {
+            return StateType.WALL_RUN.getState();
+        }
+        if (VaultUpState.canVaultUp(player, context)) {
+            return StateType.VAULT_UP.getState();
+        }
+        if (WallHangState.canWallHang(player, context)) {
+            return StateType.WALL_HANG.getState();
+        }
+        if (WallClimbState.canWallClimb(player, context)) {
+            return StateType.WALL_CLIMB.getState();
+        }
+        if (WallSlideState.canWallSlide(player, context)) {
+            return StateType.WALL_SLIDE.getState();
+        }
+        if (BreakFallReadyState.canBreakFallReady(player, context)) {
+            return StateType.BREAK_FALL_READY.getState();
+        }
+        if (AirborneState.canAirborne(player, context)) {
+            return StateType.AIRBORNE.getState();
+        }
+        if (WalkState.canWalk(player, context)) {
+            return StateType.WALK.getState();
+        }
+        LOGGER.error("evaluate error! 有状态没有覆盖!");
+        throw new RuntimeException("evaluate error! 有状态没有覆盖!");
+    }
 
     public abstract StateType getStateType();
 

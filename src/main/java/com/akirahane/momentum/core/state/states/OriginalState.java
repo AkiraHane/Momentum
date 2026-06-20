@@ -9,8 +9,6 @@ import net.minecraft.world.entity.player.Player;
 
 import static com.akirahane.momentum.core.context.PlayerMovementContext.DEFAULT_FRICTION;
 import static com.akirahane.momentum.core.effect.MomentumEffectType.FRICTION;
-import static com.akirahane.momentum.core.state.states.ground.WalkState.canWalk;
-import static com.akirahane.momentum.core.state.states.water.SwimState.canSwim;
 
 public class OriginalState extends BaseState {
     public static boolean canOriginal(Player player, PlayerMovementContext context) {
@@ -23,26 +21,14 @@ public class OriginalState extends BaseState {
                 || player.isSpectator()            // 旁观者
                 || player.isAutoSpinAttack()       // 旋转攻击(三叉戟)
                 || player.isDeadOrDying()          // 死亡
+                || player.getFoodData().getFoodLevel() <= 6.0F
                 ;
-    }
-
-    @Override
-    public BaseState evaluate(Player player, PlayerMovementContext context) {
-        if (canOriginal(player, context)) {
-            return StateType.ORIGINAL.getState();
-        }
-        if (canSwim(player, context)) {
-            return StateType.SWIM.getState();
-        }
-        if (canWalk(player, context)) {
-            return StateType.WALK.getState();
-        }
-        return StateType.AIRBORNE.getState();
     }
 
     @Override
     public void onEnter(Player player, PlayerMovementContext context) {
         context.resetEffect();
+        playStateAnimation(player, IDLE, context);
         stopAnimation(player, context);
         var instance = player.getAttribute(Attributes.GRAVITY);
         if (instance != null) {
@@ -51,7 +37,13 @@ public class OriginalState extends BaseState {
     }
 
     @Override
+    public void serverTick(Player player, PlayerMovementContext context) {
+        // 原版状态不额外消耗饱食度
+    }
+
+    @Override
     public void onExit(Player player, PlayerMovementContext context) {
+        super.onExit(player, context);
         context.resetEffect();
         stopAnimation(player, context);
         var instance = player.getAttribute(Attributes.GRAVITY);
