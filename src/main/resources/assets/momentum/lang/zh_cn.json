@@ -4,6 +4,7 @@
   "item.momentum.jet_booster.tooltip": "装备后获得增强移动能力",
   "key.momentum.lower_center": "降低重心",
   "key.momentum.change_momentum": "切换启用/关闭动量",
+  "key.momentum.toggle_hint": "切换按键提示",
   "key.category.momentum.category": "动量",
   "message.momentum.momentum_disabled": "禁用机动",
   "message.momentum.momentum_enabled": "启用机动",
