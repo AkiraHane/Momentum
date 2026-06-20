@@ -118,7 +118,7 @@ public class WallRunState extends BaseState {
         context.setNeedSoundTick(context.getNeedSoundTick() - speed);
         if (context.getNeedSoundTick() <= 0) {
             context.playWallSound(player, STEP, 0.15F, 1);
-            context.setNeedSoundTick(SOUND_TICK);
+            context.setNeedSoundTick(context.getNeedSoundTick() + SOUND_TICK);
         }
     }
 
