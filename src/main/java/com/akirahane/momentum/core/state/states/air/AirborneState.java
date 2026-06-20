@@ -75,6 +75,7 @@ public class AirborneState extends BaseState {
         }
         context.addPermanentEffect(MomentumEffectType.LIMIT_ACCELERATION_SPEED, AIR_LIMIT_ACCELERATION);
         context.setJumpCooldown(15);
+        context.setJumpAnimationSpeed(1F);
 
         if (isDivingEdge(player, context)) {
             LOGGER.info("Diving Edge");
@@ -90,6 +91,15 @@ public class AirborneState extends BaseState {
             playStateAnimation(player, FALL, context, 20, speed);
         } else if (FALL.equals(context.getCurrentAnimationName())){
             playStateAnimation(player, IDLE, context);
+        }
+        if (WallKickState.WALL_JUMP_RIGHT.equals(context.getCurrentAnimationName()) &&
+                WallKickState.WALL_JUMP_LEFT.equals(context.getCurrentAnimationName())){
+            if (context.getSpeed().y > 0 ){
+                context.setJumpAnimationSpeed(context.getJumpAnimationSpeed() * 0.9F);
+            } else {
+                context.setJumpAnimationSpeed(context.getJumpAnimationSpeed() * 1.5F);
+            }
+            playStateAnimation(player, context.getCurrentAnimationName(), context, 0, context.getJumpAnimationSpeed());
         }
     }
 

@@ -30,8 +30,8 @@ public class WallSlideState extends BaseState {
         return !player.onGround() &&
                 !Vec3.ZERO.equals(context.getWallNormal()) &&
                 context.isHasFaceWall() &&
-                !Vec3.ZERO.equals(context.getInputVec()) && Mth.abs(context.getInputWallAngle()) < 45 &&
-                Mth.abs(context.getLookWallAngle()) < 45;
+                !Vec3.ZERO.equals(context.getInputVec()) && Mth.abs(context.getInputWallAngle()) < 60 &&
+                Mth.abs(context.getLookWallAngle()) < 60;
     }
 
     @Override

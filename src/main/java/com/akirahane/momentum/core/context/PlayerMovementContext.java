@@ -118,6 +118,8 @@ public class PlayerMovementContext {
     private float needSoundTick = 0;
     // 当前墙面重力变化倍率
     private float gravityModify = 0;
+    // 跳跃动画播放速度
+    private float jumpAnimationSpeed = 1;
 
     // 当前播放的动画名称
     private String currentAnimationName = null;

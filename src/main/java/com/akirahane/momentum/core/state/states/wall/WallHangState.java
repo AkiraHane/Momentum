@@ -80,7 +80,7 @@ public class WallHangState extends BaseState {
 
     @Override
     public void onEnter(Player player, PlayerMovementContext context) {
-        playStateAnimation(player, WALL_HANG, context);
+        playStateAnimation(player, WALL_HANG, context, 1, 1);
         var instance = player.getAttribute(Attributes.GRAVITY);
         if (instance != null && instance.getModifier(WALL_GRAVITY_ID) == null) {
             instance.addOrReplacePermanentModifier(new AttributeModifier(
@@ -117,7 +117,7 @@ public class WallHangState extends BaseState {
     @Override
     public void clientTickRemote(Player player, PlayerMovementContext context) {
         float speed = (float) context.getSpeed().horizontalDistance() * 20;
-        if (speed > 0.02) {
+        if (speed > 0.05) {
             if (context.getInputWallAngle() < 0){
                 playStateAnimation(player, WALL_HANG_RIGHT, context, 2, speed);
             } else {
