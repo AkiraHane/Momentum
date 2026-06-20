@@ -27,7 +27,7 @@ public class WallRunState extends BaseState {
     private static final int SOUND_TICK = 10;
 
     public static boolean canWallRun(Player player, PlayerMovementContext context) {
-        return context.getWallDirection() != null &&
+        return !Vec3.ZERO.equals(context.getWallNormal()) &&
                 !Vec3.ZERO.equals(context.getInputVec()) &&
                 Mth.abs(context.getInputWallAngle()) > 45 && Mth.abs(context.getInputWallAngle()) < 90 &&
                 canWallRunSpeedCheck(player, context) &&
@@ -149,7 +149,7 @@ public class WallRunState extends BaseState {
             return StateType.WALL_KICK.getState();
         }
         if ((
-                context.getWallDirection() == null ||
+                Vec3.ZERO.equals(context.getWallNormal()) ||
                         !Minecraft.getInstance().options.keyUp.isDown() ||
                         !canWallRunSpeedCheck(player, context)
         ) && AirborneState.canAirborne(player, context)) {

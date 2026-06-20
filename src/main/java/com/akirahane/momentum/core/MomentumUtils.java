@@ -28,10 +28,6 @@ public class MomentumUtils {
 
     private static final Identifier BOOSTER_SPEED_ID = Identifier.fromNamespaceAndPath(Momentum.MODID, "booster_speed");
     private static final Identifier BOOSTER_JUMP_ID = Identifier.fromNamespaceAndPath(Momentum.MODID, "booster_jump");
-    // 墙面检测方向
-    public static final Direction[] HORIZONTALS = {
-            Direction.NORTH, Direction.SOUTH, Direction.EAST, Direction.WEST
-    };
 
 
     // 滑行上下坡加速和减速

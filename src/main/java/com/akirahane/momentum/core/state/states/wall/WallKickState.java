@@ -22,7 +22,7 @@ public class WallKickState extends BaseState {
     public static String WALL_JUMP_RIGHT = "wall_jump_right";
 
     public static boolean canWallKick(Player player, PlayerMovementContext context) {
-        return context.getWallDirection() != null &&
+        return !Vec3.ZERO.equals(context.getWallNormal()) &&
                 context.getInputVec().horizontalDistance() > 0.01 && Mth.abs(context.getInputWallAngle()) >= 90 &&
                 context.getInputBuffer()[context.getInputBufferIndex()].contains(JUMP);
     }

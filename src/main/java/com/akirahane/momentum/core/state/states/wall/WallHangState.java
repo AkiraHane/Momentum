@@ -34,7 +34,7 @@ public class WallHangState extends BaseState {
 
     public static boolean canWallHang(Player player, PlayerMovementContext context) {
         return context.isHasLedge() &&
-                context.getWallDirection() != null &&
+                !Vec3.ZERO.equals(context.getWallNormal()) &&
                 !Vec3.ZERO.equals(context.getInputVec()) && Mth.abs(context.getInputWallAngle()) < 90 &&
                 !Minecraft.getInstance().options.keyShift.isDown() &&
                 player.fallDistance <= player.getAttributeValue(Attributes.SAFE_FALL_DISTANCE) * 2;

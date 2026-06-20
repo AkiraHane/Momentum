@@ -28,7 +28,7 @@ public class WallSlideState extends BaseState {
 
     public static boolean canWallSlide(Player player, PlayerMovementContext context) {
         return !player.onGround() &&
-                context.getWallDirection() != null &&
+                !Vec3.ZERO.equals(context.getWallNormal()) &&
                 context.isHasFaceWall() &&
                 !Vec3.ZERO.equals(context.getInputVec()) && Mth.abs(context.getInputWallAngle()) < 45 &&
                 Mth.abs(context.getLookWallAngle()) < 45;

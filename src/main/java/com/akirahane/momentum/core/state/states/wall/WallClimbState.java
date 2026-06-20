@@ -27,7 +27,7 @@ public class WallClimbState extends BaseState {
 
     public static boolean canWallClimb(Player player, PlayerMovementContext context) {
         return player.onClimbable() || (
-                context.getWallDirection() != null &&
+                !Vec3.ZERO.equals(context.getWallNormal()) &&
                         context.isHasFaceWall() &&
                         Minecraft.getInstance().options.keyJump.isDown() &&
                         !Vec3.ZERO.equals(context.getInputVec()) && Mth.abs(context.getInputWallAngle()) < 45 &&
