@@ -20,16 +20,21 @@ public class VaultInState extends BaseState {
     public static final String VAULT_IN = "vault_in";
 
     public static boolean canVaultIn(Player player, PlayerMovementContext context) {
-        return context.isHasLedge() &&
+        return (context.isHasLedge() || player.onGround() && !context.isHasFaceWall()) &&
                 !Vec3.ZERO.equals(context.getInputVec()) && Mth.abs(context.getInputWallAngle()) < 90 &&
                 checkKey(player, context)
                 ;
     }
 
     public static boolean checkKey(Player player, PlayerMovementContext context) {
-        HintManager.add(WallHangHints.VAULT_IN);
-        return LOWER_CENTER.get().isDown() &&
-                Minecraft.getInstance().options.keyJump.isDown();
+        if (player.onGround() && !context.isHasFaceWall()){
+            HintManager.add(WallHangHints.VAULT_IN_STAND);
+            return Minecraft.getInstance().options.keyJump.isDown();
+        } else {
+            HintManager.add(WallHangHints.VAULT_IN);
+            return LOWER_CENTER.get().isDown() &&
+                    Minecraft.getInstance().options.keyJump.isDown();
+        }
     }
 
     @Override
