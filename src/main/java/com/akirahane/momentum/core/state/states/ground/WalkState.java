@@ -1,5 +1,6 @@
 package com.akirahane.momentum.core.state.states.ground;
 
+import com.akirahane.momentum.client.hud.HintManager;
 import com.akirahane.momentum.core.state.StateType;
 import com.akirahane.momentum.core.state.BaseState;
 import com.akirahane.momentum.core.context.PlayerMovementContext;
@@ -9,6 +10,7 @@ import com.akirahane.momentum.core.state.states.wall.WallClimbState;
 import com.akirahane.momentum.core.state.states.wall.WallRunState;
 import com.akirahane.momentum.core.state.states.wall.WallSlideState;
 import com.akirahane.momentum.core.state.states.water.SwimState;
+import net.minecraft.client.Minecraft;
 import net.minecraft.world.entity.player.Player;
 
 import static com.akirahane.momentum.core.state.states.OriginalState.canOriginal;
@@ -21,10 +23,12 @@ public class WalkState extends BaseState {
     @Override
     public void onEnter(Player player, PlayerMovementContext context) {
         super.onEnter(player, context);
+        HintManager.add("test", Minecraft.getInstance().options.keyJump, "hint.momentum.test");
     }
 
     @Override
     public void onExit(Player player, PlayerMovementContext context) {
+        HintManager.remove("test");
     }
 
     @Override
