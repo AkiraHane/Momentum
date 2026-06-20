@@ -55,7 +55,7 @@
 			}
 		},
 		"slide": {
-			"loop": "hold_on_last_frame",
+			"loop": true,
 			"bones": {
 				"body": {
 					"rotation": [-51.4701, -10.4018, 13.8996],
@@ -1426,9 +1426,6 @@
 							"lerp_mode": "catmullrom"
 						}
 					}
-				},
-				"head": {
-					"rotation": ["query.head_x_rotation", "-0 - math.clamp(math.min_angle_180(query.head_y_rotation, query.body_y_rotation), -70, 70)", 0]
 				},
 				"right_arm": {
 					"rotation": [-130, 0, 0]

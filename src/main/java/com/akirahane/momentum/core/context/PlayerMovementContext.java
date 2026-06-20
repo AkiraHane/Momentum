@@ -244,16 +244,7 @@ public class PlayerMovementContext {
     private void bindVariables() {
         Value value = this.mocha.scope().get("math");
         if (value instanceof ObjectValue math) {
-            math.setFunction("min_angle_180", (a, b) -> {
-                double diff = b - a;
-                // 用 Math.floorMod 的思路，保证结果在 [0, 360) 范围
-                diff = ((diff % 360.0) + 360.0) % 360.0;
-                // 映射到 (-180, 180]
-                if (diff > 180.0) {
-                    diff -= 360.0;
-                }
-                return (float) diff;
-            });
+            math.setFunction("min_angle_180", (a, b) -> (float) Mth.wrapDegrees(b - a));;
             // clamp
             math.setFunction("clamp", Mth::clamp);
             // min
