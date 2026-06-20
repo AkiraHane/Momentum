@@ -223,7 +223,7 @@ public class WallRunState extends BaseState {
                 player.setDeltaMovement(
                         tangent.x * Math.max(player.getDeltaMovement().horizontalDistance(), context.getJumpLimitSpeed()) + wallNormal.x * pushStrength,
                         0,
-                        tangent.z * Math.max(player.getDeltaMovement().horizontalDistance(), context.getJumpLimitSpeed()) + wallNormal.x * pushStrength
+                        tangent.z * Math.max(player.getDeltaMovement().horizontalDistance(), context.getJumpLimitSpeed()) + wallNormal.z * pushStrength
                 );
             } else if (context.getGravityModify() != -0.6) {
                 instance.addOrReplacePermanentModifier(new AttributeModifier(
@@ -234,7 +234,7 @@ public class WallRunState extends BaseState {
                 player.setDeltaMovement(
                         tangent.x * Math.max(player.getDeltaMovement().horizontalDistance(), context.getJumpLimitSpeed()) + wallNormal.x * pushStrength,
                         player.getDeltaMovement().y,
-                        tangent.z * Math.max(player.getDeltaMovement().horizontalDistance(), context.getJumpLimitSpeed()) + wallNormal.x * pushStrength
+                        tangent.z * Math.max(player.getDeltaMovement().horizontalDistance(), context.getJumpLimitSpeed()) + wallNormal.z * pushStrength
                 );
             }
         }
