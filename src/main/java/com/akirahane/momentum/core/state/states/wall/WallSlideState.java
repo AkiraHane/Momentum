@@ -54,7 +54,7 @@ public class WallSlideState extends BaseState {
         if (canWallRun(player, context)) {
             return StateType.WALL_RUN.getState();
         }
-        if (WallKickState.canWallKick(player, context)){
+        if (WallKickState.canWallKick(player, context)) {
             return StateType.WALL_KICK.getState();
         }
         if (canWallClimb(player, context)) {
@@ -81,6 +81,7 @@ public class WallSlideState extends BaseState {
 
     @Override
     public void serverTick(Player player, PlayerMovementContext context) {
+        super.serverTick(player, context);
         // 按照重力倍率衰减掉落伤害
         player.fallDistance *= 0.9;
     }
@@ -104,7 +105,7 @@ public class WallSlideState extends BaseState {
 
     @Override
     public void clientTickRemote(Player player, PlayerMovementContext context) {
-        if (player.tickCount % 2 == 0){
+        if (player.tickCount % 2 == 0) {
             player.playSound(
                     GRASS.getStepSound(),
                     0.05F,

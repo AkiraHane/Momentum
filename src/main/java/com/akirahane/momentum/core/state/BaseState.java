@@ -10,8 +10,7 @@ import net.minecraft.world.entity.player.Player;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 
-import static com.akirahane.momentum.config.ServerConfig.BOOSTER_STAMINA_REDUCTION;
-import static com.akirahane.momentum.config.ServerConfig.MANEUVER_CONSUME_HUNGER_AMOUNT;
+import static com.akirahane.momentum.config.ServerConfig.*;
 
 public abstract class BaseState {
     // 日志
@@ -32,10 +31,13 @@ public abstract class BaseState {
 
     // 服务器和客户端都支持的功能
     public void serverTick(Player player, PlayerMovementContext context) {
-        player.getFoodData().addExhaustion(
-                MANEUVER_CONSUME_HUNGER_AMOUNT.get().floatValue() *
-                        (1 - BOOSTER_STAMINA_REDUCTION.get().floatValue())
-        );
+        if (MANEUVER_CONSUME_HUNGER.get()) {
+            float modify = MANEUVER_CONSUME_HUNGER_AMOUNT.get().floatValue();
+            if (context.isHasJetBooster()) {
+                modify *= (1 - BOOSTER_STAMINA_REDUCTION.get().floatValue());
+            }
+            player.getFoodData().addExhaustion(modify);
+        }
     }
 
     // 视觉效果和移动、状态转换相关内容
