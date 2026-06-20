@@ -9,6 +9,8 @@ import net.minecraft.world.phys.Vec3;
 
 import java.util.*;
 
+import static com.akirahane.momentum.client.config.ClientConfig.*;
+
 public class HintManager {
 
     // ========== 数据结构 ==========
@@ -95,23 +97,11 @@ public class HintManager {
     // 各种 tick 计数
     private static int contentChangeTick = 0;    // 提示内容上次变化时间
     private static int stillTick = 0;            // 玩家停止移动持续时间
-    private static int movingTick = 0;           // 玩家移动持续时间
 
     // alpha 状态
     private static float currentAlpha = 0f;
     private static float prevAlpha = 0f;
     private static int globalTick = 0;
-
-    // 配置参数
-    private static final float MIN_ALPHA_WHEN_MOVING = 0.20f;  // 移动时最低透明度
-    private static final float MAX_ALPHA = 1.0f;
-    private static final int FRESH_DURATION = 80;              // 内容变化后高亮持续时间（4秒）
-    private static final int IDLE_DELAY = 30;                  // 静止多久后淡入（1.5秒）
-    private static final double MOVE_THRESHOLD_SQR = 0.005;    // 视为移动的速度阈值
-
-    // 缓动速度（值越小越慢）
-    private static final float FADE_IN_SPEED = 0.08f;
-    private static final float FADE_OUT_SPEED = 0.18f;
 
     // ========== 公开 API ==========
 
@@ -165,22 +155,20 @@ public class HintManager {
 
         // 2. 检测玩家移动状态
         Vec3 movement = player.getDeltaMovement();
-        boolean moving = movement.horizontalDistanceSqr() > MOVE_THRESHOLD_SQR
+        boolean moving = movement.horizontalDistanceSqr() > MOVE_THRESHOLD_SQR.get()
                 || Math.abs(movement.y) > 0.1;
 
         if (moving) {
             stillTick = 0;
-            movingTick++;
         } else {
             stillTick++;
-            movingTick = 0;
         }
 
         // 3. 计算目标 alpha
         float targetAlpha = computeTargetAlpha(moving);
 
         // 4. 平滑过渡（不对称速度）
-        float speed = (currentAlpha < targetAlpha) ? FADE_IN_SPEED : FADE_OUT_SPEED;
+        float speed = (currentAlpha < targetAlpha) ? FADE_IN_SPEED.get().floatValue() : FADE_OUT_SPEED.get().floatValue();
         currentAlpha = lerpEased(currentAlpha, targetAlpha, speed);
 
         // 防止浮点抖动
@@ -195,22 +183,22 @@ public class HintManager {
         int sinceChange = globalTick - contentChangeTick;
 
         // 优先级 1：内容刚变化（教学时机），强制显示
-        if (sinceChange < FRESH_DURATION) {
-            return MAX_ALPHA;
+        if (sinceChange < FRESH_DURATION.get().floatValue()) {
+            return MAX_ALPHA.get().floatValue();
         }
 
         // 优先级 2：玩家静止超过阈值，显示提示
-        if (stillTick >= IDLE_DELAY) {
-            return MAX_ALPHA;
+        if (stillTick >= IDLE_DELAY.get().floatValue()) {
+            return MAX_ALPHA.get().floatValue();
         }
 
         // 优先级 3：玩家在移动，降到最低可见度（不消失，做视觉锚点）
         if (moving) {
-            return MIN_ALPHA_WHEN_MOVING;
+            return MIN_ALPHA_WHEN_MOVING.get().floatValue();
         }
 
         // 默认：中等透明度
-        return MIN_ALPHA_WHEN_MOVING;
+        return MIN_ALPHA_WHEN_MOVING.get().floatValue();
     }
 
     /**
@@ -243,8 +231,8 @@ public class HintManager {
      */
     public static void forceShow() {
         contentChangeTick = globalTick;
-        currentAlpha = MAX_ALPHA;
-        prevAlpha = MAX_ALPHA;
+        currentAlpha = MAX_ALPHA.get().floatValue();
+        prevAlpha = MAX_ALPHA.get().floatValue();
     }
 
     /**
@@ -252,6 +240,6 @@ public class HintManager {
      */
     public static void notifyActionPerformed() {
         // 让内容变化时间提前，更快进入低透明度状态
-        contentChangeTick = globalTick - FRESH_DURATION + 10;
+        contentChangeTick = globalTick - FRESH_DURATION.get() + 10;
     }
 }

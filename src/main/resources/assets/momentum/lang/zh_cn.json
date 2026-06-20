@@ -22,5 +22,20 @@
   "state.momentum.wall_hang": "挂墙",
   "state.momentum.wall_kick": "蹬墙跳",
   "state.momentum.vault_up": "向上翻越",
-  "state.momentum.vault_in": "钻进"
+  "state.momentum.vault_in": "钻进",
+  "momentum.configuration.key_hints": "按键提示配置",
+  "momentum.configuration.minAlphaWhenMoving": "移动时最低透明度",
+  "momentum.configuration.minAlphaWhenMoving.tooltip": "移动时最低透明度，范围 0.0 - 1.0",
+  "momentum.configuration.maxAlpha": "最大透明度",
+  "momentum.configuration.maxAlpha.tooltip": "最大透明度，范围 0.0 - 1.0",
+  "momentum.configuration.freshDuration": "高亮持续时间",
+  "momentum.configuration.freshDuration.tooltip": "内容变化后高亮持续时间（单位：tick）",
+  "momentum.configuration.idleDelay": "静止延迟",
+  "momentum.configuration.idleDelay.tooltip": "静止多久后淡入（单位：tick）",
+  "momentum.configuration.moveThresholdSqr": "移动速度阈值",
+  "momentum.configuration.moveThresholdSqr.tooltip": "视为移动的速度阈值（平方值）",
+  "momentum.configuration.fadeInSpeed": "淡入速度",
+  "momentum.configuration.fadeInSpeed.tooltip": "淡入速度，值越小越慢",
+  "momentum.configuration.fadeOutSpeed": "淡出速度",
+  "momentum.configuration.fadeOutSpeed.tooltip": "淡出速度，值越小越慢"
 }
