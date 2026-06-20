@@ -32,9 +32,11 @@ public class WallRunState extends BaseState {
     private static final int SOUND_TICK = 10;
 
     public static boolean canWallRun(Player player, PlayerMovementContext context) {
-        return !Vec3.ZERO.equals(context.getWallNormal()) &&
+        return !player.onGround() &&
+                !Vec3.ZERO.equals(context.getWallNormal()) &&
                 !Vec3.ZERO.equals(context.getInputVec()) &&
                 isLookAndSpeedSameSide(player, context) &&
+                Mth.abs(context.getLookWallAngle()) > 45 &&
                 Mth.abs(context.getInputWallAngle()) > 45 && Mth.abs(context.getInputWallAngle()) < 100 &&
                 (context.isHasJetBooster() || canWallRunSpeedCheck(player, context)) &&
                 checkKey(player, context);
@@ -42,8 +44,10 @@ public class WallRunState extends BaseState {
 
     // 维持
     public static boolean canWallRunHold(Player player, PlayerMovementContext context) {
-        return !Vec3.ZERO.equals(context.getWallNormal()) &&
+        return !player.onGround() &&
+                !Vec3.ZERO.equals(context.getWallNormal()) &&
                 isLookAndSpeedSameSide(player, context) &&
+                Mth.abs(context.getLookWallAngle()) > 45 &&
                 (context.isHasJetBooster() || canWallRunSpeedCheck(player, context)) &&
                 checkKeyHold(player, context);
     }

@@ -126,9 +126,15 @@ public class PlayerMovementContext {
     private float targetCameraRoll = 0F;
     private float currentCameraRoll = 0F;
     private float prevCameraRoll = 0F;
+
     private float targetFovBonus = 0F;
     private float currentFovBonus = 0F;
     private float prevFovBonus = 0F;
+
+    private float momentumRollIntensity = 0F;  // 当前动作的最大倾斜角度
+    private float currentMomentumRoll = 0F;
+    private float prevMomentumRoll = 0F;
+
 
     // 当前播放的动画名称
     private String currentAnimationName = null;
@@ -323,6 +329,7 @@ public class PlayerMovementContext {
         this.bodyHeadAngleDiff = Mth.wrapDegrees(player.getYHeadRot() - player.yBodyRot);
         this.tickCameraRoll();
         this.tickFovBonus();
+        this.tickMomentumRoll(player);
     }
 
     public void clientTickRemote(Player player) {
@@ -349,6 +356,52 @@ public class PlayerMovementContext {
         prevFovBonus = currentFovBonus;
         float diff = targetFovBonus - currentFovBonus;
         currentFovBonus += diff * 0.15F;
+    }
+    public void tickMomentumRoll(Player player) {
+        prevMomentumRoll = currentMomentumRoll;
+
+        float targetRoll = 0F;
+
+        if (momentumRollIntensity != 0F) {
+            Vec3 velocity = player.getDeltaMovement();
+            double horizontalSpeed = velocity.horizontalDistance();
+
+            // 速度太低不触发，避免静止时也倾斜
+            if (horizontalSpeed > 0.05) {
+                // 归一化速度方向（只取水平）
+                Vec3 vDir = new Vec3(velocity.x, 0, velocity.z).normalize();
+
+                // 视角方向（只取水平）
+                float yaw = player.getYRot();
+                Vec3 lookDir = new Vec3(
+                        -Math.sin(Math.toRadians(yaw)),
+                        0,
+                        Math.cos(Math.toRadians(yaw))
+                );
+
+                // 叉积 y 分量 = sin(speedDir → lookDir 的夹角)
+                // 注意符号：从速度方向看，视角偏左 / 偏右
+                double crossY = vDir.x * lookDir.z - vDir.z * lookDir.x;
+
+                // 速度越快效果越明显（可选），上限保护
+                float speedFactor = (float) Mth.clamp(horizontalSpeed / 0.5, 0.0, 1.0);
+
+                // 注意符号：APEX 里向左看 → 向右倾斜，所以这里取负
+                targetRoll = (float) crossY * momentumRollIntensity * speedFactor;
+            }
+        }
+
+        // 平滑插值
+        float smoothing = 0.2F;
+        currentMomentumRoll = Mth.lerp(smoothing, currentMomentumRoll, targetRoll);
+
+        if (Math.abs(currentMomentumRoll) < 0.01F && targetRoll == 0F) {
+            currentMomentumRoll = 0F;
+        }
+    }
+
+    public float getRenderMomentumRoll(float partialTick) {
+        return Mth.lerp(partialTick, prevMomentumRoll, currentMomentumRoll);
     }
     public float getRenderCameraRoll(float partialTick) {
         return Mth.lerp(partialTick, prevCameraRoll, currentCameraRoll);

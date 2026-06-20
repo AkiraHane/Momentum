@@ -129,9 +129,11 @@ public class MomentumClient {
 
         float partialTick = (float) event.getPartialTick();
         float roll = context.getRenderCameraRoll(partialTick);
+        // 动量倾斜（滑铲、闪避等）
+        float momentumRoll = context.getRenderMomentumRoll(partialTick);
 
-        if (roll != 0F) {
-            event.setRoll(event.getRoll() + roll);
+        if (roll + momentumRoll != 0F) {
+            event.setRoll(event.getRoll() + roll + momentumRoll);
         }
     }
 

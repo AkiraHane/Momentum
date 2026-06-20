@@ -11,11 +11,6 @@ public class WalkState extends BaseState {
     }
 
     @Override
-    public void onEnter(Player player, PlayerMovementContext context) {
-        super.onEnter(player, context);
-    }
-
-    @Override
     public StateType getStateType() {
         return StateType.WALK;
     }

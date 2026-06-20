@@ -67,6 +67,7 @@ public class SlideState extends BaseState {
                 )
         );
         playStateAnimation(player, SLIDE, context, 6, 1.0f);
+        context.setMomentumRollIntensity(15F);  // 滑铲最大倾斜 15°
     }
 
     @Override
@@ -102,6 +103,7 @@ public class SlideState extends BaseState {
         player.setSprinting(false);
         context.setSlopeUnitVector(Vec3.ZERO);
         context.setSlideCooldown(ServerConfig.SLIDE_ACCELERATION_COOLDOWN.get());
+        context.setMomentumRollIntensity(0F);  // 退出时关闭
     }
 
     @Override

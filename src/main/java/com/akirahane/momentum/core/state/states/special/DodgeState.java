@@ -69,12 +69,16 @@ public class DodgeState extends BaseState {
                 0.5F,
                 1.0F + player.getRandom().nextFloat() * 0.4F - 0.2F  // 0.8 ~ 1.2 随机音高
         );
+        context.setMomentumRollIntensity(20F);
     }
 
     @Override
     public void clientTick(Player player, PlayerMovementContext context) {
-        if (context.getDodgeTimer() > 6 && !player.onGround()) {
-            context.setDodgeTimer(0);
+        if (context.getDodgeTimer() > 6) {
+            context.setMomentumRollIntensity(0F);
+            if (!player.onGround()){
+                context.setDodgeTimer(0);
+            }
         }
     }
 

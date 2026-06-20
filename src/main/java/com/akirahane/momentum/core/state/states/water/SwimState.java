@@ -17,6 +17,7 @@ public class SwimState extends BaseState {
     }
 
     public void onEnter(Player player, PlayerMovementContext context) {
+        super.onEnter(player, context);
         player.setSwimming(true);
         player.setSprinting(true);
         LOGGER.debug("player.isSwimming(): {}", player.isSwimming());
