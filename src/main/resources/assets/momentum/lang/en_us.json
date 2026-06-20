@@ -19,7 +19,7 @@
   "state.momentum.wall_climb": "Wall Climb",
   "state.momentum.wall_slide": "Wall Slide",
   "state.momentum.wall_run": "Wall Run",
-  "state.momentum.wall_hang": "Wall Hang",
+  "state.momentum.wall_hang": "Not Wall Hang",
   "state.momentum.wall_kick": "Wall Kick",
   "state.momentum.vault_up": "Vault Up",
   "state.momentum.vault_in": "Vault In",

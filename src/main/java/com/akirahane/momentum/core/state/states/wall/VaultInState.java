@@ -34,7 +34,6 @@ public class VaultInState extends BaseState {
     public static boolean checkKey(Player player, PlayerMovementContext context) {
         HintManager.add(WallHangHints.VAULT_IN);
         return LOWER_CENTER.get().isDown() &&
-                Minecraft.getInstance().options.keyUp.isDown() &&
                 Minecraft.getInstance().options.keyJump.isDown();
     }
 

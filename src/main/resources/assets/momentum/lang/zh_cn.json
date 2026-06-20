@@ -19,7 +19,7 @@
   "state.momentum.wall_climb": "攀墙",
   "state.momentum.wall_slide": "滑墙",
   "state.momentum.wall_run": "跑墙",
-  "state.momentum.wall_hang": "挂墙",
+  "state.momentum.wall_hang": "脱离挂墙",
   "state.momentum.wall_kick": "蹬墙跳",
   "state.momentum.vault_up": "向上翻越",
   "state.momentum.vault_in": "钻进",

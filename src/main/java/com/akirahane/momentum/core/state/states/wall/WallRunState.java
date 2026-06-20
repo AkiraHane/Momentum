@@ -40,7 +40,7 @@ public class WallRunState extends BaseState {
 
     public static boolean canWallRunSpeedCheck(Player player, PlayerMovementContext context) {
         return context.getSpeed().horizontalDistance() * 20 > ServerConfig.MIN_WALL_RUN_SPEED.get() &&
-                context.getSpeed().horizontalDistance() > Mth.abs((float) context.getSpeed().y);
+                context.getSpeed().horizontalDistance() > (float) - context.getSpeed().y;
     }
 
     public static boolean checkKey(Player player, PlayerMovementContext context) {
@@ -62,7 +62,7 @@ public class WallRunState extends BaseState {
         }
         playStateAnimation(player, inputWallAngle > 0 ? WALL_RUN_LEFT : WALL_RUN_RIGHT, context);
         var instance = player.getAttribute(Attributes.GRAVITY);
-        if (instance != null && instance.getModifier(WALL_GRAVITY_ID) != null) {
+        if (instance != null) {
             if (context.isHasLedge()) {
                 instance.addOrReplacePermanentModifier(new AttributeModifier(
                         WALL_GRAVITY_ID,
@@ -71,9 +71,9 @@ public class WallRunState extends BaseState {
                 ));
                 context.setGravityModify(-1F);
                 player.setDeltaMovement(
-                        tangent.x * context.getSpeed().horizontalDistance(),
+                        tangent.x * Math.max(player.getDeltaMovement().horizontalDistance(), context.getJumpLimitSpeed()),
                         0,
-                        tangent.z * context.getSpeed().horizontalDistance()
+                        tangent.z * Math.max(player.getDeltaMovement().horizontalDistance(), context.getJumpLimitSpeed())
                 );
             } else {
                 instance.addOrReplacePermanentModifier(new AttributeModifier(
@@ -83,9 +83,9 @@ public class WallRunState extends BaseState {
                 ));
                 context.setGravityModify(-0.6F);
                 player.setDeltaMovement(
-                        tangent.x * context.getSpeed().horizontalDistance(),
+                        tangent.x * Math.max(player.getDeltaMovement().horizontalDistance(), context.getJumpLimitSpeed()),
                         player.getDeltaMovement().y,
-                        tangent.z * context.getSpeed().horizontalDistance()
+                        tangent.z * Math.max(player.getDeltaMovement().horizontalDistance(), context.getJumpLimitSpeed())
                 );
             }
         }
@@ -96,6 +96,15 @@ public class WallRunState extends BaseState {
     @Override
     public void clientTick(Player player, PlayerMovementContext context) {
         super.clientTick(player, context);
+        Vec3 wallNormal = context.getWallNormal();
+        float inputWallAngle = context.getInputWallAngle();
+        Vec3 currentMovement = player.getDeltaMovement();
+        context.setNoMoveInput(true);
+        Vec3 tangent = new Vec3(-wallNormal.z, 0, wallNormal.x);
+        double dot = currentMovement.x * tangent.x + currentMovement.z * tangent.z;
+        if (dot < 0) {
+            tangent = tangent.scale(-1);
+        }
         var instance = player.getAttribute(Attributes.GRAVITY);
         if (instance != null) {
             if (context.isHasLedge() && context.getGravityModify() != -1) {
@@ -106,9 +115,9 @@ public class WallRunState extends BaseState {
                 ));
 
                 player.setDeltaMovement(
-                        player.getDeltaMovement().x,
+                        tangent.x * Math.max(player.getDeltaMovement().horizontalDistance(), context.getJumpLimitSpeed()),
                         0,
-                        player.getDeltaMovement().z
+                        tangent.z * Math.max(player.getDeltaMovement().horizontalDistance(), context.getJumpLimitSpeed())
                 );
             } else if (context.getGravityModify() != -0.6) {
                 instance.addOrReplacePermanentModifier(new AttributeModifier(
@@ -116,6 +125,11 @@ public class WallRunState extends BaseState {
                         -0.6,
                         AttributeModifier.Operation.ADD_MULTIPLIED_BASE
                 ));
+                player.setDeltaMovement(
+                        tangent.x * Math.max(player.getDeltaMovement().horizontalDistance(), context.getJumpLimitSpeed()),
+                        player.getDeltaMovement().y,
+                        tangent.z * Math.max(player.getDeltaMovement().horizontalDistance(), context.getJumpLimitSpeed())
+                );
             }
         }
     }

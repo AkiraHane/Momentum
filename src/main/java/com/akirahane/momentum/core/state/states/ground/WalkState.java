@@ -7,6 +7,7 @@ import com.akirahane.momentum.core.context.PlayerMovementContext;
 import com.akirahane.momentum.core.state.states.air.AirborneState;
 import com.akirahane.momentum.core.state.states.special.DodgeState;
 import com.akirahane.momentum.core.state.states.wall.WallClimbState;
+import com.akirahane.momentum.core.state.states.wall.WallRunState;
 import com.akirahane.momentum.core.state.states.wall.WallSlideState;
 import com.akirahane.momentum.core.state.states.water.SwimState;
 import net.minecraft.world.entity.player.Player;
@@ -34,6 +35,9 @@ public class WalkState extends BaseState {
         }
         if (SwimState.canSwim(player, context)) {
             return StateType.SWIM.getState();
+        }
+        if (WallRunState.canWallRun(player, context)) {
+            return StateType.WALL_RUN.getState();
         }
         if (WallClimbState.canWallClimb(player, context)) {
             return StateType.WALL_CLIMB.getState();

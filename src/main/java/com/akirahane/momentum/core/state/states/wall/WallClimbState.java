@@ -34,7 +34,7 @@ public class WallClimbState extends BaseState {
                         context.isHasFaceWall() &&
                         !Vec3.ZERO.equals(context.getInputVec()) && Mth.abs(context.getInputWallAngle()) < 60 &&
                         Mth.abs(context.getLookWallAngle()) < 60 &&
-                        context.getSpeed().y > 0 &&
+                        context.getSpeed().y >= 0 &&
                         checkKey(player, context)
         );
     }

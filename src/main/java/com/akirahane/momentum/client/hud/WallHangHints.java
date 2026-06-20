@@ -29,7 +29,7 @@ public class WallHangHints {
 
     public static final HintManager.KeyHint VAULT_IN =
             HintManager.KeyHint.and("state.momentum.vault_in",
-                    LOWER_CENTER.get(), OPTIONS.keyUp, OPTIONS.keyJump);
+                    LOWER_CENTER.get(), OPTIONS.keyJump);
 
     public static final HintManager.KeyHint VAULT_UP =
             HintManager.KeyHint.single(OPTIONS.keyJump, "state.momentum.vault_up");
