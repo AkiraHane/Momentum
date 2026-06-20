@@ -10,6 +10,9 @@ import net.minecraft.world.entity.player.Player;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 
+import static com.akirahane.momentum.config.ServerConfig.BOOSTER_STAMINA_REDUCTION;
+import static com.akirahane.momentum.config.ServerConfig.MANEUVER_CONSUME_HUNGER_AMOUNT;
+
 public abstract class BaseState {
     // 日志
     protected static final Logger LOGGER = LogUtils.getLogger();
@@ -29,10 +32,15 @@ public abstract class BaseState {
 
     // 服务器和客户端都支持的功能
     public void serverTick(Player player, PlayerMovementContext context) {
+        player.getFoodData().addExhaustion(
+                MANEUVER_CONSUME_HUNGER_AMOUNT.get().floatValue() *
+                        (1 - BOOSTER_STAMINA_REDUCTION.get().floatValue())
+        );
     }
 
     // 视觉效果和移动、状态转换相关内容
     public void clientTick(Player player, PlayerMovementContext context) {
+        serverTick(player, context);
         clientTickRemote(player, context);
     }
 

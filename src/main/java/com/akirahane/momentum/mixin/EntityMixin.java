@@ -81,7 +81,7 @@ public abstract class EntityMixin {
         // =================== 内容 ===================
 
         // 已经上坡则不需要下坡
-        if (cir.getReturnValue().y >= 0) {
+        if (cir.getReturnValue().y > 0) {
             setSlideAcceleration(movement, cir.getReturnValue().y, stateMachine);
             return;
         }

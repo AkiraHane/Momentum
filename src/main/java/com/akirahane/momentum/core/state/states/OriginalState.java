@@ -23,6 +23,7 @@ public class OriginalState extends BaseState {
                 || player.isSpectator()            // 旁观者
                 || player.isAutoSpinAttack()       // 旋转攻击(三叉戟)
                 || player.isDeadOrDying()          // 死亡
+                || player.getFoodData().getFoodLevel() <= 6.0F
                 ;
     }
 
@@ -49,6 +50,11 @@ public class OriginalState extends BaseState {
         if (instance != null) {
             instance.removeModifier(WALL_GRAVITY_ID);
         }
+    }
+
+    @Override
+    public void serverTick(Player player, PlayerMovementContext context) {
+        // 原版状态不额外消耗饱食度
     }
 
     @Override

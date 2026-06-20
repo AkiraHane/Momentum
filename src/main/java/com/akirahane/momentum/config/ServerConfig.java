@@ -15,6 +15,11 @@ public class ServerConfig {
             .comment("机动操作是否额外消耗饥饿值")
             .define("maneuverConsumeHunger", false);
 
+    // 机动操作每tick消耗的饥饿值
+    public static final ModConfigSpec.DoubleValue MANEUVER_CONSUME_HUNGER_AMOUNT = BUILDER
+            .comment(" Jed: 0.0 = 无消耗，1.0 = 完全消耗 默认值: 0.01")
+            .defineInRange("maneuverConsumeHungerAmount", 0.01, 0.0, 1.0);
+
     public static final ModConfigSpec.DoubleValue BOOSTER_STAMINA_REDUCTION = BUILDER
             .comment("装备助推器时体力消耗的减免幅度", "0.0 = 无减免，1.0 = 完全减免")
             .defineInRange("boosterStaminaReduction", 1.0, 0.0, 1.0);
@@ -23,24 +28,6 @@ public class ServerConfig {
     public static final ModConfigSpec.DoubleValue ADD_AUTO_CLIMB_HEIGHT = BUILDER
             .comment("机动模式下增加的自动上坡高度（米），设为0则为不额外增加自动上坡高度，修改需要重启服务", "默认值: 0.5")
             .defineInRange("autoClimbHeight", 0.5, 0.0, 0.6);
-
-    // ========== 体力系统配置 ==========
-
-    public static final ModConfigSpec.BooleanValue MANEUVER_CONSUMES_STAMINA = BUILDER
-            .comment("机动行为是否消耗体力", "默认值: true")
-            .define("maneuverConsumesStamina", true);
-
-    public static final ModConfigSpec.IntValue STAMINA_MAX_VALUE = BUILDER
-            .comment("体力最大值", "默认值: 100")
-            .defineInRange("staminaMaxValue", 100, 1, 1000);
-
-    public static final ModConfigSpec.DoubleValue STAMINA_REGEN_PER_SECOND = BUILDER
-            .comment("体力自然恢复速度（每秒恢复点数）", "默认值: 5.0")
-            .defineInRange("staminaRegenPerSecond", 5.0, 0.0, 50.0);
-
-    public static final ModConfigSpec.DoubleValue STAMINA_REGEN_DELAY = BUILDER
-            .comment("体力恢复延迟（秒，停止消耗后多久开始恢复）", "默认值: 2.0")
-            .defineInRange("staminaRegenDelay", 2.0, 0.0, 10.0);
 
     // ========== 机动配置 ==========
     public static final ModConfigSpec.DoubleValue MIN_SLIDE_SPEED = BUILDER
