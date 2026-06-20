@@ -6,8 +6,11 @@ import com.akirahane.momentum.core.state.StateType;
 import com.akirahane.momentum.core.state.BaseState;
 import com.akirahane.momentum.core.state.states.air.AirborneState;
 import com.akirahane.momentum.core.state.states.ground.WalkState;
+import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.block.SoundType;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 
 import static com.akirahane.momentum.core.state.states.OriginalState.canOriginal;
@@ -17,7 +20,7 @@ public class BreakFallState extends BaseState {
     public static String BREAK_FALL = "break_fall";
 
     public static boolean canBreakFall(Player player, PlayerMovementContext context) {
-        return context.isToBreakFallState() && player.fallDistance > Math.min(4, player.getAttributeValue(Attributes.SAFE_FALL_DISTANCE));
+        return context.isToBreakFallState();
     }
 
     @Override
@@ -29,6 +32,14 @@ public class BreakFallState extends BaseState {
         Vec3 direction = Vec3.directionFromRotation(0, player.getYRot());
         player.setDeltaMovement(direction.x, 0.0D, direction.z);
         context.addEffect(MomentumEffectType.FRICTION, context.BREAK_FALL_FRICTION, 6);
+
+        // 播放脚下方块的破坏音效
+        BlockPos below = player.blockPosition().below();
+        BlockState state = player.level().getBlockState(below);
+        if (!state.isAir()) {
+            SoundType soundType = state.getSoundType(player.level(), below, player);
+            player.playSound(soundType.getBreakSound(), soundType.getVolume(), soundType.getPitch() * 0.8F);
+        }
 
     }
 

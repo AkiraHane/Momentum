@@ -41,14 +41,14 @@ public class BreakFallReadyState extends BaseState {
         if (canSlide(player, context)) {
             return StateType.SLIDE.getState();
         }
-        if (ProneState.canProne(player, context)) {
-            return StateType.PRONE.getState();
-        }
         if (canAirborne(player, context) && !LOWER_CENTER.get().isDown()) {
             return StateType.AIRBORNE.getState();
         }
         if (canBreakFall(player, context)) {
             return StateType.BREAK_FALL.getState();
+        }
+        if (ProneState.canProne(player, context)) {
+            return StateType.PRONE.getState();
         }
         if (canWalk(player, context)) {
             return StateType.WALK.getState();
