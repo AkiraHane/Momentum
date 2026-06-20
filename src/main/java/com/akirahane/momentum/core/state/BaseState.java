@@ -92,6 +92,9 @@ public abstract class BaseState {
         if (VaultUpState.canVaultUp(player, context)) {
             return StateType.VAULT_UP.getState();
         }
+        if (WallKickState.canWallKick(player, context)) {
+            return StateType.WALL_KICK.getState();
+        }
         if (WallHangState.canWallHang(player, context)) {
             return StateType.WALL_HANG.getState();
         }
@@ -100,9 +103,6 @@ public abstract class BaseState {
         }
         if (WallSlideState.canWallSlide(player, context)) {
             return StateType.WALL_SLIDE.getState();
-        }
-        if (WallKickState.canWallKick(player, context)) {
-            return StateType.WALL_KICK.getState();
         }
         if (BreakFallState.canBreakFall(player, context)) {
             return StateType.BREAK_FALL.getState();

@@ -39,5 +39,6 @@
   "momentum.configuration.fadeOutSpeed": "Fade Out Speed",
   "momentum.configuration.fadeOutSpeed.tooltip": "Fade out speed, lower values are slower",
   "hint.momentum.click": "Click",
-  "hint.momentum.double_click": "Double Click"
+  "hint.momentum.double_click": "Double Click",
+  "hint.momentum.move_with_wall": "Move With Wall"
 }

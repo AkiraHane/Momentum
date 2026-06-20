@@ -39,5 +39,6 @@
   "momentum.configuration.fadeOutSpeed": "淡出速度",
   "momentum.configuration.fadeOutSpeed.tooltip": "淡出速度，值越小越慢",
   "hint.momentum.click": "单击",
-  "hint.momentum.double_click": "双击"
+  "hint.momentum.double_click": "双击",
+  "hint.momentum.move_with_wall": "向墙移动"
 }
