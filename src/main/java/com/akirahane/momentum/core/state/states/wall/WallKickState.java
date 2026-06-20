@@ -13,7 +13,7 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
 
-import static com.akirahane.momentum.core.context.PlayerMovementContext.JUMP;
+import static com.akirahane.momentum.core.context.PlayerMovementContext.*;
 import static com.akirahane.momentum.core.state.states.OriginalState.canOriginal;
 
 public class WallKickState extends BaseState {
@@ -23,7 +23,7 @@ public class WallKickState extends BaseState {
 
     public static boolean canWallKick(Player player, PlayerMovementContext context) {
         return context.getWallDirection() != null &&
-                !Vec3.ZERO.equals(context.getInputVec()) && Mth.abs(context.getInputWallAngle()) >= 90 &&
+                context.getInputVec().horizontalDistance() > 0.01 && Mth.abs(context.getInputWallAngle()) >= 90 &&
                 context.getInputBuffer()[context.getInputBufferIndex()].contains(JUMP);
     }
 
@@ -42,6 +42,7 @@ public class WallKickState extends BaseState {
                         context.getInputVec().z * 0.3
                 )
         );
+        context.playWallSound(player, FALL, 0.15F, 1);
     }
     @Override
     public BaseState evaluate(Player player, PlayerMovementContext context) {

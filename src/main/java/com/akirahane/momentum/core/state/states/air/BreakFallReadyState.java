@@ -64,11 +64,6 @@ public class BreakFallReadyState extends BaseState {
     }
 
     @Override
-    public void clientTick(Player player, PlayerMovementContext context) {
-        clientTickRemote(player, context);
-    }
-
-    @Override
     public void clientTickRemote(Player player, PlayerMovementContext context) {
         if (player.fallDistance > player.getAttributeValue(Attributes.SAFE_FALL_DISTANCE)) {
             float t = (float) ((player.fallDistance - 3.0f) / (70.0f - 3.0f));

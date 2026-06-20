@@ -13,14 +13,14 @@ import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
 
-import static com.akirahane.momentum.core.context.PlayerMovementContext.AIR_ACCELERATION;
-import static com.akirahane.momentum.core.context.PlayerMovementContext.AIR_LIMIT_ACCELERATION;
+import static com.akirahane.momentum.core.context.PlayerMovementContext.*;
 import static com.akirahane.momentum.core.state.states.OriginalState.canOriginal;
 import static com.akirahane.momentum.core.state.states.air.AirborneState.canAirborne;
 import static com.akirahane.momentum.core.state.states.ground.WalkState.canWalk;
 import static com.akirahane.momentum.core.state.states.wall.WallClimbState.canWallClimb;
 import static com.akirahane.momentum.core.state.states.wall.WallHangState.canWallHang;
 import static com.akirahane.momentum.core.state.states.wall.WallRunState.canWallRun;
+import static net.minecraft.world.level.block.SoundType.*;
 
 public class WallSlideState extends BaseState {
     // 动画名称
@@ -87,6 +87,7 @@ public class WallSlideState extends BaseState {
 
     @Override
     public void clientTick(Player player, PlayerMovementContext context) {
+        super.clientTick(player, context);
         // 按照重力倍率衰减掉落伤害
         player.fallDistance *= 0.9;
         var instance = player.getAttribute(Attributes.GRAVITY);
@@ -98,6 +99,17 @@ public class WallSlideState extends BaseState {
                     -0.9,
                     AttributeModifier.Operation.ADD_MULTIPLIED_BASE
             ));
+        }
+    }
+
+    @Override
+    public void clientTickRemote(Player player, PlayerMovementContext context) {
+        if (player.tickCount % 2 == 0){
+            player.playSound(
+                    GRASS.getStepSound(),
+                    0.05F,
+                    1F
+            );
         }
     }
 

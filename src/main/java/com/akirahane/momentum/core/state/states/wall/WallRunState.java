@@ -44,15 +44,6 @@ public class WallRunState extends BaseState {
     public void onEnter(Player player, PlayerMovementContext context) {
         Vec3 wallNormal = context.getWallNormal();
         float inputWallAngle = context.getInputWallAngle();
-        playStateAnimation(player, inputWallAngle > 0 ? WALL_RUN_LEFT : WALL_RUN_RIGHT, context);
-        var instance = player.getAttribute(Attributes.GRAVITY);
-        if (instance != null && instance.getModifier(WALL_GRAVITY_ID) == null) {
-            instance.addOrReplacePermanentModifier(new AttributeModifier(
-                    WALL_GRAVITY_ID,
-                    -0.6,
-                    AttributeModifier.Operation.ADD_MULTIPLIED_BASE
-            ));
-        }
         Vec3 currentMovement = player.getDeltaMovement();
         context.setNoMoveInput(true);
         Vec3 tangent = new Vec3(-wallNormal.z, 0, wallNormal.x);
@@ -60,18 +51,64 @@ public class WallRunState extends BaseState {
         if (dot < 0) {
             tangent = tangent.scale(-1);
         }
-        player.setDeltaMovement(
-                tangent.x * context.getSpeed().horizontalDistance(),
-                player.getDeltaMovement().y,
-                tangent.z * context.getSpeed().horizontalDistance()
-        );
+        playStateAnimation(player, inputWallAngle > 0 ? WALL_RUN_LEFT : WALL_RUN_RIGHT, context);
+        var instance = player.getAttribute(Attributes.GRAVITY);
+        if (instance != null && instance.getModifier(WALL_GRAVITY_ID) != null) {
+            if (context.isHasLedge()) {
+                instance.addOrReplacePermanentModifier(new AttributeModifier(
+                        WALL_GRAVITY_ID,
+                        -1,
+                        AttributeModifier.Operation.ADD_MULTIPLIED_BASE
+                ));
+                context.setGravityModify(-1F);
+                player.setDeltaMovement(
+                        tangent.x * context.getSpeed().horizontalDistance(),
+                        0,
+                        tangent.z * context.getSpeed().horizontalDistance()
+                );
+            } else {
+                instance.addOrReplacePermanentModifier(new AttributeModifier(
+                        WALL_GRAVITY_ID,
+                        -0.6,
+                        AttributeModifier.Operation.ADD_MULTIPLIED_BASE
+                ));
+                context.setGravityModify(-0.6F);
+                player.setDeltaMovement(
+                        tangent.x * context.getSpeed().horizontalDistance(),
+                        player.getDeltaMovement().y,
+                        tangent.z * context.getSpeed().horizontalDistance()
+                );
+            }
+        }
         context.setNeedSoundTick(SOUND_TICK);
         context.playWallSound(player, STEP, 0.15F, 1);
     }
 
     @Override
     public void clientTick(Player player, PlayerMovementContext context) {
-        clientTickRemote(player, context);
+        super.clientTick(player, context);
+        var instance = player.getAttribute(Attributes.GRAVITY);
+        if (instance != null) {
+            if (context.isHasLedge() && context.getGravityModify() != -1) {
+                instance.addOrReplacePermanentModifier(new AttributeModifier(
+                        WALL_GRAVITY_ID,
+                        -1,
+                        AttributeModifier.Operation.ADD_MULTIPLIED_BASE
+                ));
+
+                player.setDeltaMovement(
+                        player.getDeltaMovement().x,
+                        0,
+                        player.getDeltaMovement().z
+                );
+            } else if (context.getGravityModify() != -0.6) {
+                instance.addOrReplacePermanentModifier(new AttributeModifier(
+                        WALL_GRAVITY_ID,
+                        -0.6,
+                        AttributeModifier.Operation.ADD_MULTIPLIED_BASE
+                ));
+            }
+        }
     }
 
     @Override
@@ -79,7 +116,7 @@ public class WallRunState extends BaseState {
         float speed = (float) Math.min(context.getSpeed().length() * 5, 5);
         playStateAnimation(player, context.getCurrentAnimationName(), context, 0, speed);
         context.setNeedSoundTick(context.getNeedSoundTick() - speed);
-        if (context.getNeedSoundTick() <= 0){
+        if (context.getNeedSoundTick() <= 0) {
             context.playWallSound(player, STEP, 0.15F, 1);
             context.setNeedSoundTick(SOUND_TICK);
         }
@@ -108,7 +145,7 @@ public class WallRunState extends BaseState {
         if (ProneState.canProne(player, context)) {
             return StateType.PRONE.getState();
         }
-        if (WallKickState.canWallKick(player, context)){
+        if (WallKickState.canWallKick(player, context)) {
             return StateType.WALL_KICK.getState();
         }
         if ((

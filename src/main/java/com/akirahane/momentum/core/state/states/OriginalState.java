@@ -43,6 +43,7 @@ public class OriginalState extends BaseState {
     @Override
     public void onEnter(Player player, PlayerMovementContext context) {
         context.resetEffect();
+        playStateAnimation(player, IDLE, context);
         stopAnimation(player, context);
         var instance = player.getAttribute(Attributes.GRAVITY);
         if (instance != null) {

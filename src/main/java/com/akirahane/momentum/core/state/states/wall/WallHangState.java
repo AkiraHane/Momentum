@@ -92,11 +92,6 @@ public class WallHangState extends BaseState {
     }
 
     @Override
-    public void clientTick(Player player, PlayerMovementContext context) {
-        clientTickRemote(player, context);
-    }
-
-    @Override
     public void clientTickRemote(Player player, PlayerMovementContext context) {
         float speed = (float) context.getSpeed().horizontalDistance() * 20;
         if (speed > 0.02) {

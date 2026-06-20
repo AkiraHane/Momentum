@@ -33,6 +33,7 @@ public abstract class BaseState {
 
     // 视觉效果和移动、状态转换相关内容
     public void clientTick(Player player, PlayerMovementContext context) {
+        clientTickRemote(player, context);
     }
 
     // 其他玩家要在客户端渲染视觉效果的所需数据

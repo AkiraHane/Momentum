@@ -119,6 +119,8 @@ public class PlayerMovementContext {
     private float wallFriction = 0.6f;
     // need sound tick = 0
     private float needSoundTick = 0;
+    // 当前墙面重力变化倍率
+    private float gravityModify = 0;
 
     // 当前播放的动画名称
     private String currentAnimationName = null;

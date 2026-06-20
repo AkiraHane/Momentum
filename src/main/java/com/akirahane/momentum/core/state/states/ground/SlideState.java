@@ -19,6 +19,7 @@ import static com.akirahane.momentum.core.MomentumUtils.canPlayerFitAtPose;
 import static com.akirahane.momentum.core.effect.MomentumEffect.EffectType.LOCAL_VALUE;
 import static com.akirahane.momentum.core.state.states.OriginalState.canOriginal;
 import static com.akirahane.momentum.core.state.states.air.BreakFallReadyState.canBreakFallReady;
+import static net.minecraft.world.level.block.SoundType.GRASS;
 
 
 public class SlideState extends BaseState {
@@ -65,6 +66,17 @@ public class SlideState extends BaseState {
         );
         context.setSlideCooldown(ServerConfig.SLIDE_ACCELERATION_COOLDOWN.get());
         playStateAnimation(player, SLIDE, context, 6, 1.0f);
+    }
+
+    @Override
+    public void clientTickRemote(Player player, PlayerMovementContext context) {
+        if (player.tickCount % 2 == 0){
+            player.playSound(
+                    GRASS.getStepSound(),
+                    0.05F,
+                    1F
+            );
+        }
     }
 
     public void onExit(Player player, PlayerMovementContext context) {

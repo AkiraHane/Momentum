@@ -38,13 +38,13 @@ public class MovementDebugEntry implements DebugScreenEntry {
 //        displayer.addToGroup(group, String.format("[Momentum] OnGround: %s", mc.player.onGround()));
         float yRot = mc.player.getYRot(); // 水平朝向 (yaw), -180 到 180
         float xRot = mc.player.getXRot(); // 垂直角度 (pitch), -90 到 90
-        displayer.addToGroup(group, String.format("[Momentum] yRot: %.4f", yRot));
-        displayer.addToGroup(group, String.format("[Momentum] xRot: %.4f", xRot));
+//        displayer.addToGroup(group, String.format("[Momentum] yRot: %.4f", yRot));
+//        displayer.addToGroup(group, String.format("[Momentum] xRot: %.4f", xRot));
         double fallDistance = mc.player.fallDistance;
-        displayer.addToGroup(group, String.format("[Momentum] Fall Distance: %.4f", fallDistance));
+//        displayer.addToGroup(group, String.format("[Momentum] Fall Distance: %.4f", fallDistance));
         // lastFallDistance
         double lastFallDistance = context.getLastFallDistance();
-        displayer.addToGroup(group, String.format("[Momentum] LastFallDistance: %.4f", lastFallDistance));
+//        displayer.addToGroup(group, String.format("[Momentum] LastFallDistance: %.4f", lastFallDistance));
 //        // getWorldInputVec
 //        Vec3 inputVec = context.getInputVec();
 //        displayer.addToGroup(group, String.format("[Momentum] InputVec: %s", inputVec));
@@ -91,8 +91,8 @@ public class MovementDebugEntry implements DebugScreenEntry {
 //            displayer.addToGroup(group, String.format("[Momentum] IsSwimming: %s", mocha.eval("query.is_swimming")));
 //            // math.mod(query.head_y_rotation - query.body_y_rotation, 360)
 //            displayer.addToGroup(group, String.format("[Momentum] HeadYRotation - BodyYRotation: %.4f", mocha.eval("query.head_y_rotation - query.body_y_rotation")));
-            displayer.addToGroup(group, String.format("[Momentum] get_movement_y_speed: %.4f", mocha.eval("variable.get_movement_y_speed()")));
-            displayer.addToGroup(group, String.format("[Momentum] get_movement_speed: %.4f", mocha.eval("variable.get_movement_speed()")));
+//            displayer.addToGroup(group, String.format("[Momentum] get_movement_y_speed: %.4f", mocha.eval("variable.get_movement_y_speed()")));
+//            displayer.addToGroup(group, String.format("[Momentum] get_movement_speed: %.4f", mocha.eval("variable.get_movement_speed()")));
         }
     }
 }
