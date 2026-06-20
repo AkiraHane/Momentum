@@ -30,6 +30,7 @@ import net.neoforged.fml.config.ModConfig;
 import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
 import net.neoforged.neoforge.client.event.RegisterDebugEntriesEvent;
+import net.neoforged.neoforge.client.event.ViewportEvent;
 import net.neoforged.neoforge.client.gui.ConfigurationScreen;
 import net.neoforged.neoforge.client.gui.IConfigScreenFactory;
 import net.neoforged.neoforge.client.network.ClientPacketDistributor;
@@ -111,5 +112,21 @@ public class MomentumClient {
         Minecraft mc = Minecraft.getInstance();
         if (mc.player == null || mc.level == null || mc.isPaused()) return;
         HintManager.clientTick(mc.player);
+    }
+
+    @SubscribeEvent
+    public static void onCameraAngles(ViewportEvent.ComputeCameraAngles event) {
+        Minecraft mc = Minecraft.getInstance();
+        if (mc.player == null) return;
+        if (!mc.player.hasData(InitAttachments.MOVEMENT_STATE)) return;
+
+        var context = mc.player.getData(InitAttachments.MOVEMENT_STATE).getContext();
+
+        float partialTick = (float) event.getPartialTick();
+        float roll = context.getRenderCameraRoll(partialTick);
+
+        if (roll != 0F) {
+            event.setRoll(event.getRoll() + roll);
+        }
     }
 }

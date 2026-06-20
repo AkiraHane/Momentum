@@ -52,4 +52,7 @@ public class WallHangHints {
 
     public static final HintManager.KeyHint WALL_RUN =
             HintManager.KeyHint.and("state.momentum.wall_run", OPTIONS.keyUp, OPTIONS.keyJump);
+
+    public static final HintManager.KeyHint WALL_RUN_HOLD =
+            HintManager.KeyHint.single(OPTIONS.keyUp, "state.momentum.wall_run");
 }

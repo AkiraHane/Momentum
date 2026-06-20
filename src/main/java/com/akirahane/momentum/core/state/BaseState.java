@@ -89,14 +89,14 @@ public abstract class BaseState {
         if (ProneState.canProne(player, context)) {
             return StateType.PRONE.getState();
         }
+        if (WallKickState.canWallKick(player, context)) {
+            return StateType.WALL_KICK.getState();
+        }
         if (WallRunState.canWallRun(player, context)) {
             return StateType.WALL_RUN.getState();
         }
         if (VaultUpState.canVaultUp(player, context)) {
             return StateType.VAULT_UP.getState();
-        }
-        if (WallKickState.canWallKick(player, context)) {
-            return StateType.WALL_KICK.getState();
         }
         if (WallHangState.canWallHang(player, context)) {
             return StateType.WALL_HANG.getState();

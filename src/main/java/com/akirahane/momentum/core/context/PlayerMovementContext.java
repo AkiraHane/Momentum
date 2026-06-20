@@ -122,6 +122,10 @@ public class PlayerMovementContext {
     private float jumpAnimationSpeed = 1;
     // 头身角度差
     private float bodyHeadAngleDiff = 0F;
+    // 摄像头旋转角度
+    private float targetCameraRoll = 0F;
+    private float currentCameraRoll = 0F;
+    private float prevCameraRoll = 0F;
 
     // 当前播放的动画名称
     private String currentAnimationName = null;
@@ -314,11 +318,26 @@ public class PlayerMovementContext {
         this.setWorldInputVec(player);
         this.detectWall(player);
         this.bodyHeadAngleDiff = Mth.wrapDegrees(player.getYHeadRot() - player.yBodyRot);
+        this.tickCameraRoll();
     }
 
     public void clientTickRemote(Player player) {
         this.bodyHeadAngleDiff = Mth.wrapDegrees(player.getYHeadRot() - player.yBodyRot);
         remoteDetectWall(player);
+    }
+
+    public void tickCameraRoll() {
+        prevCameraRoll = currentCameraRoll;
+
+        float diff = targetCameraRoll - currentCameraRoll;
+        currentCameraRoll += diff * 0.15F;
+
+        if (Math.abs(currentCameraRoll - targetCameraRoll) < 0.01F) {
+            currentCameraRoll = targetCameraRoll;
+        }
+    }
+    public float getRenderCameraRoll(float partialTick) {
+        return Mth.lerp(partialTick, prevCameraRoll, currentCameraRoll);
     }
 
     // 是否双击了某个键(两个true中至少隔一个false)

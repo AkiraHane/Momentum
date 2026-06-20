@@ -6,6 +6,15 @@ import com.akirahane.momentum.config.ServerConfig;
 import com.akirahane.momentum.core.context.PlayerMovementContext;
 import com.akirahane.momentum.core.state.StateType;
 import com.akirahane.momentum.core.state.BaseState;
+import com.akirahane.momentum.core.state.states.OriginalState;
+import com.akirahane.momentum.core.state.states.air.AirborneState;
+import com.akirahane.momentum.core.state.states.air.BreakFallReadyState;
+import com.akirahane.momentum.core.state.states.ground.ProneState;
+import com.akirahane.momentum.core.state.states.ground.SlideState;
+import com.akirahane.momentum.core.state.states.ground.WalkState;
+import com.akirahane.momentum.core.state.states.special.BreakFallState;
+import com.akirahane.momentum.core.state.states.special.DodgeState;
+import com.akirahane.momentum.core.state.states.water.SwimState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
@@ -25,10 +34,45 @@ public class WallRunState extends BaseState {
     public static boolean canWallRun(Player player, PlayerMovementContext context) {
         return !Vec3.ZERO.equals(context.getWallNormal()) &&
                 !Vec3.ZERO.equals(context.getInputVec()) &&
+                isLookAndSpeedSameSide(player, context) &&
                 Mth.abs(context.getInputWallAngle()) > 45 && Mth.abs(context.getInputWallAngle()) < 100 &&
                 (context.isHasJetBooster() || canWallRunSpeedCheck(player, context)) &&
                 checkKey(player, context);
     }
+
+    // 维持
+    public static boolean canWallRunHold(Player player, PlayerMovementContext context) {
+        return !Vec3.ZERO.equals(context.getWallNormal()) &&
+                isLookAndSpeedSameSide(player, context) &&
+                (context.isHasJetBooster() || canWallRunSpeedCheck(player, context)) &&
+                checkKeyHold(player, context);
+    }
+    public static boolean isLookAndSpeedSameSide(Player player, PlayerMovementContext context) {
+        Vec3 wallNormal = context.getWallNormal();
+        if (Vec3.ZERO.equals(wallNormal)) return false;
+
+        Vec3 speed = player.getDeltaMovement();
+        // 水平速度太小时认为没有方向，直接通过（避免误判）
+        if (speed.horizontalDistanceSqr() < 1.0E-4) return true;
+
+        // 视角水平方向
+        float yaw = player.getYRot();
+        Vec3 lookVec = new Vec3(
+                -Math.sin(Math.toRadians(yaw)),
+                0,
+                Math.cos(Math.toRadians(yaw))
+        );
+
+        // 墙面切线（水平方向，与法线垂直）
+        Vec3 tangent = new Vec3(-wallNormal.z, 0, wallNormal.x);
+
+        double speedDot = speed.x * tangent.x + speed.z * tangent.z;
+        double lookDot = lookVec.x * tangent.x + lookVec.z * tangent.z;
+
+        // 同号即同一侧
+        return speedDot * lookDot > 0;
+    }
+
 
     public static boolean canWallRunSpeedCheck(Player player, PlayerMovementContext context) {
         return context.getSpeed().horizontalDistance() * 20 > ServerConfig.MIN_WALL_RUN_SPEED.get() &&
@@ -39,6 +83,66 @@ public class WallRunState extends BaseState {
         HintManager.add(WallHangHints.WALL_RUN);
         return Minecraft.getInstance().options.keyUp.isDown() &&
                 Minecraft.getInstance().options.keyJump.isDown();
+    }
+
+    public static boolean checkKeyHold(Player player, PlayerMovementContext context) {
+        HintManager.add(WallHangHints.WALL_RUN_HOLD);
+        return Minecraft.getInstance().options.keyUp.isDown();
+    }
+
+    // 状态转换检查
+    public BaseState evaluate(Player player, PlayerMovementContext context) {
+        HintManager.clear();
+        if (OriginalState.canOriginal(player, context)) {
+            return StateType.ORIGINAL.getState();
+        }
+        if (DodgeState.canDodge(player, context)) {
+            return StateType.DODGE.getState();
+        }
+        if (BreakFallState.canBreakFall(player, context)) {
+            return StateType.BREAK_FALL.getState();
+        }
+        if (VaultInState.canVaultIn(player, context)) {
+            return StateType.VAULT_IN.getState();
+        }
+        if (SwimState.canSwim(player, context)) {
+            return StateType.SWIM.getState();
+        }
+        if (SlideState.canSlide(player, context)) {
+            return StateType.SLIDE.getState();
+        }
+        if (ProneState.canProne(player, context)) {
+            return StateType.PRONE.getState();
+        }
+        if (WallKickState.canWallKick(player, context)) {
+            return StateType.WALL_KICK.getState();
+        }
+        if (WallRunState.canWallRunHold(player, context)) {
+            return StateType.WALL_RUN.getState();
+        }
+        if (VaultUpState.canVaultUp(player, context)) {
+            return StateType.VAULT_UP.getState();
+        }
+        if (WallHangState.canWallHang(player, context)) {
+            return StateType.WALL_HANG.getState();
+        }
+        if (WallClimbState.canWallClimb(player, context)) {
+            return StateType.WALL_CLIMB.getState();
+        }
+        if (WallSlideState.canWallSlide(player, context)) {
+            return StateType.WALL_SLIDE.getState();
+        }
+        if (BreakFallReadyState.canBreakFallReady(player, context)) {
+            return StateType.BREAK_FALL_READY.getState();
+        }
+        if (AirborneState.canAirborne(player, context)) {
+            return StateType.AIRBORNE.getState();
+        }
+        if (WalkState.canWalk(player, context)) {
+            return StateType.WALK.getState();
+        }
+        LOGGER.warn("WallRunState evaluate error! 有状态没有覆盖!");
+        return super.evaluate(player, context);
     }
 
     @Override
@@ -75,7 +179,7 @@ public class WallRunState extends BaseState {
                 ));
                 context.setGravityModify(-0.6F);
                 double ySpeed = player.getDeltaMovement().y;
-                if (context.isHasJetBooster()){
+                if (context.isHasJetBooster()) {
                     ySpeed = Math.max(0.62, ySpeed);
                 }
                 player.setDeltaMovement(
@@ -87,6 +191,8 @@ public class WallRunState extends BaseState {
         }
         context.setNeedSoundTick(SOUND_TICK);
         context.playWallSound(player, STEP, 0.15F, 1);
+        float roll = inputWallAngle > 0 ? -15F : 15F;
+        context.setTargetCameraRoll(roll);
     }
 
     @Override
@@ -144,6 +250,8 @@ public class WallRunState extends BaseState {
     @Override
     public void onExit(Player player, PlayerMovementContext context) {
         super.onExit(player, context);
+        context.setTargetCameraRoll(0F);  // 退出时回正
+
         var instance = player.getAttribute(Attributes.GRAVITY);
         if (instance != null) {
             instance.removeModifier(WALL_GRAVITY_ID);
