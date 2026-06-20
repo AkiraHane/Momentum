@@ -134,4 +134,21 @@ public class MomentumClient {
             event.setRoll(event.getRoll() + roll);
         }
     }
+
+    @SubscribeEvent
+    public static void onComputeFov(ViewportEvent.ComputeFov event) {
+        if (!ENABLE_CAMERA_OFFSET.get()){
+            return;
+        }
+        Minecraft mc = Minecraft.getInstance();
+        if (mc.player == null) return;
+        if (!mc.player.hasData(InitAttachments.MOVEMENT_STATE)) return;
+
+        var context = mc.player.getData(InitAttachments.MOVEMENT_STATE).getContext();
+        float bonus = context.getRenderFovBonus((float) event.getPartialTick());
+
+        if (bonus != 0F) {
+            event.setFOV(event.getFOV() + bonus);
+        }
+    }
 }

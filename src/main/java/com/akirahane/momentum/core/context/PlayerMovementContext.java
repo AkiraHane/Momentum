@@ -126,6 +126,9 @@ public class PlayerMovementContext {
     private float targetCameraRoll = 0F;
     private float currentCameraRoll = 0F;
     private float prevCameraRoll = 0F;
+    private float targetFovBonus = 0F;
+    private float currentFovBonus = 0F;
+    private float prevFovBonus = 0F;
 
     // 当前播放的动画名称
     private String currentAnimationName = null;
@@ -319,6 +322,7 @@ public class PlayerMovementContext {
         this.detectWall(player);
         this.bodyHeadAngleDiff = Mth.wrapDegrees(player.getYHeadRot() - player.yBodyRot);
         this.tickCameraRoll();
+        this.tickFovBonus();
     }
 
     public void clientTickRemote(Player player) {
@@ -329,15 +333,29 @@ public class PlayerMovementContext {
     public void tickCameraRoll() {
         prevCameraRoll = currentCameraRoll;
 
+        // 远离 0 时：稍慢，0.12
+        // 回归 0 时：更快，0.25
+        float smoothing = Math.abs(targetCameraRoll) > Math.abs(currentCameraRoll) ? 0.24F : 0.5F;
+
         float diff = targetCameraRoll - currentCameraRoll;
-        currentCameraRoll += diff * 0.15F;
+        currentCameraRoll += diff * smoothing;
 
         if (Math.abs(currentCameraRoll - targetCameraRoll) < 0.01F) {
             currentCameraRoll = targetCameraRoll;
         }
     }
+
+    public void tickFovBonus() {
+        prevFovBonus = currentFovBonus;
+        float diff = targetFovBonus - currentFovBonus;
+        currentFovBonus += diff * 0.15F;
+    }
     public float getRenderCameraRoll(float partialTick) {
         return Mth.lerp(partialTick, prevCameraRoll, currentCameraRoll);
+    }
+
+    public float getRenderFovBonus(float partialTick) {
+        return Mth.lerp(partialTick, prevFovBonus, currentFovBonus);
     }
 
     // 是否双击了某个键(两个true中至少隔一个false)

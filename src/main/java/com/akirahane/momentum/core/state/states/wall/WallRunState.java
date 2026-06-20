@@ -191,8 +191,7 @@ public class WallRunState extends BaseState {
         }
         context.setNeedSoundTick(SOUND_TICK);
         context.playWallSound(player, STEP, 0.15F, 1);
-        float roll = inputWallAngle > 0 ? -15F : 15F;
-        context.setTargetCameraRoll(roll);
+        context.setTargetCameraRoll(inputWallAngle > 0 ? -15F : 15F);
     }
 
     @Override
@@ -209,6 +208,7 @@ public class WallRunState extends BaseState {
         }
         var instance = player.getAttribute(Attributes.GRAVITY);
         if (instance != null) {
+            double pushStrength = 0.05;
             if ((context.isHasLedge() || context.isHasJetBooster() && player.getDeltaMovement().y <= 0) && context.getGravityModify() != -1) {
                 instance.addOrReplacePermanentModifier(new AttributeModifier(
                         WALL_GRAVITY_ID,
@@ -217,9 +217,9 @@ public class WallRunState extends BaseState {
                 ));
 
                 player.setDeltaMovement(
-                        tangent.x * Math.max(player.getDeltaMovement().horizontalDistance(), context.getJumpLimitSpeed()),
+                        tangent.x * Math.max(player.getDeltaMovement().horizontalDistance(), context.getJumpLimitSpeed()) + wallNormal.x * pushStrength,
                         0,
-                        tangent.z * Math.max(player.getDeltaMovement().horizontalDistance(), context.getJumpLimitSpeed())
+                        tangent.z * Math.max(player.getDeltaMovement().horizontalDistance(), context.getJumpLimitSpeed()) + wallNormal.x * pushStrength
                 );
             } else if (context.getGravityModify() != -0.6) {
                 instance.addOrReplacePermanentModifier(new AttributeModifier(
@@ -228,9 +228,9 @@ public class WallRunState extends BaseState {
                         AttributeModifier.Operation.ADD_MULTIPLIED_BASE
                 ));
                 player.setDeltaMovement(
-                        tangent.x * Math.max(player.getDeltaMovement().horizontalDistance(), context.getJumpLimitSpeed()),
+                        tangent.x * Math.max(player.getDeltaMovement().horizontalDistance(), context.getJumpLimitSpeed()) + wallNormal.x * pushStrength,
                         player.getDeltaMovement().y,
-                        tangent.z * Math.max(player.getDeltaMovement().horizontalDistance(), context.getJumpLimitSpeed())
+                        tangent.z * Math.max(player.getDeltaMovement().horizontalDistance(), context.getJumpLimitSpeed()) + wallNormal.x * pushStrength
                 );
             }
         }
