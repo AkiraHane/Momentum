@@ -53,7 +53,12 @@ public class DodgeState extends BaseState {
             playStateAnimation(player, DODGE_UP, context, 4, 2f);
         }
         Vec3 direction = Vec3.directionFromRotation(4, yRot);
-        player.setDeltaMovement(direction.x * 0.8, player.getDeltaMovement().y, direction.z * 0.8);
+        if (!context.isHasJetBooster()){
+            player.setDeltaMovement(direction.x * 0.8, player.getDeltaMovement().y, direction.z * 0.8);
+        } else {
+            player.setDeltaMovement(direction.x * 0.8, 0.3F, direction.z * 0.8);
+            player.fallDistance = 0;
+        }
         context.setDodgeTimer(8);
         context.setDodgeCooldown(context.getDodgeCooldown() + DODGE_COOLDOWN.get());
         context.setNoJump(true);

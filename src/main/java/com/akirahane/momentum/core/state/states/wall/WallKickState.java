@@ -18,7 +18,7 @@ public class WallKickState extends BaseState {
 
     public static boolean canWallKick(Player player, PlayerMovementContext context) {
         return !Vec3.ZERO.equals(context.getWallNormal()) &&
-                context.getInputVec().horizontalDistance() > 0.01 && Mth.abs(context.getInputWallAngle()) >= 90 &&
+                context.getInputVec().horizontalDistance() > 0.01 && Mth.abs(context.getInputWallAngle()) >= 100 &&
                 checkKey(player, context);
     }
 

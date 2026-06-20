@@ -4,6 +4,7 @@ import com.akirahane.momentum.client.MomentumClient;
 import com.akirahane.momentum.client.animation.MomentumAnimationController;
 import com.akirahane.momentum.core.context.PlayerMovementContext;
 import com.akirahane.momentum.init.InitAttachments;
+import com.akirahane.momentum.mixin.LivingEntityAccessor;
 import com.zigythebird.playeranim.api.PlayerAnimationAccess;
 import com.zigythebird.playeranimcore.animation.AnimationController;
 import net.minecraft.client.Minecraft;
@@ -62,6 +63,10 @@ public class MovementDebugEntry implements DebugScreenEntry {
         Player player = mc.player;
         double jumpLimitSpeed = context.getJumpLimitSpeed();
         displayer.addToGroup(group, String.format("[Momentum] JumpLimitSpeed: %.4f", jumpLimitSpeed * 20));
+        //
+        float jumpPower = ((LivingEntityAccessor) player).invokeGetJumpPower();
+        displayer.addToGroup(group, String.format("[Momentum] JumpPower: %.4f", jumpPower));
+
 //        double jumpAcceleration = context.getJumpAcceleration();
 //        displayer.addToGroup(group, String.format("[Momentum] JumpAcceleration: %.4f", jumpAcceleration));
 //        double safeFallDistance = player.getAttributeValue(Attributes.SAFE_FALL_DISTANCE);

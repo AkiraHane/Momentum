@@ -87,6 +87,10 @@ public class Momentum {
         float distance = (float) event.getDistance();
         float multiplier = event.getDamageMultiplier();
 
+        if (stateMachine.getContext().isHasJetBooster()){
+            distance -= 12;
+            multiplier *= 0.5F;
+        }
         if (stateMachine.getContext().getBreakFallReadyCount() > 0) {
             distance -= 6;
             multiplier *= 0.3F;

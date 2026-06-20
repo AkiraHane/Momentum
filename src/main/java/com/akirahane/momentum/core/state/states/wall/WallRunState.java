@@ -25,14 +25,14 @@ public class WallRunState extends BaseState {
     public static boolean canWallRun(Player player, PlayerMovementContext context) {
         return !Vec3.ZERO.equals(context.getWallNormal()) &&
                 !Vec3.ZERO.equals(context.getInputVec()) &&
-                Mth.abs(context.getInputWallAngle()) > 45 && Mth.abs(context.getInputWallAngle()) < 90 &&
-                canWallRunSpeedCheck(player, context) &&
+                Mth.abs(context.getInputWallAngle()) > 45 && Mth.abs(context.getInputWallAngle()) < 100 &&
+                (context.isHasJetBooster() || canWallRunSpeedCheck(player, context)) &&
                 checkKey(player, context);
     }
 
     public static boolean canWallRunSpeedCheck(Player player, PlayerMovementContext context) {
         return context.getSpeed().horizontalDistance() * 20 > ServerConfig.MIN_WALL_RUN_SPEED.get() &&
-                context.getSpeed().horizontalDistance() > (float) - context.getSpeed().y;
+                context.getSpeed().horizontalDistance() > (float) -context.getSpeed().y;
     }
 
     public static boolean checkKey(Player player, PlayerMovementContext context) {
@@ -74,9 +74,13 @@ public class WallRunState extends BaseState {
                         AttributeModifier.Operation.ADD_MULTIPLIED_BASE
                 ));
                 context.setGravityModify(-0.6F);
+                double ySpeed = player.getDeltaMovement().y;
+                if (context.isHasJetBooster()){
+                    ySpeed = Math.max(0.62, ySpeed);
+                }
                 player.setDeltaMovement(
                         tangent.x * Math.max(player.getDeltaMovement().horizontalDistance(), context.getJumpLimitSpeed()),
-                        player.getDeltaMovement().y,
+                        ySpeed,
                         tangent.z * Math.max(player.getDeltaMovement().horizontalDistance(), context.getJumpLimitSpeed())
                 );
             }
@@ -99,7 +103,7 @@ public class WallRunState extends BaseState {
         }
         var instance = player.getAttribute(Attributes.GRAVITY);
         if (instance != null) {
-            if (context.isHasLedge() && context.getGravityModify() != -1) {
+            if ((context.isHasLedge() || context.isHasJetBooster() && player.getDeltaMovement().y <= 0) && context.getGravityModify() != -1) {
                 instance.addOrReplacePermanentModifier(new AttributeModifier(
                         WALL_GRAVITY_ID,
                         -1,

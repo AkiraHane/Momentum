@@ -6,6 +6,7 @@ import com.akirahane.momentum.core.context.PlayerMovementContext;
 import com.akirahane.momentum.core.effect.MomentumEffectType;
 import com.akirahane.momentum.core.state.StateType;
 import com.akirahane.momentum.core.state.BaseState;
+import com.akirahane.momentum.mixin.LivingEntityAccessor;
 import net.minecraft.client.Minecraft;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
@@ -27,7 +28,7 @@ public class WallClimbState extends BaseState {
                         context.isHasFaceWall() &&
                         !Vec3.ZERO.equals(context.getInputVec()) && Mth.abs(context.getInputWallAngle()) < 60 &&
                         Mth.abs(context.getLookWallAngle()) < 60 &&
-                        context.getSpeed().y >= 0 &&
+                        (context.getSpeed().y >= 0 || context.isHasJetBooster()) &&
                         checkKey(player, context)
         );
     }
@@ -53,6 +54,18 @@ public class WallClimbState extends BaseState {
         player.addDeltaMovement(new Vec3(0, player.getDeltaMovement().y * 0.2, 0));
         context.setNeedSoundTick(SOUND_TICK);
         context.playWallSound(player, STEP, 0.15F, 1);
+    }
+
+    @Override
+    public void clientTick(Player player, PlayerMovementContext context) {
+        super.clientTick(player, context);
+        if (context.isHasJetBooster()){
+            player.setDeltaMovement(
+                    player.getDeltaMovement().x,
+                    Math.max(0.3, player.getDeltaMovement().y),
+                    player.getDeltaMovement().z
+            );
+        }
     }
 
     @Override
