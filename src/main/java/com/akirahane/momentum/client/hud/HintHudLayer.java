@@ -62,7 +62,7 @@ public class HintHudLayer {
         int startY = scaledScreenHeight - PADDING_Y - totalHeight;
 
         int i = 0;
-        for (HintManager.KeyHint hint : hints) {
+        for (KeyHint hint : hints) {
             int y = startY + i * (KEY_HEIGHT + LINE_GAP);
             renderHintLine(graphics, font, hint, PADDING_X, y);
             i++;
@@ -72,39 +72,31 @@ public class HintHudLayer {
     }
 
     private static void renderHintLine(GuiGraphicsExtractor graphics, Font font,
-                                       HintManager.KeyHint hint, int x, int y) {
+                                       KeyHint hint, int x, int y) {
         int currentX = x;
-        String separator = hint.join().separator;
-        int separatorWidth = font.width(separator);
         int textY = y + (KEY_HEIGHT - font.lineHeight) / 2 + 1;
 
-        // 渲染所有按键 + 分隔符
-        for (int i = 0; i < hint.keys().size(); i++) {
-            KeyMapping key = hint.keys().get(i);
-            String keyName = key.getTranslatedKeyMessage().getString();
-            int keyTextWidth = font.width(keyName);
-            int keyBgWidth = Math.max(KEY_HEIGHT, keyTextWidth + KEY_PADDING_H * 2);
+        for (KeyHint.Element element : hint.elements()) {
+            if (element instanceof KeyHint.KeyElement(KeyMapping key)) {
+                String keyName = key.getTranslatedKeyMessage().getString();
+                int keyTextWidth = font.width(keyName);
+                int keyBgWidth = Math.max(KEY_HEIGHT, keyTextWidth + KEY_PADDING_H * 2);
 
-            // 按键背景
-            graphics.blitSprite(
-                    RenderPipelines.GUI_TEXTURED,
-                    KEY_BUTTON_SPRITE,
-                    currentX, y, keyBgWidth, KEY_HEIGHT
-            );
+                graphics.blitSprite(
+                        RenderPipelines.GUI_TEXTURED,
+                        KEY_BUTTON_SPRITE,
+                        currentX, y, keyBgWidth, KEY_HEIGHT
+                );
 
-            // 按键文字（居中）
-            graphics.text(font, keyName,
-                    currentX + (keyBgWidth - keyTextWidth) / 2,
-                    textY,
-                    TEXT_COLOR, true);
+                graphics.text(font, keyName,
+                        currentX + (keyBgWidth - keyTextWidth) / 2,
+                        textY, TEXT_COLOR, true);
 
-            currentX += keyBgWidth;
-
-            // 不是最后一个按键则添加分隔符
-            if (i < hint.keys().size() - 1) {
+                currentX += keyBgWidth;
+            } else if (element instanceof KeyHint.TextElement(String text)) {
                 currentX += SEPARATOR_GAP;
-                graphics.text(font, separator, currentX, textY, TEXT_COLOR, true);
-                currentX += separatorWidth + SEPARATOR_GAP;
+                graphics.text(font, text, currentX, textY, TEXT_COLOR, true);
+                currentX += font.width(text) + SEPARATOR_GAP;
             }
         }
 
@@ -112,4 +104,5 @@ public class HintHudLayer {
         currentX += KEY_DESC_GAP;
         graphics.text(font, hint.description(), currentX, textY, TEXT_COLOR, true);
     }
+
 }

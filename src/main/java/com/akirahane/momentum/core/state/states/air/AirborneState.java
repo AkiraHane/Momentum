@@ -105,6 +105,7 @@ public class AirborneState extends BaseState {
 
     @Override
     public void onExit(Player player, PlayerMovementContext context) {
+        super.onExit(player, context);
         context.removeEffect(MomentumEffectType.LIMIT_ACCELERATION_SPEED, AIR_LIMIT_ACCELERATION);
     }
 

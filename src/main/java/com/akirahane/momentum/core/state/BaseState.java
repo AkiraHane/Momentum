@@ -1,6 +1,7 @@
 package com.akirahane.momentum.core.state;
 
 import com.akirahane.momentum.Momentum;
+import com.akirahane.momentum.client.hud.HintManager;
 import com.akirahane.momentum.core.context.PlayerMovementContext;
 import com.mojang.logging.LogUtils;
 import com.zigythebird.playeranimcore.animation.layered.modifier.AbstractFadeModifier;
@@ -52,6 +53,7 @@ public abstract class BaseState {
 
     // 离开状态时调用一次。
     public void onExit(Player player, PlayerMovementContext context) {
+        HintManager.clear();
     }
 
     // 状态转换检查

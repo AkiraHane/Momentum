@@ -6,5 +6,21 @@
   "key.momentum.change_momentum": "change momentum",
   "key.category.momentum.category": "Momentum",
   "message.momentum.momentum_disabled": "Momentum disabled",
-  "message.momentum.momentum_enabled": "Momentum enabled"
+  "message.momentum.momentum_enabled": "Momentum enabled",
+  "state.momentum.original": "Original",
+  "state.momentum.walk": "Walk",
+  "state.momentum.prone": "Prone",
+  "state.momentum.slide": "Slide",
+  "state.momentum.airborne": "Airborne",
+  "state.momentum.break_fall_ready": "Break Fall Ready",
+  "state.momentum.swim": "Swim",
+  "state.momentum.break_fall": "Break Fall",
+  "state.momentum.dodge": "Dodge",
+  "state.momentum.wall_climb": "Wall Climb",
+  "state.momentum.wall_slide": "Wall Slide",
+  "state.momentum.wall_run": "Wall Run",
+  "state.momentum.wall_hang": "Wall Hang",
+  "state.momentum.wall_kick": "Wall Kick",
+  "state.momentum.vault_up": "Vault Up",
+  "state.momentum.vault_in": "Vault In"
 }

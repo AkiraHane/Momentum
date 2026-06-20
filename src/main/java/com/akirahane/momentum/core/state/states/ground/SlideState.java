@@ -80,6 +80,7 @@ public class SlideState extends BaseState {
     }
 
     public void onExit(Player player, PlayerMovementContext context) {
+        super.onExit(player, context);
         if (JUMP_DECELERATION_WINDOW >= (ServerConfig.SLIDE_ACCELERATION_COOLDOWN.get() - context.getSlideCooldown())) {
             // 如果跳跃的时间小于冷却, 则增加移动方向的阻力
             context.addEffect(

@@ -59,6 +59,7 @@ public class OriginalState extends BaseState {
 
     @Override
     public void onExit(Player player, PlayerMovementContext context) {
+        super.onExit(player, context);
         context.resetEffect();
         stopAnimation(player, context);
         var instance = player.getAttribute(Attributes.GRAVITY);

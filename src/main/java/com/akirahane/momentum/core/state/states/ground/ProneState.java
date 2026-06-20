@@ -52,6 +52,7 @@ public class ProneState extends BaseState {
 
     @Override
     public void onExit(Player player, PlayerMovementContext context) {
+        super.onExit(player, context);
         player.setForcedPose(null);
     }
 

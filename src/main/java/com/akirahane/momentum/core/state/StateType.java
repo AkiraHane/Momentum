@@ -17,22 +17,22 @@ import org.slf4j.Logger;
 import java.util.*;
 
 public enum StateType {
-    ORIGINAL(new OriginalState()),
-    WALK(new WalkState()),
-    PRONE(new ProneState()),
-    SLIDE(new SlideState()),
-    AIRBORNE(new AirborneState()),
-    BREAK_FALL_READY(new BreakFallReadyState()),
-    SWIM(new SwimState()),
-    BREAK_FALL(new BreakFallState()),
-    DODGE(new DodgeState()),
-    WALL_CLIMB(new WallClimbState()),
-    WALL_SLIDE(new WallSlideState()),
-    WALL_RUN(new WallRunState()),
-    WALL_HANG(new WallHangState()),
-    WALL_KICK(new WallKickState()),
-    VAULT_UP(new VaultUpState()),
-    VAULT_IN(new VaultInState()),
+    ORIGINAL(new OriginalState(), "state.momentum.original"),
+    WALK(new WalkState(), "state.momentum.walk"),
+    PRONE(new ProneState(), "state.momentum.prone"),
+    SLIDE(new SlideState(), "state.momentum.slide"),
+    AIRBORNE(new AirborneState(), "state.momentum.airborne"),
+    BREAK_FALL_READY(new BreakFallReadyState(), "state.momentum.break_fall_ready"),
+    SWIM(new SwimState(), "state.momentum.swim"),
+    BREAK_FALL(new BreakFallState(), "state.momentum.break_fall"),
+    DODGE(new DodgeState(), "state.momentum.dodge"),
+    WALL_CLIMB(new WallClimbState(), "state.momentum.wall_climb"),
+    WALL_SLIDE(new WallSlideState(), "state.momentum.wall_slide"),
+    WALL_RUN(new WallRunState(), "state.momentum.wall_run"),
+    WALL_HANG(new WallHangState(), "state.momentum.wall_hang"),
+    WALL_KICK(new WallKickState(), "state.momentum.wall_kick"),
+    VAULT_UP(new VaultUpState(), "state.momentum.vault_up"),
+    VAULT_IN(new VaultInState(), "state.momentum.vault_in"),
     ;
     // 日志
     static final Logger LOGGER = LogUtils.getLogger();
@@ -44,6 +44,8 @@ public enum StateType {
     private static final Map<Class<? extends BaseState>, StateType> CLASS_MAP;
     @Getter
     private final BaseState state;
+    @Getter
+    private final String i18nKey;
 
     static {
         BY_ID = new StateType[values().length];
@@ -54,7 +56,8 @@ public enum StateType {
         }
     }
 
-    StateType(BaseState state) {
+    StateType(BaseState state, String i18nKey) {
+        this.i18nKey = i18nKey;
         this.id = ordinal();
         this.state = state;
     }

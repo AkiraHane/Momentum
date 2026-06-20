@@ -70,6 +70,7 @@ public class DodgeState extends BaseState {
 
     @Override
     public void onExit(Player player, PlayerMovementContext context) {
+        super.onExit(player, context);
         context.setNoJump(false);
         context.setNoMoveInput(false);
         context.removeEffect(MomentumEffectType.BLOCK_FRICTION, context.DODGE_BLOCK_FRICTION);

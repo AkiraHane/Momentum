@@ -6,5 +6,21 @@
   "key.momentum.change_momentum": "切换启用/关闭动量",
   "key.category.momentum.category": "动量",
   "message.momentum.momentum_disabled": "禁用机动",
-  "message.momentum.momentum_enabled": "启用机动"
+  "message.momentum.momentum_enabled": "启用机动",
+  "state.momentum.original": "原版",
+  "state.momentum.walk": "行走",
+  "state.momentum.prone": "匍匐",
+  "state.momentum.slide": "滑铲",
+  "state.momentum.airborne": "滞空",
+  "state.momentum.break_fall_ready": "准备受身",
+  "state.momentum.swim": "游泳",
+  "state.momentum.break_fall": "受身",
+  "state.momentum.dodge": "闪避",
+  "state.momentum.wall_climb": "攀墙",
+  "state.momentum.wall_slide": "滑墙",
+  "state.momentum.wall_run": "跑墙",
+  "state.momentum.wall_hang": "挂墙",
+  "state.momentum.wall_kick": "蹬墙跳",
+  "state.momentum.vault_up": "向上翻越",
+  "state.momentum.vault_in": "钻进"
 }

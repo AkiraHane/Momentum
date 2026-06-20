@@ -50,6 +50,7 @@ public class BreakFallState extends BaseState {
 
     @Override
     public void onExit(Player player, PlayerMovementContext context) {
+        super.onExit(player, context);
         context.setNoJump(false);
         context.setNoMoveInput(false);
         context.removeEffect(MomentumEffectType.FRICTION, context.BREAK_FALL_FRICTION);

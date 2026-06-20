@@ -116,6 +116,7 @@ public class WallSlideState extends BaseState {
 
     @Override
     public void onExit(Player player, PlayerMovementContext context) {
+        super.onExit(player, context);
         context.removeEffect(MomentumEffectType.ACCELERATION, AIR_ACCELERATION);
         context.removeEffect(MomentumEffectType.LIMIT_ACCELERATION_SPEED, AIR_LIMIT_ACCELERATION);
         var instance = player.getAttribute(Attributes.GRAVITY);
