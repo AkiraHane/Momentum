@@ -2,11 +2,11 @@ package com.akirahane.momentum.client.hud;
 
 import com.akirahane.momentum.Momentum;
 import net.minecraft.client.DeltaTracker;
-import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -69,9 +69,9 @@ public class HintHudLayer {
         int startY = scaledScreenHeight - PADDING_Y - totalHeight;
 
         int i = 0;
-        for (HintManager.KeyHint hint : hints) {
+        for (int index = hints.size() - 1; index >= 0; index--) {
             int y = startY + i * (KEY_HEIGHT + LINE_GAP);
-            renderHintLine(graphics, font, hint, PADDING_X, y, alpha);
+            renderHintLine(graphics, font, hints.get(index), PADDING_X, y, alpha);
             i++;
         }
 
@@ -112,7 +112,7 @@ public class HintHudLayer {
                         textY, textColor, true);
 
                 currentX += keyBgWidth;
-            } else if (element instanceof HintManager.TextElement(String text)) {
+            } else if (element instanceof HintManager.TextElement(Component text)) {
                 currentX += SEPARATOR_GAP;
                 graphics.text(font, text, currentX, textY, normalTextColor, true);
                 currentX += font.width(text) + SEPARATOR_GAP;

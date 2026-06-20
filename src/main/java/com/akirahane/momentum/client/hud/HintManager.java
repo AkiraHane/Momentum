@@ -21,7 +21,7 @@ public class HintManager {
     public record KeyElement(KeyMapping key) implements Element {
     }
 
-    public record TextElement(String text) implements Element {
+    public record TextElement(Component text) implements Element {
     }
 
     public record KeyHint(List<Element> elements, Component description) {
@@ -40,8 +40,9 @@ public class HintManager {
 
         private static KeyHint joinKeys(String translationKey, String sep, KeyMapping... keys) {
             List<Element> list = new ArrayList<>();
+            Component sepComponent = Component.literal(sep);
             for (int i = 0; i < keys.length; i++) {
-                if (i > 0) list.add(new TextElement(sep));
+                if (i > 0) list.add(new TextElement(sepComponent));
                 list.add(new KeyElement(keys[i]));
             }
             return new KeyHint(list, Component.translatable(translationKey));
@@ -65,16 +66,32 @@ public class HintManager {
             }
 
             public Builder plus() {
-                elements.add(new TextElement("+"));
+                elements.add(new TextElement(Component.literal("+")));
                 return this;
             }
 
             public Builder slash() {
-                elements.add(new TextElement("/"));
+                elements.add(new TextElement(Component.literal("/")));
                 return this;
             }
 
             public Builder text(String text) {
+                elements.add(new TextElement(Component.literal(text)));
+                return this;
+            }
+
+            /**
+             * 翻译键（多语言）
+             */
+            public Builder translatable(String translationKey) {
+                elements.add(new TextElement(Component.translatable(translationKey)));
+                return this;
+            }
+
+            /**
+             * 直接传 Component
+             */
+            public Builder component(Component text) {
                 elements.add(new TextElement(text));
                 return this;
             }
@@ -87,12 +104,9 @@ public class HintManager {
 
     // ========== 状态管理 ==========
 
-    private static final Map<String, KeyHint> HINTS = new LinkedHashMap<>();
+    private static final List<KeyHint> HINTS = new ArrayList<>();
     @Getter
     private static boolean visible = true;
-
-    // 内容签名，用于检测提示集变化
-    private static int lastHintsHash = 0;
 
     // 各种 tick 计数
     private static int contentChangeTick = 0;    // 提示内容上次变化时间
@@ -105,27 +119,22 @@ public class HintManager {
 
     // ========== 公开 API ==========
 
-    public static void add(String id, KeyHint hint) {
-        KeyHint existing = HINTS.get(id);
-        if (existing != hint) {
-            HINTS.put(id, hint);
+    public static void add(KeyHint hint) {
+        if (!HINTS.contains(hint)) {
+            HINTS.add(hint);
         }
     }
 
-    public static void remove(String id) {
-        HINTS.remove(id);
-    }
-
-    public static void removeByPrefix(String prefix) {
-        HINTS.keySet().removeIf(id -> id.startsWith(prefix));
+    public static void remove(KeyHint hint) {
+        HINTS.remove(hint);
     }
 
     public static void clear() {
         HINTS.clear();
     }
 
-    public static Collection<KeyHint> getAll() {
-        return HINTS.values();
+    public static List<KeyHint> getAll() {
+        return HINTS;
     }
 
     public static boolean isEmpty() {
@@ -146,14 +155,7 @@ public class HintManager {
         globalTick++;
         prevAlpha = currentAlpha;
 
-        // 1. 检测提示内容变化
-        int currentHash = HINTS.keySet().hashCode();
-        if (currentHash != lastHintsHash) {
-            lastHintsHash = currentHash;
-            contentChangeTick = globalTick;
-        }
-
-        // 2. 检测玩家移动状态
+        // 检测玩家移动状态
         Vec3 movement = player.getDeltaMovement();
         boolean moving = movement.horizontalDistanceSqr() > MOVE_THRESHOLD_SQR.get()
                 || Math.abs(movement.y) > 0.1;
@@ -182,7 +184,7 @@ public class HintManager {
 
         int sinceChange = globalTick - contentChangeTick;
 
-        // 优先级 1：内容刚变化（教学时机），强制显示
+        // 优先级 1：强制显示
         if (sinceChange < FRESH_DURATION.get().floatValue()) {
             return MAX_ALPHA.get().floatValue();
         }
@@ -192,7 +194,7 @@ public class HintManager {
             return MAX_ALPHA.get().floatValue();
         }
 
-        // 优先级 3：玩家在移动，降到最低可见度（不消失，做视觉锚点）
+        // 优先级 3：玩家在移动，降到最低可见度
         if (moving) {
             return MIN_ALPHA_WHEN_MOVING.get().floatValue();
         }
@@ -220,26 +222,11 @@ public class HintManager {
     }
 
     /**
-     * 渲染时调用，判断是否需要绘制
-     */
-    public static boolean shouldRender(float partialTick) {
-        return getAlpha(partialTick) > 0.01f;
-    }
-
-    /**
      * 强制立即显示（外部触发）
      */
     public static void forceShow() {
         contentChangeTick = globalTick;
         currentAlpha = MAX_ALPHA.get().floatValue();
         prevAlpha = MAX_ALPHA.get().floatValue();
-    }
-
-    /**
-     * 通知"玩家执行了动作"，让提示稍微淡化（强化反馈）
-     */
-    public static void notifyActionPerformed() {
-        // 让内容变化时间提前，更快进入低透明度状态
-        contentChangeTick = globalTick - FRESH_DURATION.get() + 10;
     }
 }

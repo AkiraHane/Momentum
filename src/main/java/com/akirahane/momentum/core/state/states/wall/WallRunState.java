@@ -1,11 +1,14 @@
 package com.akirahane.momentum.core.state.states.wall;
 
+import com.akirahane.momentum.client.hud.HintManager;
+import com.akirahane.momentum.client.hud.WallHangHints;
 import com.akirahane.momentum.config.ServerConfig;
 import com.akirahane.momentum.core.context.PlayerMovementContext;
 import com.akirahane.momentum.core.state.StateType;
 import com.akirahane.momentum.core.state.BaseState;
 import com.akirahane.momentum.core.state.states.air.AirborneState;
 import com.akirahane.momentum.core.state.states.ground.ProneState;
+import com.akirahane.momentum.core.state.states.ground.SlideState;
 import com.akirahane.momentum.core.state.states.ground.WalkState;
 import com.akirahane.momentum.core.state.states.special.DodgeState;
 import com.akirahane.momentum.core.state.states.water.SwimState;
@@ -32,13 +35,18 @@ public class WallRunState extends BaseState {
                 !Vec3.ZERO.equals(context.getInputVec()) &&
                 Mth.abs(context.getInputWallAngle()) > 45 && Mth.abs(context.getInputWallAngle()) < 90 &&
                 canWallRunSpeedCheck(player, context) &&
-                Minecraft.getInstance().options.keyUp.isDown() &&
-                Minecraft.getInstance().options.keyJump.isDown();
+                checkKey(player, context);
     }
 
     public static boolean canWallRunSpeedCheck(Player player, PlayerMovementContext context) {
         return context.getSpeed().horizontalDistance() * 20 > ServerConfig.MIN_WALL_RUN_SPEED.get() &&
                 context.getSpeed().horizontalDistance() > Mth.abs((float) context.getSpeed().y);
+    }
+
+    public static boolean checkKey(Player player, PlayerMovementContext context) {
+        HintManager.add(WallHangHints.WALL_RUN);
+        return Minecraft.getInstance().options.keyUp.isDown() &&
+                Minecraft.getInstance().options.keyJump.isDown();
     }
 
     @Override
@@ -135,6 +143,7 @@ public class WallRunState extends BaseState {
 
     @Override
     public BaseState evaluate(Player player, PlayerMovementContext context) {
+        HintManager.clear();
         if (canOriginal(player, context)) {
             return StateType.ORIGINAL.getState();
         }
@@ -143,6 +152,9 @@ public class WallRunState extends BaseState {
         }
         if (SwimState.canSwim(player, context)) {
             return StateType.SWIM.getState();
+        }
+        if (SlideState.canSlide(player, context)) {
+            return StateType.SLIDE.getState();
         }
         if (ProneState.canProne(player, context)) {
             return StateType.PRONE.getState();

@@ -1,5 +1,6 @@
 package com.akirahane.momentum.core.state.states;
 
+import com.akirahane.momentum.client.hud.HintManager;
 import com.akirahane.momentum.core.state.StateType;
 import com.akirahane.momentum.core.context.PlayerMovementContext;
 import com.akirahane.momentum.core.state.BaseState;
@@ -29,6 +30,7 @@ public class OriginalState extends BaseState {
 
     @Override
     public BaseState evaluate(Player player, PlayerMovementContext context) {
+        HintManager.clear();
         if (canOriginal(player, context)) {
             return StateType.ORIGINAL.getState();
         }

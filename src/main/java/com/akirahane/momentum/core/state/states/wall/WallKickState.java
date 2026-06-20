@@ -1,10 +1,13 @@
 package com.akirahane.momentum.core.state.states.wall;
 
+import com.akirahane.momentum.client.hud.HintManager;
+import com.akirahane.momentum.client.hud.WallHangHints;
 import com.akirahane.momentum.core.context.PlayerMovementContext;
 import com.akirahane.momentum.core.state.BaseState;
 import com.akirahane.momentum.core.state.StateType;
 import com.akirahane.momentum.core.state.states.air.AirborneState;
 import com.akirahane.momentum.core.state.states.ground.ProneState;
+import com.akirahane.momentum.core.state.states.ground.SlideState;
 import com.akirahane.momentum.core.state.states.ground.WalkState;
 import com.akirahane.momentum.core.state.states.special.DodgeState;
 import com.akirahane.momentum.core.state.states.water.SwimState;
@@ -24,8 +27,14 @@ public class WallKickState extends BaseState {
     public static boolean canWallKick(Player player, PlayerMovementContext context) {
         return !Vec3.ZERO.equals(context.getWallNormal()) &&
                 context.getInputVec().horizontalDistance() > 0.01 && Mth.abs(context.getInputWallAngle()) >= 90 &&
-                context.getInputBuffer()[context.getInputBufferIndex()].contains(JUMP);
+                checkKey(player, context);
     }
+
+    public static boolean checkKey(Player player, PlayerMovementContext context) {
+        HintManager.add(WallHangHints.WALL_KICK);
+        return context.getInputBuffer()[context.getInputBufferIndex()].contains(JUMP);
+    }
+
 
     @Override
     public void onEnter(Player player, PlayerMovementContext context) {
@@ -44,8 +53,10 @@ public class WallKickState extends BaseState {
         );
         context.playWallSound(player, FALL, 0.15F, 1);
     }
+
     @Override
     public BaseState evaluate(Player player, PlayerMovementContext context) {
+        HintManager.clear();
         if (canOriginal(player, context)) {
             return StateType.ORIGINAL.getState();
         }
@@ -54,6 +65,9 @@ public class WallKickState extends BaseState {
         }
         if (SwimState.canSwim(player, context)) {
             return StateType.SWIM.getState();
+        }
+        if (SlideState.canSlide(player, context)) {
+            return StateType.SLIDE.getState();
         }
         if (ProneState.canProne(player, context)) {
             return StateType.PRONE.getState();

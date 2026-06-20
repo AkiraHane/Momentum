@@ -1,5 +1,7 @@
 package com.akirahane.momentum.core.state.states.ground;
 
+import com.akirahane.momentum.client.hud.HintManager;
+import com.akirahane.momentum.client.hud.WallHangHints;
 import com.akirahane.momentum.core.effect.MomentumEffect;
 import com.akirahane.momentum.core.effect.MomentumEffectType;
 import com.akirahane.momentum.core.state.StateType;
@@ -31,14 +33,19 @@ public class SlideState extends BaseState {
 
     public static boolean canSlide(Player player, PlayerMovementContext context) {
         return player.onGround() &&
-                LOWER_CENTER.get().isDown() &&
                 player.isSprinting() &&
-                canSlideSpeedCheck(player, context);
+                canSlideSpeedCheck(player, context) &&
+                checkKey(player, context);
     }
 
     public static boolean canSlideSpeedCheck(Player player, PlayerMovementContext context) {
         return context.getSpeed().horizontalDistance() * 20 > ServerConfig.MIN_SLIDE_SPEED.get() &&
                 context.getOldSpeed().horizontalDistance() >= -context.getOldSpeed().y;
+    }
+
+    public static boolean checkKey(Player player, PlayerMovementContext context) {
+        HintManager.add(WallHangHints.SLIDE);
+        return LOWER_CENTER.get().isDown();
     }
 
     @Override
@@ -104,6 +111,7 @@ public class SlideState extends BaseState {
 
     @Override
     public BaseState evaluate(Player player, PlayerMovementContext context) {
+        HintManager.clear();
         if (canOriginal(player, context)) {
             return StateType.ORIGINAL.getState();
         }

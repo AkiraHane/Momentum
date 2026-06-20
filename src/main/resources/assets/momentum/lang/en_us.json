@@ -37,5 +37,7 @@
   "momentum.configuration.fadeInSpeed": "Fade In Speed",
   "momentum.configuration.fadeInSpeed.tooltip": "Fade in speed, lower values are slower",
   "momentum.configuration.fadeOutSpeed": "Fade Out Speed",
-  "momentum.configuration.fadeOutSpeed.tooltip": "Fade out speed, lower values are slower"
+  "momentum.configuration.fadeOutSpeed.tooltip": "Fade out speed, lower values are slower",
+  "hint.momentum.click": "Click",
+  "hint.momentum.double_click": "Double Click"
 }

@@ -1,5 +1,7 @@
 package com.akirahane.momentum.core.state.states.air;
 
+import com.akirahane.momentum.client.hud.HintManager;
+import com.akirahane.momentum.client.hud.WallHangHints;
 import com.akirahane.momentum.core.context.PlayerMovementContext;
 import com.akirahane.momentum.core.effect.MomentumEffectType;
 import com.akirahane.momentum.core.state.BaseState;
@@ -28,11 +30,13 @@ public class BreakFallReadyState extends BaseState {
     }
 
     public static boolean checkKey(Player player, PlayerMovementContext context) {
+        HintManager.add(WallHangHints.BREAK_FALL_READY);
         return LOWER_CENTER.get().isDown();
     }
 
     @Override
     public BaseState evaluate(Player player, PlayerMovementContext context) {
+        HintManager.clear();
         if (canOriginal(player, context)) {
             return StateType.ORIGINAL.getState();
         }
@@ -56,6 +60,9 @@ public class BreakFallReadyState extends BaseState {
         }
         if (canWalk(player, context)) {
             return StateType.WALK.getState();
+        }
+        if (canBreakFallReady(player, context)) {
+            return StateType.BREAK_FALL_READY.getState();
         }
         return StateType.BREAK_FALL_READY.getState();
     }

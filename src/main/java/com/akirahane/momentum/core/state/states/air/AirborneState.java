@@ -1,10 +1,12 @@
 package com.akirahane.momentum.core.state.states.air;
 
+import com.akirahane.momentum.client.hud.HintManager;
 import com.akirahane.momentum.core.context.PlayerMovementContext;
 import com.akirahane.momentum.core.effect.MomentumEffectType;
 import com.akirahane.momentum.core.state.StateType;
 import com.akirahane.momentum.core.state.BaseState;
 import com.akirahane.momentum.core.state.states.ground.ProneState;
+import com.akirahane.momentum.core.state.states.ground.SlideState;
 import com.akirahane.momentum.core.state.states.special.DodgeState;
 import com.akirahane.momentum.core.state.states.wall.WallClimbState;
 import com.akirahane.momentum.core.state.states.wall.WallKickState;
@@ -31,6 +33,7 @@ public class AirborneState extends BaseState {
 
     @Override
     public BaseState evaluate(Player player, PlayerMovementContext context) {
+        HintManager.clear();
         if (canOriginal(player, context)) {
             return StateType.ORIGINAL.getState();
         }
@@ -39,6 +42,9 @@ public class AirborneState extends BaseState {
         }
         if (SwimState.canSwim(player, context)) {
             return StateType.SWIM.getState();
+        }
+        if (SlideState.canSlide(player, context)) {
+            return StateType.SLIDE.getState();
         }
         if (ProneState.canProne(player, context)) {
             return StateType.PRONE.getState();

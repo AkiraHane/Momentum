@@ -1,13 +1,16 @@
 package com.akirahane.momentum.core.state.states.special;
 
+import com.akirahane.momentum.client.hud.HintManager;
 import com.akirahane.momentum.core.context.PlayerMovementContext;
 import com.akirahane.momentum.core.effect.MomentumEffectType;
 import com.akirahane.momentum.core.state.StateType;
 import com.akirahane.momentum.core.state.BaseState;
 import com.akirahane.momentum.core.state.states.air.AirborneState;
+import com.akirahane.momentum.core.state.states.ground.ProneState;
+import com.akirahane.momentum.core.state.states.ground.SlideState;
 import com.akirahane.momentum.core.state.states.ground.WalkState;
 import net.minecraft.core.BlockPos;
-import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.Pose;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.state.BlockState;
@@ -26,6 +29,7 @@ public class BreakFallState extends BaseState {
     @Override
     public void onEnter(Player player, PlayerMovementContext context) {
         context.setBreakFallTimer(12);
+        player.setForcedPose(Pose.SWIMMING);
         context.setNoJump(true);
         context.setNoMoveInput(true);
         playStateAnimation(player, BREAK_FALL, context, 0, 2f);
@@ -53,16 +57,24 @@ public class BreakFallState extends BaseState {
         super.onExit(player, context);
         context.setNoJump(false);
         context.setNoMoveInput(false);
+        player.setForcedPose(null);
         context.removeEffect(MomentumEffectType.FRICTION, context.BREAK_FALL_FRICTION);
     }
 
     @Override
     public BaseState evaluate(Player player, PlayerMovementContext context) {
+        HintManager.clear();
         if (canOriginal(player, context)) {
             return StateType.ORIGINAL.getState();
         }
         if (context.getBreakFallTimer() > 0) {
             return StateType.BREAK_FALL.getState();
+        }
+        if (SlideState.canSlide(player, context)) {
+            return StateType.SLIDE.getState();
+        }
+        if (ProneState.canProne(player, context)) {
+            return StateType.PRONE.getState();
         }
         if (AirborneState.canAirborne(player, context)) {
             return StateType.AIRBORNE.getState();

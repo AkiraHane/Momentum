@@ -9,8 +9,6 @@ import com.akirahane.momentum.core.state.states.special.DodgeState;
 import com.akirahane.momentum.core.state.states.wall.WallClimbState;
 import com.akirahane.momentum.core.state.states.wall.WallSlideState;
 import com.akirahane.momentum.core.state.states.water.SwimState;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.Options;
 import net.minecraft.world.entity.player.Player;
 
 import static com.akirahane.momentum.core.state.states.OriginalState.canOriginal;
@@ -23,32 +21,11 @@ public class WalkState extends BaseState {
     @Override
     public void onEnter(Player player, PlayerMovementContext context) {
         super.onEnter(player, context);
-        Options options = Minecraft.getInstance().options;
-        HintManager.add("jump", HintManager.KeyHint.single(options.keyJump, "hint.momentum.jump"));
-
-// 简单：多键统一用 +
-        HintManager.add("dash", HintManager.KeyHint.and("hint.momentum.dash",
-                options.keySprint, options.keyJump));
-// 显示：[Ctrl] + [Space] 冲刺
-
-// 简单：多键统一用 /
-        HintManager.add("look", HintManager.KeyHint.or("hint.momentum.look",
-                options.keyUp, options.keyDown));
-// 显示：[W] / [S] 视角
-
-// 混合：Ctrl + W/A/S/D
-        HintManager.add("move", HintManager.KeyHint.builder("hint.momentum.move")
-                .key(options.keySprint).plus()
-                .key(options.keyUp).slash()
-                .key(options.keyLeft).slash()
-                .key(options.keyDown).slash()
-                .key(options.keyRight).key(options.keyRight)
-                .build());
-// 显示：[Ctrl] + [W] / [A] / [S] / [D] 移动
     }
 
     @Override
     public BaseState evaluate(Player player, PlayerMovementContext context) {
+        HintManager.clear();
         if (canOriginal(player, context)) {
             return StateType.ORIGINAL.getState();
         }
