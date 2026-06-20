@@ -249,17 +249,11 @@ public class PlayerMovementContext {
         if (value instanceof ObjectValue math) {
             math.setFunction("min_angle_180", (a, b) -> {
                 double diff = b - a;
-                // 用取模运算将差值初步约束到 (-360°, 360°)
-                diff = diff % 360.0;
-                // 进一步规范化到目标区间
-                if (diff < -180.0) {
-                    diff += 360.0;
-                } else if (diff > 180.0) {
+                // 用 Math.floorMod 的思路，保证结果在 [0, 360) 范围
+                diff = ((diff % 360.0) + 360.0) % 360.0;
+                // 映射到 (-180, 180]
+                if (diff > 180.0) {
                     diff -= 360.0;
-                }
-                // 处理边界：当结果为 -180° 时，可统一返回 180°（因为几何意义等价）
-                if (diff == -180.0) {
-                    diff = 180.0;
                 }
                 return (float) diff;
             });
