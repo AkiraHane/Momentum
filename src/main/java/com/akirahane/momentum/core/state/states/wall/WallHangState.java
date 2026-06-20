@@ -97,6 +97,24 @@ public class WallHangState extends BaseState {
     }
 
     @Override
+    public void clientTick(Player player, PlayerMovementContext context) {
+        super.clientTick(player, context);
+        // 如果没有按后键, 给个向墙的速度防止失误掉落
+        if (!Minecraft.getInstance().options.keyDown.isDown()){
+            Vec3 wallNormal = context.getWallNormal();
+            Vec3 currentMovement = player.getDeltaMovement();
+
+            // 给一个轻微的朝墙速度，防止玩家因为微小偏移脱离墙面
+            double pushStrength = 0.05;
+            player.setDeltaMovement(
+                    currentMovement.x + wallNormal.x * pushStrength,
+                    currentMovement.y,
+                    currentMovement.z + wallNormal.z * pushStrength
+            );
+        }
+    }
+
+    @Override
     public void clientTickRemote(Player player, PlayerMovementContext context) {
         float speed = (float) context.getSpeed().horizontalDistance() * 20;
         if (speed > 0.02) {
