@@ -16,12 +16,15 @@ import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
 
+import static com.akirahane.momentum.core.context.PlayerMovementContext.STEP;
 import static com.akirahane.momentum.core.context.PlayerMovementContext.WALL_FRICTION;
 import static com.akirahane.momentum.core.state.states.OriginalState.canOriginal;
 import static com.akirahane.momentum.core.state.states.wall.VaultInState.canVaultIn;
 import static com.akirahane.momentum.core.state.states.wall.VaultUpState.canVaultUp;
 
 public class WallHangState extends BaseState {
+
+    private static final int SOUND_TICK = 10;
     // 动画名称
     public static final String WALL_HANG = "wall_hang";
     public static final String WALL_HANG_LOOK_RIGHT = "wall_hang_look_right";
@@ -89,6 +92,8 @@ public class WallHangState extends BaseState {
         player.setDeltaMovement(0, 0, 0);
         player.fallDistance = 0;
         context.addPermanentEffect(MomentumEffectType.FRICTION, WALL_FRICTION);
+        context.setNeedSoundTick(SOUND_TICK);
+        context.playWallSound(player, STEP, 0.15F, 1);
     }
 
     @Override
@@ -100,7 +105,13 @@ public class WallHangState extends BaseState {
             } else {
                 playStateAnimation(player, WALL_HANG_LEFT, context, 2, speed);
             }
+            context.setNeedSoundTick(context.getNeedSoundTick() - speed);
+            if (context.getNeedSoundTick() <= 0){
+                context.playWallSound(player, STEP, 0.15F, 1);
+                context.setNeedSoundTick(context.getNeedSoundTick() + SOUND_TICK);
+            }
         } else {
+            context.setNeedSoundTick(SOUND_TICK);
             if (Mth.abs(context.getLookWallAngle()) < 45) {
                 playStateAnimation(player, WALL_HANG, context, 2, 1);
             } else if (context.getLookWallAngle() < -70) {
