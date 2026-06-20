@@ -120,6 +120,8 @@ public class PlayerMovementContext {
     private float gravityModify = 0;
     // 跳跃动画播放速度
     private float jumpAnimationSpeed = 1;
+    // 头身角度差
+    private float bodyHeadAngleDiff = 0F;
 
     // 当前播放的动画名称
     private String currentAnimationName = null;
@@ -243,10 +245,15 @@ public class PlayerMovementContext {
         }
     }
 
+    // 用于检测跳变
+    private static double lastA = Double.NaN;
+    private static double lastB = Double.NaN;
+    private static double lastResult = Double.NaN;
+    private static long callCount = 0;
+
     private void bindVariables() {
         Value value = this.mocha.scope().get("math");
         if (value instanceof ObjectValue math) {
-            math.setFunction("min_angle_180", (a, b) -> (float) Mth.wrapDegrees(b - a));;
             // clamp
             math.setFunction("clamp", Mth::clamp);
             // min
@@ -259,6 +266,8 @@ public class PlayerMovementContext {
             variable.setFunction("get_movement_speed", () -> (float) this.getSpeed().horizontalDistance());
             // y speed
             variable.setFunction("get_movement_y_speed", () -> (float) this.getSpeed().y());
+            // y speed
+            variable.setFunction("stable_body_head_angle", this::getBodyHeadAngleDiff);
         } else {
             LOGGER.warn("Failed to bind variable.get_movement_speed to Mocha");
         }
@@ -304,6 +313,7 @@ public class PlayerMovementContext {
         this.jumpAcceleration = jumpCooldown > 0 ? 0.2 : moveSpeed * (1 + jumpStrength) * 1.2;
         this.setWorldInputVec(player);
         this.detectWall(player);
+        this.bodyHeadAngleDiff = Mth.wrapDegrees(player.getYHeadRot() - player.yBodyRot);
     }
 
     public void clientTickRemote(Player player) {

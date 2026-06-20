@@ -41,10 +41,10 @@ public class MovementDebugEntry implements DebugScreenEntry {
 //        displayer.addToGroup(group, String.format("[Momentum] yRot: %.4f", yRot));
 //        displayer.addToGroup(group, String.format("[Momentum] xRot: %.4f", xRot));
         double fallDistance = mc.player.fallDistance;
-//        displayer.addToGroup(group, String.format("[Momentum] Fall Distance: %.4f", fallDistance));
+        displayer.addToGroup(group, String.format("[Momentum] Fall Distance: %.4f", fallDistance));
         // lastFallDistance
         double lastFallDistance = context.getLastFallDistance();
-//        displayer.addToGroup(group, String.format("[Momentum] LastFallDistance: %.4f", lastFallDistance));
+        displayer.addToGroup(group, String.format("[Momentum] LastFallDistance: %.4f", lastFallDistance));
 //        // getWorldInputVec
 //        Vec3 inputVec = context.getInputVec();
 //        displayer.addToGroup(group, String.format("[Momentum] InputVec: %s", inputVec));

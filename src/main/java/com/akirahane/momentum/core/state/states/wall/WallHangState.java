@@ -57,6 +57,9 @@ public class WallHangState extends BaseState {
         if (DodgeState.canDodge(player, context)) {
             return StateType.DODGE.getState();
         }
+        if (BreakFallState.canBreakFall(player, context)) {
+            return StateType.BREAK_FALL.getState();
+        }
         if (SwimState.canSwim(player, context)) {
             return StateType.SWIM.getState();
         }
@@ -86,9 +89,6 @@ public class WallHangState extends BaseState {
         }
         if (WallSlideState.canWallSlide(player, context)) {
             return StateType.WALL_SLIDE.getState();
-        }
-        if (BreakFallState.canBreakFall(player, context)) {
-            return StateType.BREAK_FALL.getState();
         }
         if (BreakFallReadyState.canBreakFallReady(player, context)) {
             return StateType.BREAK_FALL_READY.getState();

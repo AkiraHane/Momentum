@@ -27,14 +27,15 @@ public class SlideState extends BaseState {
 
     public static boolean canSlide(Player player, PlayerMovementContext context) {
         return player.onGround() &&
-                player.isSprinting() &&
                 canSlideSpeedCheck(player, context) &&
                 checkKey(player, context);
     }
 
     public static boolean canSlideSpeedCheck(Player player, PlayerMovementContext context) {
-        return context.getSpeed().horizontalDistance() * 20 > ServerConfig.MIN_SLIDE_SPEED.get() &&
-                context.getOldSpeed().horizontalDistance() >= -context.getOldSpeed().y;
+        return context.getSpeed().horizontalDistance() * 20 >
+                (player.isSprinting() ? ServerConfig.MIN_SLIDE_SPEED.get() : ServerConfig.MIN_SLIDE_SPEED.get() * 2) &&
+                (context.getPendingEffectPool().get(MomentumEffectType.ACCELERATION).contains(context.SLIDE_ACCELERATION) ||
+                        context.getOldSpeed().horizontalDistance() >= -context.getOldSpeed().y);
     }
 
     public static boolean checkKey(Player player, PlayerMovementContext context) {
@@ -65,13 +66,12 @@ public class SlideState extends BaseState {
                         velocity.z * jumpPower / velocity.horizontalDistance()
                 )
         );
-        context.setSlideCooldown(ServerConfig.SLIDE_ACCELERATION_COOLDOWN.get());
         playStateAnimation(player, SLIDE, context, 6, 1.0f);
     }
 
     @Override
     public void clientTickRemote(Player player, PlayerMovementContext context) {
-        if (player.tickCount % 2 == 0){
+        if (player.tickCount % 2 == 0) {
             player.playSound(
                     GRASS.getStepSound(),
                     0.05F,
@@ -101,6 +101,7 @@ public class SlideState extends BaseState {
         context.removeEffect(MomentumEffectType.BLOCK_FRICTION, context.SLIDE_BLOCK_FRICTION);
         player.setSprinting(false);
         context.setSlopeUnitVector(Vec3.ZERO);
+        context.setSlideCooldown(ServerConfig.SLIDE_ACCELERATION_COOLDOWN.get());
     }
 
     @Override

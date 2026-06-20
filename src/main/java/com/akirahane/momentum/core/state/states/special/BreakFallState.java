@@ -29,11 +29,9 @@ public class BreakFallState extends BaseState {
         context.setNoJump(true);
         context.setNoMoveInput(true);
         playStateAnimation(player, BREAK_FALL, context, 0, 2f);
-        Vec3 direction;
-        if (Vec3.ZERO.equals(context.getSpeed())){
+        Vec3 direction = new Vec3(context.getSpeed().x, 0, context.getSpeed().z).normalize();
+        if (Vec3.ZERO.equals(direction)){
             direction = Vec3.directionFromRotation(0, player.getYRot());
-        } else {
-            direction = context.getSpeed().normalize();
         }
         player.setDeltaMovement(direction.x, 0.0D, direction.z);
         context.addEffect(MomentumEffectType.FRICTION, context.BREAK_FALL_FRICTION, 6);

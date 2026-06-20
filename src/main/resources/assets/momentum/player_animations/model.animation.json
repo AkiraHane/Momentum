@@ -258,8 +258,8 @@
 				"head": {
 					"rotation": [
 						"-0 + query.head_x_rotation + 50",
-						"-0 + 10 + math.min_angle_180(query.body_y_rotation, query.head_y_rotation) / 1.4",
-						"-6.4664 + math.min_angle_180(query.body_y_rotation, query.head_y_rotation) / 1.4"
+						"-0 + 10 + variable.stable_body_head_angle() / 1.4",
+						"-6.4664 + variable.stable_body_head_angle() / 1.4"
 					]
 				},
 				"right_arm": {
@@ -1658,7 +1658,7 @@
 					"rotation": [0, 0, -17.5]
 				},
 				"head": {
-					"rotation": ["query.head_x_rotation", "-0 - math.min_angle_180(query.head_y_rotation, query.body_y_rotation + 90)", -10]
+					"rotation": ["query.head_x_rotation", "-0 + variable.stable_body_head_angle() - 90", -10]
 				},
 				"right_arm": {
 					"rotation": [7.5, 0, 20],
@@ -1699,7 +1699,7 @@
 					"rotation": [0, 0, 17.5]
 				},
 				"head": {
-					"rotation": ["query.head_x_rotation", "-0 - math.min_angle_180(query.head_y_rotation, query.body_y_rotation - 90)", 10]
+					"rotation": ["query.head_x_rotation", "-0 + variable.stable_body_head_angle() + 90", 10]
 				},
 				"right_arm": {
 					"rotation": [-120, 90, 0],
@@ -1788,7 +1788,6 @@
 					}
 				},
 				"head": {
-					"rotation": ["query.head_x_rotation", "-0 - math.clamp(math.min_angle_180(query.head_y_rotation, query.body_y_rotation), -70, 70)", 0],
 					"position": {
 						"0.0": {
 							"post": [0, 0, 0],
@@ -2007,7 +2006,6 @@
 					}
 				},
 				"head": {
-					"rotation": ["query.head_x_rotation", "-0 - math.clamp(math.min_angle_180(query.head_y_rotation, query.body_y_rotation), -70, 70)", 0],
 					"position": {
 						"0.0": {
 							"post": [0, 0, 0],
@@ -2332,7 +2330,7 @@
 					}
 				},
 				"head": {
-					"rotation": ["query.head_x_rotation", "-0 - math.clamp(math.min_angle_180(query.head_y_rotation, query.body_y_rotation + 90), -70, 70)", 0]
+					"rotation": ["query.head_x_rotation", "-0 + math.clamp(variable.stable_body_head_angle(), -70, 70) - 90", 0]
 				},
 				"right_arm": {
 					"rotation": {
@@ -2555,7 +2553,7 @@
 					}
 				},
 				"head": {
-					"rotation": ["query.head_x_rotation", "-0 - math.clamp(math.min_angle_180(query.head_y_rotation, query.body_y_rotation - 90), -70, 70)", 0]
+					"rotation": ["query.head_x_rotation", "-0 + math.clamp(variable.stable_body_head_angle(), -70, 70) + 90", 0]
 				},
 				"right_arm": {
 					"rotation": {
