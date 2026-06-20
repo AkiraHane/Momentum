@@ -16,12 +16,15 @@ import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
 
+import static com.akirahane.momentum.core.context.PlayerMovementContext.STEP;
 import static com.akirahane.momentum.core.state.states.OriginalState.canOriginal;
 
 public class WallRunState extends BaseState {
     // 动画名称
     public static String WALL_RUN_LEFT = "wall_run_left";
     public static String WALL_RUN_RIGHT = "wall_run_right";
+
+    private static final int SOUND_TICK = 10;
 
     public static boolean canWallRun(Player player, PlayerMovementContext context) {
         return context.getWallDirection() != null &&
@@ -33,7 +36,8 @@ public class WallRunState extends BaseState {
     }
 
     public static boolean canWallRunSpeedCheck(Player player, PlayerMovementContext context) {
-        return context.getSpeed().horizontalDistance() * 20 > ServerConfig.MIN_WALL_RUN_SPEED.get();
+        return context.getSpeed().horizontalDistance() * 20 > ServerConfig.MIN_WALL_RUN_SPEED.get() &&
+                context.getSpeed().horizontalDistance() > Mth.abs((float) context.getSpeed().y);
     }
 
     @Override
@@ -61,6 +65,8 @@ public class WallRunState extends BaseState {
                 player.getDeltaMovement().y,
                 tangent.z * context.getSpeed().horizontalDistance()
         );
+        context.setNeedSoundTick(SOUND_TICK);
+        context.playWallSound(player, STEP, 0.15F, 1);
     }
 
     @Override
@@ -72,6 +78,11 @@ public class WallRunState extends BaseState {
     public void clientTickRemote(Player player, PlayerMovementContext context) {
         float speed = (float) Math.min(context.getSpeed().length() * 5, 5);
         playStateAnimation(player, context.getCurrentAnimationName(), context, 0, speed);
+        context.setNeedSoundTick(context.getNeedSoundTick() - speed);
+        if (context.getNeedSoundTick() <= 0){
+            context.playWallSound(player, STEP, 0.15F, 1);
+            context.setNeedSoundTick(SOUND_TICK);
+        }
     }
 
     @Override

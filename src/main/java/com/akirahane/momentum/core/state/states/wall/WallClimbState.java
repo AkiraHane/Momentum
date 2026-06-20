@@ -16,13 +16,14 @@ import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
 
-import static com.akirahane.momentum.core.context.PlayerMovementContext.AIR_ACCELERATION;
-import static com.akirahane.momentum.core.context.PlayerMovementContext.AIR_LIMIT_ACCELERATION;
+import static com.akirahane.momentum.core.context.PlayerMovementContext.*;
 import static com.akirahane.momentum.core.state.states.OriginalState.canOriginal;
 
 public class WallClimbState extends BaseState {
     // 动画名称
     public static String WALL_CLIMB = "wall_climb";
+
+    private static final int SOUND_TICK = 10;
 
     public static boolean canWallClimb(Player player, PlayerMovementContext context) {
         return player.onClimbable() || (
@@ -88,6 +89,8 @@ public class WallClimbState extends BaseState {
             ));
         }
         player.addDeltaMovement(new Vec3(0, player.getDeltaMovement().y * 0.2, 0));
+        context.setNeedSoundTick(SOUND_TICK);
+        context.playWallSound(player, STEP, 0.15F, 1);
     }
 
     @Override
@@ -99,6 +102,11 @@ public class WallClimbState extends BaseState {
     public void clientTickRemote(Player player, PlayerMovementContext context) {
         float speed = (float) Math.min(context.getSpeed().y * 6, 5);
         playStateAnimation(player, WALL_CLIMB, context, 0, speed);
+        context.setNeedSoundTick(context.getNeedSoundTick() - speed);
+        if (context.getNeedSoundTick() <= 0){
+            context.playWallSound(player, STEP, 0.15F, 1);
+            context.setNeedSoundTick(SOUND_TICK);
+        }
     }
 
     @Override

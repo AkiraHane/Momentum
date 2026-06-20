@@ -13,11 +13,15 @@ import com.zigythebird.playeranimcore.animation.AnimationController;
 import lombok.Getter;
 import lombok.Setter;
 import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.sounds.SoundEvent;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.SoundType;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec2;
 import net.minecraft.world.phys.Vec3;
@@ -27,6 +31,7 @@ import team.unnamed.mocha.runtime.value.ObjectValue;
 import team.unnamed.mocha.runtime.value.Value;
 
 import java.util.*;
+import java.util.function.Function;
 
 import static com.akirahane.momentum.core.MomentumUtils.HORIZONTALS;
 import static com.akirahane.momentum.core.MomentumUtils.applyBoosterAttributes;
@@ -40,6 +45,16 @@ public class PlayerMovementContext {
     protected static final Logger LOGGER = LogUtils.getLogger();
     // 键位
     public static final int UP = 0, DOWN = 1, LEFT = 2, RIGHT = 3, JUMP = 4;
+    // 音效
+//    HIT(SoundType::getHitSound),
+//    BREAK(SoundType::getBreakSound),
+//    PLACE(SoundType::getPlaceSound),
+//    FALL(SoundType::getFallSound);
+    public static final Function<SoundType, SoundEvent> STEP = SoundType::getStepSound,
+            HIT = SoundType::getHitSound,
+            BREAK = SoundType::getBreakSound,
+            PLACE = SoundType::getPlaceSound,
+            FALL = SoundType::getFallSound;
     // 动画控制器
     MomentumAnimationController controller;
     // 动画moLang
@@ -102,6 +117,8 @@ public class PlayerMovementContext {
     private int jumpCooldown = 0;
     // 墙面方块摩擦力
     private float wallFriction = 0.6f;
+    // need sound tick = 0
+    private float needSoundTick = 0;
 
     // 当前播放的动画名称
     private String currentAnimationName = null;
@@ -116,6 +133,8 @@ public class PlayerMovementContext {
     private final Map<MomentumEffectType, Set<MomentumEffect>> pendingEffectPool = new HashMap<>();
     @SuppressWarnings("unchecked")
     private final HashSet<Integer>[] inputBuffer = new HashSet[inputBufferSize];
+    // 墙面方块列表
+    private final List<BlockPos> wallBlocks = new ArrayList<>();
 
     // 每tick要变动的效果
     // 跳跃计数 用于跳跃限速
@@ -252,6 +271,8 @@ public class PlayerMovementContext {
             variable.setFunction("get_movement_speed", () -> (float) this.getSpeed().horizontalDistance());
             // y speed
             variable.setFunction("get_movement_y_speed", () -> (float) this.getSpeed().y());
+        } else {
+            LOGGER.warn("Failed to bind variable.get_movement_speed to Mocha");
         }
     }
 
@@ -379,12 +400,22 @@ public class PlayerMovementContext {
                 double cross = lookVec.x * wallNormal.z - lookVec.z * wallNormal.x;
                 double dot = lookVec.dot(wallNormal);
                 bestLookAngle = (float) Math.toDegrees(Math.atan2(cross, dot));
-                if (hasInput){
+                if (hasInput) {
                     cross = inputVec.x * wallNormal.z - inputVec.z * wallNormal.x;
                     dot = inputVec.dot(wallNormal);
                     bestInputAngle = (float) Math.toDegrees(Math.atan2(cross, dot));
                 }
                 bestDir = dir;
+
+                // 收集墙面方块
+                wallBlocks.clear();
+                BlockPos.betweenClosedStream(expanded).forEach(pos -> {
+                    BlockState state = level.getBlockState(pos);
+                    if (!state.isAir()) {
+                        wallBlocks.add(pos.immutable());
+                    }
+                });
+                break;
             }
         }
         if (bestDir == null) {
@@ -486,6 +517,22 @@ public class PlayerMovementContext {
         this.setWallDirection(bestDir);
         this.setWallNormal(new Vec3(bestDir.getStepX(), 0, bestDir.getStepZ()));
         this.setLookWallAngle(bestLookAngle);
+    }
+
+    public void playWallSound(Player player, Function<SoundType, SoundEvent> kind, float volumeMultiplier, float pitchMultiplier) {
+        if (wallBlocks.isEmpty()) return;
+
+        Level level = player.level();
+        BlockPos pos = wallBlocks.get(level.getRandom().nextInt(wallBlocks.size()));
+        BlockState state = level.getBlockState(pos);
+        if (state.isAir()) return;
+
+        SoundType soundType = state.getSoundType(level, pos, player);
+        player.playSound(
+                kind.apply(soundType),
+                soundType.getVolume() * volumeMultiplier,
+                soundType.getPitch() * pitchMultiplier
+        );
     }
 
     // 向指定效果添加永久buff
