@@ -125,6 +125,11 @@ public class HintManager {
         }
     }
 
+    // 判断是否有
+    public static boolean contains(KeyHint hint) {
+        return HINTS.contains(hint);
+    }
+
     public static void remove(KeyHint hint) {
         HINTS.remove(hint);
     }

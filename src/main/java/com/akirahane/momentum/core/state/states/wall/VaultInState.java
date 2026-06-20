@@ -29,7 +29,9 @@ public class VaultInState extends BaseState {
     public static boolean checkKey(Player player, PlayerMovementContext context) {
         if (player.onGround() && !context.isHasFaceWall()){
             HintManager.add(WallHangHints.VAULT_IN_STAND);
-            return Minecraft.getInstance().options.keyJump.isDown();
+            return Minecraft.getInstance().options.keyUp.isDown() &&
+                    LOWER_CENTER.get().isDown()
+                    ;
         } else {
             HintManager.add(WallHangHints.VAULT_IN);
             return LOWER_CENTER.get().isDown() &&

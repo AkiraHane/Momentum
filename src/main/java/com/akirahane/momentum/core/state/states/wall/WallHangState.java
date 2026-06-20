@@ -60,6 +60,9 @@ public class WallHangState extends BaseState {
         if (BreakFallState.canBreakFall(player, context)) {
             return StateType.BREAK_FALL.getState();
         }
+        if (VaultInState.canVaultIn(player, context)) {
+            return StateType.VAULT_IN.getState();
+        }
         if (SwimState.canSwim(player, context)) {
             return StateType.SWIM.getState();
         }
@@ -71,9 +74,6 @@ public class WallHangState extends BaseState {
         }
         if (WallRunState.canWallRun(player, context)) {
             return StateType.WALL_RUN.getState();
-        }
-        if (VaultInState.canVaultIn(player, context)) {
-            return StateType.VAULT_IN.getState();
         }
         if (VaultUpState.canVaultUp(player, context)) {
             return StateType.VAULT_UP.getState();

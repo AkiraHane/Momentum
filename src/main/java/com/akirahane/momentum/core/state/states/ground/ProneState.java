@@ -31,7 +31,9 @@ public class ProneState extends BaseState {
     }
 
     public static boolean checkKey(Player player, PlayerMovementContext context) {
-        HintManager.add(WallHangHints.PRONE);
+        if (!HintManager.contains(WallHangHints.VAULT_IN_STAND)){
+            HintManager.add(WallHangHints.PRONE);
+        }
         return LOWER_CENTER.get().isDown();
     }
     // 状态转换检查
@@ -46,6 +48,9 @@ public class ProneState extends BaseState {
         if (BreakFallState.canBreakFall(player, context)) {
             return StateType.BREAK_FALL.getState();
         }
+        if (VaultInState.canVaultIn(player, context)) {
+            return StateType.VAULT_IN.getState();
+        }
         if (SwimState.canSwim(player, context)) {
             return StateType.SWIM.getState();
         }
@@ -55,9 +60,6 @@ public class ProneState extends BaseState {
         }
         if (WallRunState.canWallRun(player, context)) {
             return StateType.WALL_RUN.getState();
-        }
-        if (VaultInState.canVaultIn(player, context)) {
-            return StateType.VAULT_IN.getState();
         }
         if (VaultUpState.canVaultUp(player, context)) {
             return StateType.VAULT_UP.getState();

@@ -8,11 +8,13 @@ import com.akirahane.momentum.core.state.StateType;
 import com.akirahane.momentum.core.state.BaseState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.sounds.SoundEvents;
+import net.minecraft.world.entity.Pose;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
 
 import static com.akirahane.momentum.config.ServerConfig.DODGE_COOLDOWN;
 import static com.akirahane.momentum.config.ServerConfig.DODGE_STORAGE;
+import static com.akirahane.momentum.core.MomentumUtils.canPlayerFitAtPose;
 import static com.akirahane.momentum.core.state.states.OriginalState.canOriginal;
 
 public class DodgeState extends BaseState {
@@ -24,6 +26,7 @@ public class DodgeState extends BaseState {
 
     public static boolean canDodge(Player player, PlayerMovementContext context) {
         return (player.onGround() || context.isHasJetBooster()) &&
+                !(player.getPose() == Pose.SWIMMING && !canPlayerFitAtPose(player, Pose.CROUCHING)) &&
                 DODGE_COOLDOWN.get() * DODGE_STORAGE.get() - context.getDodgeCooldown() > DODGE_COOLDOWN.get() &&
                 checkKey(player, context);
     }
