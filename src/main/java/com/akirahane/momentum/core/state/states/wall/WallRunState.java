@@ -18,6 +18,7 @@ import net.minecraft.world.phys.Vec3;
 
 import static com.akirahane.momentum.core.context.PlayerMovementContext.STEP;
 import static com.akirahane.momentum.core.state.states.OriginalState.canOriginal;
+import static com.akirahane.momentum.core.state.states.wall.WallHangState.canWallHang;
 
 public class WallRunState extends BaseState {
     // 动画名称
@@ -146,8 +147,17 @@ public class WallRunState extends BaseState {
         if (ProneState.canProne(player, context)) {
             return StateType.PRONE.getState();
         }
+        if (canWallHang(player, context)) {
+            return StateType.WALL_HANG.getState();
+        }
         if (WallKickState.canWallKick(player, context)) {
             return StateType.WALL_KICK.getState();
+        }
+        if (WallClimbState.canWallClimb(player, context)) {
+            return StateType.WALL_CLIMB.getState();
+        }
+        if (WallSlideState.canWallSlide(player, context)) {
+            return StateType.WALL_SLIDE.getState();
         }
         if ((
                 Vec3.ZERO.equals(context.getWallNormal()) ||

@@ -360,7 +360,7 @@ public class PlayerMovementContext {
     public void detectWall(Player player) {
         AABB box = player.getBoundingBox();
         Level level = player.level();
-        double reach = 0.2;
+        double reach = 0.3;
 
         float yaw = player.getYRot();
         Vec3 lookVec = new Vec3(
