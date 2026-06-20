@@ -317,6 +317,7 @@ public class PlayerMovementContext {
     }
 
     public void clientTickRemote(Player player) {
+        this.bodyHeadAngleDiff = Mth.wrapDegrees(player.getYHeadRot() - player.yBodyRot);
         remoteDetectWall(player);
     }
 
