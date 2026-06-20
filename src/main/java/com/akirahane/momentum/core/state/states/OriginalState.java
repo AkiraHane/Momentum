@@ -1,6 +1,5 @@
 package com.akirahane.momentum.core.state.states;
 
-import com.akirahane.momentum.client.hud.HintManager;
 import com.akirahane.momentum.core.state.StateType;
 import com.akirahane.momentum.core.context.PlayerMovementContext;
 import com.akirahane.momentum.core.state.BaseState;
@@ -10,8 +9,6 @@ import net.minecraft.world.entity.player.Player;
 
 import static com.akirahane.momentum.core.context.PlayerMovementContext.DEFAULT_FRICTION;
 import static com.akirahane.momentum.core.effect.MomentumEffectType.FRICTION;
-import static com.akirahane.momentum.core.state.states.ground.WalkState.canWalk;
-import static com.akirahane.momentum.core.state.states.water.SwimState.canSwim;
 
 public class OriginalState extends BaseState {
     public static boolean canOriginal(Player player, PlayerMovementContext context) {
@@ -26,21 +23,6 @@ public class OriginalState extends BaseState {
                 || player.isDeadOrDying()          // 死亡
                 || player.getFoodData().getFoodLevel() <= 6.0F
                 ;
-    }
-
-    @Override
-    public BaseState evaluate(Player player, PlayerMovementContext context) {
-        HintManager.clear();
-        if (canOriginal(player, context)) {
-            return StateType.ORIGINAL.getState();
-        }
-        if (canSwim(player, context)) {
-            return StateType.SWIM.getState();
-        }
-        if (canWalk(player, context)) {
-            return StateType.WALK.getState();
-        }
-        return StateType.AIRBORNE.getState();
     }
 
     @Override

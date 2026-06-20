@@ -5,10 +5,6 @@ import com.akirahane.momentum.core.context.PlayerMovementContext;
 import com.akirahane.momentum.core.effect.MomentumEffectType;
 import com.akirahane.momentum.core.state.StateType;
 import com.akirahane.momentum.core.state.BaseState;
-import com.akirahane.momentum.core.state.states.air.AirborneState;
-import com.akirahane.momentum.core.state.states.ground.ProneState;
-import com.akirahane.momentum.core.state.states.ground.SlideState;
-import com.akirahane.momentum.core.state.states.ground.WalkState;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.Pose;
 import net.minecraft.world.entity.player.Player;
@@ -70,19 +66,7 @@ public class BreakFallState extends BaseState {
         if (context.getBreakFallTimer() > 0) {
             return StateType.BREAK_FALL.getState();
         }
-        if (SlideState.canSlide(player, context)) {
-            return StateType.SLIDE.getState();
-        }
-        if (ProneState.canProne(player, context)) {
-            return StateType.PRONE.getState();
-        }
-        if (AirborneState.canAirborne(player, context)) {
-            return StateType.AIRBORNE.getState();
-        }
-        if (WalkState.canWalk(player, context)) {
-            return StateType.WALK.getState();
-        }
-        return StateType.BREAK_FALL.getState();
+        return super.evaluate(player, context);
     }
 
     @Override

@@ -6,20 +6,12 @@ import com.akirahane.momentum.core.context.PlayerMovementContext;
 import com.akirahane.momentum.core.effect.MomentumEffectType;
 import com.akirahane.momentum.core.state.BaseState;
 import com.akirahane.momentum.core.state.StateType;
-import com.akirahane.momentum.core.state.states.ground.ProneState;
-import com.akirahane.momentum.core.state.states.special.DodgeState;
-import com.akirahane.momentum.core.state.states.water.SwimState;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
 
 import static com.akirahane.momentum.client.input.LowerCenterKey.LOWER_CENTER;
 import static com.akirahane.momentum.core.context.PlayerMovementContext.AIR_LIMIT_ACCELERATION;
-import static com.akirahane.momentum.core.state.states.OriginalState.canOriginal;
 import static com.akirahane.momentum.core.state.states.air.AirborneState.FALL;
-import static com.akirahane.momentum.core.state.states.air.AirborneState.canAirborne;
-import static com.akirahane.momentum.core.state.states.ground.SlideState.*;
-import static com.akirahane.momentum.core.state.states.ground.WalkState.canWalk;
-import static com.akirahane.momentum.core.state.states.special.BreakFallState.canBreakFall;
 
 public class BreakFallReadyState extends BaseState {
     // 动画名称
@@ -32,39 +24,6 @@ public class BreakFallReadyState extends BaseState {
     public static boolean checkKey(Player player, PlayerMovementContext context) {
         HintManager.add(WallHangHints.BREAK_FALL_READY);
         return LOWER_CENTER.get().isDown();
-    }
-
-    @Override
-    public BaseState evaluate(Player player, PlayerMovementContext context) {
-        HintManager.clear();
-        if (canOriginal(player, context)) {
-            return StateType.ORIGINAL.getState();
-        }
-        if (context.isHasJetBooster() && DodgeState.canDodge(player, context)) {
-            return StateType.DODGE.getState();
-        }
-        if (SwimState.canSwim(player, context)) {
-            return StateType.SWIM.getState();
-        }
-        if (canSlide(player, context)) {
-            return StateType.SLIDE.getState();
-        }
-        if (canAirborne(player, context) && !LOWER_CENTER.get().isDown()) {
-            return StateType.AIRBORNE.getState();
-        }
-        if (canBreakFall(player, context)) {
-            return StateType.BREAK_FALL.getState();
-        }
-        if (ProneState.canProne(player, context)) {
-            return StateType.PRONE.getState();
-        }
-        if (canWalk(player, context)) {
-            return StateType.WALK.getState();
-        }
-        if (canBreakFallReady(player, context)) {
-            return StateType.BREAK_FALL_READY.getState();
-        }
-        return StateType.BREAK_FALL_READY.getState();
     }
 
     @Override

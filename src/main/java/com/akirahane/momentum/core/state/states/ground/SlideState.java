@@ -7,9 +7,6 @@ import com.akirahane.momentum.core.effect.MomentumEffectType;
 import com.akirahane.momentum.core.state.StateType;
 import com.akirahane.momentum.core.state.BaseState;
 import com.akirahane.momentum.core.context.PlayerMovementContext;
-import com.akirahane.momentum.core.state.states.air.AirborneState;
-import com.akirahane.momentum.core.state.states.special.DodgeState;
-import com.akirahane.momentum.core.state.states.water.SwimState;
 import com.akirahane.momentum.mixin.LivingEntityAccessor;
 import com.akirahane.momentum.config.ServerConfig;
 import net.minecraft.world.entity.Pose;
@@ -17,10 +14,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
 
 import static com.akirahane.momentum.client.input.LowerCenterKey.LOWER_CENTER;
-import static com.akirahane.momentum.core.MomentumUtils.canPlayerFitAtPose;
 import static com.akirahane.momentum.core.effect.MomentumEffect.EffectType.LOCAL_VALUE;
-import static com.akirahane.momentum.core.state.states.OriginalState.canOriginal;
-import static com.akirahane.momentum.core.state.states.air.BreakFallReadyState.canBreakFallReady;
 import static net.minecraft.world.level.block.SoundType.GRASS;
 
 
@@ -107,37 +101,6 @@ public class SlideState extends BaseState {
         context.removeEffect(MomentumEffectType.BLOCK_FRICTION, context.SLIDE_BLOCK_FRICTION);
         player.setSprinting(false);
         context.setSlopeUnitVector(Vec3.ZERO);
-    }
-
-    @Override
-    public BaseState evaluate(Player player, PlayerMovementContext context) {
-        HintManager.clear();
-        if (canOriginal(player, context)) {
-            return StateType.ORIGINAL.getState();
-        }
-        if (DodgeState.canDodge(player, context)) {
-            return StateType.DODGE.getState();
-        }
-        if (SwimState.canSwim(player, context)) {
-            return StateType.SWIM.getState();
-        }
-        if (canBreakFallReady(player, context)) {
-            return StateType.BREAK_FALL_READY.getState();
-        }
-        if (AirborneState.canAirborne(player, context)) {
-            return StateType.AIRBORNE.getState();
-        }
-        boolean canCrouching = canPlayerFitAtPose(player, Pose.CROUCHING);
-        if (!LOWER_CENTER.get().isDown() && canCrouching) {
-            return StateType.WALK.getState();
-        }
-        if (!LOWER_CENTER.get().isDown()) {
-            return StateType.PRONE.getState();
-        }
-        if (context.getSpeed().horizontalDistance() * 20 <= ServerConfig.MIN_SLIDE_SPEED.get() / 2) {
-            return StateType.PRONE.getState();
-        }
-        return StateType.SLIDE.getState();
     }
 
     @Override

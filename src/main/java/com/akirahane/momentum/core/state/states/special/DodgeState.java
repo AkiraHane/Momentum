@@ -6,15 +6,11 @@ import com.akirahane.momentum.core.context.PlayerMovementContext;
 import com.akirahane.momentum.core.effect.MomentumEffectType;
 import com.akirahane.momentum.core.state.StateType;
 import com.akirahane.momentum.core.state.BaseState;
-import com.akirahane.momentum.core.state.states.air.AirborneState;
-import com.akirahane.momentum.core.state.states.ground.WalkState;
-import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
 
-import static com.akirahane.momentum.client.input.LowerCenterKey.LOWER_CENTER;
 import static com.akirahane.momentum.config.ServerConfig.DODGE_COOLDOWN;
 import static com.akirahane.momentum.config.ServerConfig.DODGE_STORAGE;
 import static com.akirahane.momentum.core.state.states.OriginalState.canOriginal;
@@ -27,7 +23,8 @@ public class DodgeState extends BaseState {
     public static String DODGE_RIGHT = "dodge_right";
 
     public static boolean canDodge(Player player, PlayerMovementContext context) {
-        return DODGE_COOLDOWN.get() * DODGE_STORAGE.get() - context.getDodgeCooldown() > DODGE_COOLDOWN.get() &&
+        return (player.onGround() || context.isHasJetBooster()) &&
+                DODGE_COOLDOWN.get() * DODGE_STORAGE.get() - context.getDodgeCooldown() > DODGE_COOLDOWN.get() &&
                 checkKey(player, context);
     }
 
@@ -90,13 +87,7 @@ public class DodgeState extends BaseState {
         if (context.getDodgeTimer() > 0) {
             return StateType.DODGE.getState();
         }
-        if (AirborneState.canAirborne(player, context)) {
-            return StateType.AIRBORNE.getState();
-        }
-        if (WalkState.canWalk(player, context)) {
-            return StateType.WALK.getState();
-        }
-        return StateType.DODGE.getState();
+        return super.evaluate(player, context);
     }
 
     @Override

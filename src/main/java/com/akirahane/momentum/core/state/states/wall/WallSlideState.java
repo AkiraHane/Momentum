@@ -1,14 +1,9 @@
 package com.akirahane.momentum.core.state.states.wall;
 
-import com.akirahane.momentum.client.hud.HintManager;
 import com.akirahane.momentum.core.context.PlayerMovementContext;
 import com.akirahane.momentum.core.effect.MomentumEffectType;
 import com.akirahane.momentum.core.state.StateType;
 import com.akirahane.momentum.core.state.BaseState;
-import com.akirahane.momentum.core.state.states.ground.ProneState;
-import com.akirahane.momentum.core.state.states.ground.SlideState;
-import com.akirahane.momentum.core.state.states.special.DodgeState;
-import com.akirahane.momentum.core.state.states.water.SwimState;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
@@ -16,12 +11,6 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
 
 import static com.akirahane.momentum.core.context.PlayerMovementContext.*;
-import static com.akirahane.momentum.core.state.states.OriginalState.canOriginal;
-import static com.akirahane.momentum.core.state.states.air.AirborneState.canAirborne;
-import static com.akirahane.momentum.core.state.states.ground.WalkState.canWalk;
-import static com.akirahane.momentum.core.state.states.wall.WallClimbState.canWallClimb;
-import static com.akirahane.momentum.core.state.states.wall.WallHangState.canWallHang;
-import static com.akirahane.momentum.core.state.states.wall.WallRunState.canWallRun;
 import static net.minecraft.world.level.block.SoundType.*;
 
 public class WallSlideState extends BaseState {
@@ -34,48 +23,6 @@ public class WallSlideState extends BaseState {
                 context.isHasFaceWall() &&
                 !Vec3.ZERO.equals(context.getInputVec()) && Mth.abs(context.getInputWallAngle()) < 60 &&
                 Mth.abs(context.getLookWallAngle()) < 60;
-    }
-
-    @Override
-    public BaseState evaluate(Player player, PlayerMovementContext context) {
-        HintManager.clear();
-        if (canOriginal(player, context)) {
-            return StateType.ORIGINAL.getState();
-        }
-        if (DodgeState.canDodge(player, context)) {
-            return StateType.DODGE.getState();
-        }
-        if (SwimState.canSwim(player, context)) {
-            return StateType.SWIM.getState();
-        }
-        if (SlideState.canSlide(player, context)) {
-            return StateType.SLIDE.getState();
-        }
-        if (ProneState.canProne(player, context)) {
-            return StateType.PRONE.getState();
-        }
-        if (canWallHang(player, context)) {
-            return StateType.WALL_HANG.getState();
-        }
-        if (canWallRun(player, context)) {
-            return StateType.WALL_RUN.getState();
-        }
-        if (WallKickState.canWallKick(player, context)) {
-            return StateType.WALL_KICK.getState();
-        }
-        if (canWallClimb(player, context)) {
-            return StateType.WALL_CLIMB.getState();
-        }
-        if (canWallSlide(player, context)) {
-            return StateType.WALL_SLIDE.getState();
-        }
-        if (canAirborne(player, context)) {
-            return StateType.AIRBORNE.getState();
-        }
-        if (canWalk(player, context)) {
-            return StateType.WALK.getState();
-        }
-        return StateType.WALL_SLIDE.getState();
     }
 
     @Override

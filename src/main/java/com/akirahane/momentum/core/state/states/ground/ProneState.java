@@ -5,15 +5,11 @@ import com.akirahane.momentum.client.hud.WallHangHints;
 import com.akirahane.momentum.core.state.StateType;
 import com.akirahane.momentum.core.state.BaseState;
 import com.akirahane.momentum.core.context.PlayerMovementContext;
-import com.akirahane.momentum.core.state.states.air.AirborneState;
-import com.akirahane.momentum.core.state.states.special.DodgeState;
-import com.akirahane.momentum.core.state.states.water.SwimState;
 import net.minecraft.world.entity.Pose;
 import net.minecraft.world.entity.player.Player;
 
 import static com.akirahane.momentum.client.input.LowerCenterKey.LOWER_CENTER;
 import static com.akirahane.momentum.core.MomentumUtils.canPlayerFitAtPose;
-import static com.akirahane.momentum.core.state.states.OriginalState.canOriginal;
 import static com.akirahane.momentum.core.state.states.ground.SlideState.canSlideSpeedCheck;
 
 
@@ -26,30 +22,6 @@ public class ProneState extends BaseState {
     public static boolean checkKey(Player player, PlayerMovementContext context) {
         HintManager.add(WallHangHints.PRONE);
         return LOWER_CENTER.get().isDown();
-    }
-
-    @Override
-    public BaseState evaluate(Player player, PlayerMovementContext context) {
-        HintManager.clear();
-        if (canOriginal(player, context)) {
-            return StateType.ORIGINAL.getState();
-        }
-        if (DodgeState.canDodge(player, context)) {
-            return StateType.DODGE.getState();
-        }
-        if (SwimState.canSwim(player, context)) {
-            return StateType.SWIM.getState();
-        }
-        if (ProneState.canProne(player, context)) {
-            return StateType.PRONE.getState();
-        }
-        if (AirborneState.canAirborne(player, context)) {
-            return StateType.AIRBORNE.getState();
-        }
-        if (WalkState.canWalk(player, context)) {
-            return StateType.WALK.getState();
-        }
-        return StateType.PRONE.getState();
     }
 
     @Override

@@ -5,12 +5,7 @@ import com.akirahane.momentum.client.hud.WallHangHints;
 import com.akirahane.momentum.core.context.PlayerMovementContext;
 import com.akirahane.momentum.core.state.BaseState;
 import com.akirahane.momentum.core.state.StateType;
-import com.akirahane.momentum.core.state.states.air.AirborneState;
-import com.akirahane.momentum.core.state.states.ground.ProneState;
-import com.akirahane.momentum.core.state.states.ground.SlideState;
-import com.akirahane.momentum.core.state.states.ground.WalkState;
 import com.akirahane.momentum.core.state.states.special.DodgeState;
-import com.akirahane.momentum.core.state.states.water.SwimState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Pose;
@@ -67,31 +62,7 @@ public class VaultInState extends BaseState {
         if (context.getVaultTimer() > 0) {
             return StateType.VAULT_IN.getState();
         }
-        if (SwimState.canSwim(player, context)) {
-            return StateType.SWIM.getState();
-        }
-        if (SlideState.canSlide(player, context)) {
-            return StateType.SLIDE.getState();
-        }
-        if (ProneState.canProne(player, context)) {
-            return StateType.PRONE.getState();
-        }
-        if (WallRunState.canWallRun(player, context)) {
-            return StateType.WALL_RUN.getState();
-        }
-        if (WallClimbState.canWallClimb(player, context)) {
-            return StateType.WALL_CLIMB.getState();
-        }
-        if (WallSlideState.canWallSlide(player, context)) {
-            return StateType.WALL_SLIDE.getState();
-        }
-        if (WalkState.canWalk(player, context)) {
-            return StateType.WALK.getState();
-        }
-        if (AirborneState.canAirborne(player, context)) {
-            return StateType.AIRBORNE.getState();
-        }
-        return StateType.VAULT_IN.getState();
+        return super.evaluate(player, context);
     }
 
     @Override
