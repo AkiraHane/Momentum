@@ -4,6 +4,7 @@ import com.akirahane.momentum.Momentum;
 import com.akirahane.momentum.client.animation.MomentumAnimationController;
 import com.akirahane.momentum.client.config.ClientConfig;
 import com.akirahane.momentum.client.debug.MovementDebugEntry;
+import com.akirahane.momentum.client.hud.HintManager;
 import com.akirahane.momentum.core.state.MovementStateMachine;
 import com.akirahane.momentum.core.state.BaseState;
 import com.akirahane.momentum.init.InitAttachments;
@@ -11,6 +12,7 @@ import com.akirahane.momentum.network.StateTransitionPacket;
 import com.mojang.logging.LogUtils;
 import com.zigythebird.playeranim.api.PlayerAnimationFactory;
 import com.zigythebird.playeranimcore.enums.PlayState;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.debug.DebugScreenEntryStatus;
 import net.minecraft.client.gui.components.debug.DebugScreenProfile;
 import net.minecraft.client.player.AbstractClientPlayer;
@@ -26,6 +28,7 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.config.ModConfig;
 import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
+import net.neoforged.neoforge.client.event.ClientTickEvent;
 import net.neoforged.neoforge.client.event.RegisterDebugEntriesEvent;
 import net.neoforged.neoforge.client.gui.ConfigurationScreen;
 import net.neoforged.neoforge.client.gui.IConfigScreenFactory;
@@ -101,5 +104,12 @@ public class MomentumClient {
                     )
             );
         });
+    }
+
+    @SubscribeEvent
+    public static void onClientTick(ClientTickEvent.Post event) {
+        Minecraft mc = Minecraft.getInstance();
+        if (mc.player == null || mc.level == null || mc.isPaused()) return;
+        HintManager.clientTick(mc.player);
     }
 }

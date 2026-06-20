@@ -53,7 +53,6 @@ public abstract class BaseState {
 
     // 离开状态时调用一次。
     public void onExit(Player player, PlayerMovementContext context) {
-        HintManager.clear();
     }
 
     // 状态转换检查

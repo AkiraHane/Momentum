@@ -1,14 +1,12 @@
 package com.akirahane.momentum.core.state.states.ground;
 
 import com.akirahane.momentum.client.hud.HintManager;
-import com.akirahane.momentum.client.hud.KeyHint;
 import com.akirahane.momentum.core.state.StateType;
 import com.akirahane.momentum.core.state.BaseState;
 import com.akirahane.momentum.core.context.PlayerMovementContext;
 import com.akirahane.momentum.core.state.states.air.AirborneState;
 import com.akirahane.momentum.core.state.states.special.DodgeState;
 import com.akirahane.momentum.core.state.states.wall.WallClimbState;
-import com.akirahane.momentum.core.state.states.wall.WallRunState;
 import com.akirahane.momentum.core.state.states.wall.WallSlideState;
 import com.akirahane.momentum.core.state.states.water.SwimState;
 import net.minecraft.client.Minecraft;
@@ -26,20 +24,20 @@ public class WalkState extends BaseState {
     public void onEnter(Player player, PlayerMovementContext context) {
         super.onEnter(player, context);
         Options options = Minecraft.getInstance().options;
-        HintManager.add("jump", KeyHint.single(options.keyJump, "hint.momentum.jump"));
+        HintManager.add("jump", HintManager.KeyHint.single(options.keyJump, "hint.momentum.jump"));
 
 // 简单：多键统一用 +
-        HintManager.add("dash", KeyHint.and("hint.momentum.dash",
+        HintManager.add("dash", HintManager.KeyHint.and("hint.momentum.dash",
                 options.keySprint, options.keyJump));
 // 显示：[Ctrl] + [Space] 冲刺
 
 // 简单：多键统一用 /
-        HintManager.add("look", KeyHint.or("hint.momentum.look",
+        HintManager.add("look", HintManager.KeyHint.or("hint.momentum.look",
                 options.keyUp, options.keyDown));
 // 显示：[W] / [S] 视角
 
 // 混合：Ctrl + W/A/S/D
-        HintManager.add("move", KeyHint.builder("hint.momentum.move")
+        HintManager.add("move", HintManager.KeyHint.builder("hint.momentum.move")
                 .key(options.keySprint).plus()
                 .key(options.keyUp).slash()
                 .key(options.keyLeft).slash()

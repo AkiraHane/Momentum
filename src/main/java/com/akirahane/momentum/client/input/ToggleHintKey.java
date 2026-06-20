@@ -43,6 +43,9 @@ public class ToggleHintKey {
         boolean isDown = TOGGLE_HINT_KEY_MAPPING.get().isDown();
         if (isDown && !wasDown) {
             HintManager.toggleVisible();
+            if (HintManager.isVisible()) {
+                HintManager.forceShow(); // 开启时立即显示
+            }
         }
         wasDown = isDown;
     }
