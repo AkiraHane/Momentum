@@ -4,6 +4,10 @@ import net.neoforged.neoforge.common.ModConfigSpec;
 
 public class ClientConfig {
     private static final ModConfigSpec.Builder BUILDER = new ModConfigSpec.Builder();
+    // 是否开启摄像头偏移
+    public static final ModConfigSpec.BooleanValue ENABLE_CAMERA_OFFSET = BUILDER
+            .comment("是否开启摄像头偏移")
+            .define("enableCameraOffset", true);
     // 按键提示
     static {
         BUILDER.push("key_hints");

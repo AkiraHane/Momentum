@@ -37,6 +37,8 @@ import net.neoforged.neoforge.client.network.ClientPacketDistributor;
 import net.neoforged.neoforge.event.tick.PlayerTickEvent;
 import org.slf4j.Logger;
 
+import static com.akirahane.momentum.client.config.ClientConfig.ENABLE_CAMERA_OFFSET;
+
 // 此类不会在专用服务器上加载。在此处访问客户端代码是安全的。
 @Mod(value = Momentum.MODID, dist = Dist.CLIENT)
 // 可以使用 EventBusSubscriber 来自动注册类中所有带有 @SubscribeEvent 注解的静态方法
@@ -116,6 +118,9 @@ public class MomentumClient {
 
     @SubscribeEvent
     public static void onCameraAngles(ViewportEvent.ComputeCameraAngles event) {
+        if (!ENABLE_CAMERA_OFFSET.get()){
+            return;
+        }
         Minecraft mc = Minecraft.getInstance();
         if (mc.player == null) return;
         if (!mc.player.hasData(InitAttachments.MOVEMENT_STATE)) return;
