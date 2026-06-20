@@ -12,6 +12,8 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
 
+import static com.akirahane.momentum.config.ServerConfig.DODGE_COOLDOWN;
+import static com.akirahane.momentum.config.ServerConfig.DODGE_STORAGE;
 import static com.akirahane.momentum.core.state.states.OriginalState.canOriginal;
 
 public class DodgeState extends BaseState {
@@ -27,7 +29,9 @@ public class DodgeState extends BaseState {
         return player.onGround() &&
                 !player.isInLiquid() &&
                 keySprint.isDown() &&
-                (context.isDoubleClickUp() || context.isDoubleClickDown() || context.isDoubleClickLeft() || context.isDoubleClickRight());
+                (context.isDoubleClickUp() || context.isDoubleClickDown() || context.isDoubleClickLeft() || context.isDoubleClickRight()) &&
+                DODGE_COOLDOWN.get() * DODGE_STORAGE.get() - context.getDodgeCooldown() > DODGE_COOLDOWN.get()
+                ;
     }
 
     @Override
@@ -46,8 +50,9 @@ public class DodgeState extends BaseState {
             playStateAnimation(player, DODGE_UP, context, 4, 2f);
         }
         Vec3 direction = Vec3.directionFromRotation(4, yRot);
-        player.setDeltaMovement(direction.x * 0.8, 0.2, direction.z * 0.8);
+        player.setDeltaMovement(direction.x * 0.8, player.getDeltaMovement().y, direction.z * 0.8);
         context.setDodgeTimer(8);
+        context.setDodgeCooldown(context.getDodgeCooldown() + DODGE_COOLDOWN.get());
         context.setNoJump(true);
         context.setNoMoveInput(true);
         context.addEffect(MomentumEffectType.BLOCK_FRICTION, context.DODGE_BLOCK_FRICTION, 3);
@@ -56,6 +61,13 @@ public class DodgeState extends BaseState {
                 0.5F,
                 1.0F + player.getRandom().nextFloat() * 0.4F - 0.2F  // 0.8 ~ 1.2 随机音高
         );
+    }
+
+    @Override
+    public void clientTick(Player player, PlayerMovementContext context) {
+        if (context.getDodgeTimer() > 6 && !player.onGround()){
+            context.setDodgeTimer(0);
+        }
     }
 
     @Override

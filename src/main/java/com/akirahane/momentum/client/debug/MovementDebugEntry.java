@@ -35,7 +35,7 @@ public class MovementDebugEntry implements DebugScreenEntry {
         Vec3 vel = context.getSpeed().multiply(20, 20, 20);
         displayer.addToGroup(group, String.format("[Momentum] H Speed * 20: %.4f", vel.horizontalDistance()));
         displayer.addToGroup(group, String.format("[Momentum] Y Vel * 20: %.4f", vel.y));
-//        displayer.addToGroup(group, String.format("[Momentum] OnGround: %s", mc.player.onGround()));
+        displayer.addToGroup(group, String.format("[Momentum] OnGround: %s", mc.player.onGround()));
         float yRot = mc.player.getYRot(); // 水平朝向 (yaw), -180 到 180
         float xRot = mc.player.getXRot(); // 垂直角度 (pitch), -90 到 90
 //        displayer.addToGroup(group, String.format("[Momentum] yRot: %.4f", yRot));

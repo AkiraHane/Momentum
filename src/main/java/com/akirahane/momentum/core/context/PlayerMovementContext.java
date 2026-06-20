@@ -147,6 +147,8 @@ public class PlayerMovementContext {
     private int breakFallTimer = 0;
     // 闪避计时器
     private int dodgeTimer = 0;
+    // 闪避冷却计时器
+    private int dodgeCooldown = 0;
     // 翻越计时器
     private int vaultTimer = 0;
     // 受身计数器
@@ -290,6 +292,7 @@ public class PlayerMovementContext {
         if (this.slideCooldown > 0) this.slideCooldown--;
         if (this.breakFallTimer > 0) this.breakFallTimer--;
         if (this.dodgeTimer > 0) this.dodgeTimer--;
+        if (this.dodgeCooldown > 0) this.dodgeCooldown--;
         if (this.vaultTimer > 0) this.vaultTimer--;
         if (this.jumpCooldown > 0) this.jumpCooldown--;
         if (this.breakFallReadyCount > 0) this.breakFallReadyCount--;
