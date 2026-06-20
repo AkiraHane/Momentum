@@ -13,6 +13,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.function.Supplier;
 
 import static com.akirahane.momentum.Momentum.MODID;
+import static com.akirahane.momentum.config.ServerConfig.DEFAULT_ENABLE_MANEUVER;
 
 public class InitAttachments {
     // 注册持久化
@@ -20,7 +21,7 @@ public class InitAttachments {
             DeferredRegister.create(NeoForgeRegistries.ATTACHMENT_TYPES, MODID);
     public static final Supplier<AttachmentType<@NotNull Boolean>> MOMENTUM_ENABLED =
             ATTACHMENT_TYPES.register("momentum_enabled",
-                    () -> AttachmentType.builder(() -> true)
+                    () -> AttachmentType.builder(DEFAULT_ENABLE_MANEUVER)
                             .serialize(Codec.BOOL.fieldOf("momentum_enabled"))
                             .copyOnDeath()
                             .sync(ByteBufCodecs.BOOL.cast())
