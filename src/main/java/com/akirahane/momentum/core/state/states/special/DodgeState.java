@@ -77,7 +77,7 @@ public class DodgeState extends BaseState {
         if (context.getDodgeTimer() > 6) {
             context.setMomentumRollIntensity(0F);
             if (!player.onGround()){
-                context.setDodgeTimer(0);
+                playStateAnimation(player, IDLE, context);
             }
         }
     }

@@ -366,12 +366,14 @@ public class PlayerMovementContext {
             Vec3 velocity = player.getDeltaMovement();
             double horizontalSpeed = velocity.horizontalDistance();
 
-            // 速度太低不触发，避免静止时也倾斜
-            if (horizontalSpeed > 0.05) {
-                // 归一化速度方向（只取水平）
-                Vec3 vDir = new Vec3(velocity.x, 0, velocity.z).normalize();
+            // 速度参数（每秒格数更直观）
+            double speedPerSec = horizontalSpeed * 20;
+            double minSpeed = 5.0;   // 最小速度阈值（每秒 4 格才开始有效果）
+            double maxSpeed = 21.0;  // 最大速度（达到这个速度倾斜满）
 
-                // 视角方向（只取水平）
+            if (speedPerSec > minSpeed) {
+                // 归一化方向
+                Vec3 vDir = new Vec3(velocity.x, 0, velocity.z).normalize();
                 float yaw = player.getYRot();
                 Vec3 lookDir = new Vec3(
                         -Math.sin(Math.toRadians(yaw)),
@@ -379,15 +381,27 @@ public class PlayerMovementContext {
                         Math.cos(Math.toRadians(yaw))
                 );
 
-                // 叉积 y 分量 = sin(speedDir → lookDir 的夹角)
-                // 注意符号：从速度方向看，视角偏左 / 偏右
+                // 叉积 y = sin(夹角)，范围 [-1, 1]
                 double crossY = vDir.x * lookDir.z - vDir.z * lookDir.x;
 
-                // 速度越快效果越明显（可选），上限保护
-                float speedFactor = (float) Mth.clamp(horizontalSpeed / 0.5, 0.0, 1.0);
+                // 角度偏差阈值：sin 值小于这个不触发
+                // sin(15°) ≈ 0.26，意味着夹角小于 15° 不触发
+                double angleThreshold = 0.26;
 
-                // 注意符号：APEX 里向左看 → 向右倾斜，所以这里取负
-                targetRoll = (float) crossY * momentumRollIntensity * speedFactor;
+                if (Math.abs(crossY) > angleThreshold) {
+                    // 重新映射：把 [threshold, 1] 映射到 [0, 1]，避免突变
+                    double sign = Math.signum(crossY);
+                    double mappedCross = (Math.abs(crossY) - angleThreshold) / (1.0 - angleThreshold);
+                    mappedCross = Math.min(1.0, mappedCross) * sign;
+
+                    // 速度因子：[minSpeed, maxSpeed] 线性映射到 [0, 1]
+                    float speedFactor = (float) Mth.clamp(
+                            (speedPerSec - minSpeed) / (maxSpeed - minSpeed),
+                            0.0, 1.0
+                    );
+
+                    targetRoll = (float) mappedCross * momentumRollIntensity * speedFactor;
+                }
             }
         }
 
