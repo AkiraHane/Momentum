@@ -26,9 +26,7 @@ public class DodgeState extends BaseState {
     public static boolean canDodge(Player player, PlayerMovementContext context) {
         Minecraft mc = Minecraft.getInstance();
         KeyMapping keySprint = mc.options.keySprint;
-        return player.onGround() &&
-                !player.isInLiquid() &&
-                keySprint.isDown() &&
+        return keySprint.isDown() &&
                 (context.isDoubleClickUp() || context.isDoubleClickDown() || context.isDoubleClickLeft() || context.isDoubleClickRight()) &&
                 DODGE_COOLDOWN.get() * DODGE_STORAGE.get() - context.getDodgeCooldown() > DODGE_COOLDOWN.get()
                 ;

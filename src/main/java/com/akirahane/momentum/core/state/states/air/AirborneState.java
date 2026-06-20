@@ -34,7 +34,7 @@ public class AirborneState extends BaseState {
         if (canOriginal(player, context)) {
             return StateType.ORIGINAL.getState();
         }
-        if (DodgeState.canDodge(player, context)) {
+        if (context.isHasJetBooster() && DodgeState.canDodge(player, context)) {
             return StateType.DODGE.getState();
         }
         if (SwimState.canSwim(player, context)) {
