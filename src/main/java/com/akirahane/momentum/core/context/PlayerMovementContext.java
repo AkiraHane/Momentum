@@ -104,6 +104,8 @@ public class PlayerMovementContext {
     private Vec3 inputVec = Vec3.ZERO;
     // 向墙的法向量
     Vec3 wallNormal = Vec3.ZERO;
+    // 墙跑使用的法向量
+    Vec3 runWallNormal = Vec3.ZERO;
     // 向墙视线角度
     float lookWallAngle = 360F;
     // 向墙输入角度

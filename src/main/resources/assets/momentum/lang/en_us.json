@@ -25,6 +25,7 @@
   "state.momentum.wall_kick": "Wall Kick",
   "state.momentum.vault_up": "Vault Up",
   "state.momentum.vault_in": "Vault In",
+  "momentum.configuration.enableCameraOffset": "Enable Camera Offset",
   "momentum.configuration.key_hints": "Key Hints Config",
   "momentum.configuration.minAlphaWhenMoving": "Minimum Alpha When Moving",
   "momentum.configuration.minAlphaWhenMoving.tooltip": "Minimum transparency when moving, range 0.0 - 1.0",

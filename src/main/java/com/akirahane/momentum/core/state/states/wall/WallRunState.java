@@ -46,6 +46,7 @@ public class WallRunState extends BaseState {
     // 维持
     public static boolean canWallRunHold(Player player, PlayerMovementContext context) {
         return !Vec3.ZERO.equals(context.getWallNormal()) &&
+                context.getWallNormal().equals(context.getRunWallNormal()) &&
                 isLookAndSpeedSameSide(player, context) &&
                 Mth.abs(context.getLookWallAngle()) >= 30 &&
                 (context.isHasJetBooster() || canWallRunSpeedCheck(player, context)) &&
@@ -155,6 +156,7 @@ public class WallRunState extends BaseState {
     @Override
     public void onEnter(Player player, PlayerMovementContext context) {
         Vec3 wallNormal = context.getWallNormal();
+        context.setRunWallNormal(wallNormal);
         float inputWallAngle = context.getInputWallAngle();
         Vec3 currentMovement = player.getDeltaMovement();
         context.setNoMoveInput(true);

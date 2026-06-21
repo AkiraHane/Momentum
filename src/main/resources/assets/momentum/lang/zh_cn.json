@@ -25,6 +25,7 @@
   "state.momentum.wall_kick": "蹬墙跳",
   "state.momentum.vault_up": "向上翻越",
   "state.momentum.vault_in": "钻进",
+  "momentum.configuration.enableCameraOffset": "启用相机偏移(倾斜+FOV)",
   "momentum.configuration.key_hints": "按键提示配置",
   "momentum.configuration.minAlphaWhenMoving": "移动时最低透明度",
   "momentum.configuration.minAlphaWhenMoving.tooltip": "移动时最低透明度，范围 0.0 - 1.0",
