@@ -52,7 +52,7 @@ public class SlideState extends BaseState {
 
         Vec3 velocity = player.getDeltaMovement();
         float jumpPower = ((LivingEntityAccessor) player).invokeGetJumpPower();
-        LOGGER.debug("player.getJumpPower() {}", jumpPower);
+        LOGGER.trace("player.getJumpPower() {}", jumpPower);
         int slideAccelerationCooldown = ServerConfig.SLIDE_ACCELERATION_COOLDOWN.get();
         if (context.getSlideCooldown() != 0) {
             jumpPower /= 2;
