@@ -143,6 +143,7 @@ public abstract class BaseState {
             LOGGER.warn("播放动画失败, 没有找到玩家: {} 的动画控制器或控制器死了(什?)", player.getName().getString());
             return;
         }
+        context.getController().removeModifierIf(m -> m instanceof AbstractFadeModifier);
         context.getController().replaceAnimationWithFade(
                 AbstractFadeModifier.standardFadeIn(fadeInTime, EasingType.EASE_IN_OUT_SINE),
                 Identifier.fromNamespaceAndPath(Momentum.MODID, animName)
