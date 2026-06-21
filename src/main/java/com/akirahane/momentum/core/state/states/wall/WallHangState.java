@@ -36,7 +36,8 @@ public class WallHangState extends BaseState {
     public static final String WALL_HANG_LEFT = "wall_hang_left";
 
     public static boolean canWallHang(Player player, PlayerMovementContext context) {
-        return context.isHasLedge() &&
+        return !player.onGround() &&
+                context.isHasLedge() &&
                 !Vec3.ZERO.equals(context.getWallNormal()) &&
                 (Mth.abs(context.getLookWallAngle()) < 60 || Mth.abs(context.getInputWallAngle()) < 60) &&
                 player.fallDistance <= player.getAttributeValue(Attributes.SAFE_FALL_DISTANCE) * 2 &&
