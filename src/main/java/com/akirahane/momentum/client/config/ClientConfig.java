@@ -13,8 +13,8 @@ public class ClientConfig {
         BUILDER.push("key_hints");
     }
     public static final ModConfigSpec.DoubleValue MIN_ALPHA_WHEN_MOVING = BUILDER
-            .comment("移动时最低透明度", "范围: 0.0 - 1.0", "默认值: 0.2")
-            .defineInRange("minAlphaWhenMoving", 0.2, 0.0, 1.0);
+            .comment("移动时最低透明度", "范围: 0.0 - 1.0", "默认值: 0.4")
+            .defineInRange("minAlphaWhenMoving", 0.4, 0.0, 1.0);
 
     public static final ModConfigSpec.DoubleValue MAX_ALPHA = BUILDER
             .comment("最大透明度", "范围: 0.0 - 1.0", "默认值: 1.0")

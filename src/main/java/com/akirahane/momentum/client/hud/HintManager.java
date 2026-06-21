@@ -185,7 +185,7 @@ public class HintManager {
     }
 
     private static float computeTargetAlpha(boolean moving) {
-        if (HINTS.isEmpty() || !visible) return 0f;
+        if (!visible) return 0f;
 
         int sinceChange = globalTick - contentChangeTick;
 
