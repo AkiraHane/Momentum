@@ -13,7 +13,7 @@ public class ServerConfig {
 
     public static final ModConfigSpec.BooleanValue MANEUVER_CONSUME_HUNGER = BUILDER
             .comment("机动操作是否额外消耗饥饿值")
-            .define("maneuverConsumeHunger", true);
+            .define("maneuverConsumeHunger", false);
 
     // 新玩家是否默认开启机动
     public static final ModConfigSpec.BooleanValue DEFAULT_ENABLE_MANEUVER = BUILDER
