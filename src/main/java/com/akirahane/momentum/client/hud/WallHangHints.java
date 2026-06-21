@@ -3,7 +3,9 @@ package com.akirahane.momentum.client.hud;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.Options;
 
+import static com.akirahane.momentum.client.input.ChangeMomentumKey.CHANGE_MOMENTUM_KEY_MAPPING;
 import static com.akirahane.momentum.client.input.LowerCenterKey.LOWER_CENTER;
+import static com.akirahane.momentum.client.input.ToggleHintKey.TOGGLE_HINT_KEY_MAPPING;
 
 public class WallHangHints {
     private static final Options OPTIONS = Minecraft.getInstance().options;
@@ -55,4 +57,12 @@ public class WallHangHints {
 
     public static final HintManager.KeyHint WALL_RUN_HOLD =
             HintManager.KeyHint.single(OPTIONS.keyUp, "state.momentum.wall_run");
+
+    // 开关提示
+    public static final HintManager.KeyHint TOGGLE_HINT =
+            HintManager.KeyHint.single(TOGGLE_HINT_KEY_MAPPING.get(), "hint.momentum.hit_toggle");
+
+    // 进入原版状态
+    public static final HintManager.KeyHint ORIGINAL_STATE =
+            HintManager.KeyHint.single(CHANGE_MOMENTUM_KEY_MAPPING.get(), "state.momentum.original");
 }

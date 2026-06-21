@@ -8,7 +8,7 @@
   "key.category.momentum.category": "动量",
   "message.momentum.momentum_disabled": "禁用机动",
   "message.momentum.momentum_enabled": "启用机动",
-  "state.momentum.original": "原版",
+  "state.momentum.original": "回到原版",
   "state.momentum.walk": "行走",
   "state.momentum.prone": "匍匐",
   "state.momentum.slide": "滑铲",
@@ -41,5 +41,6 @@
   "momentum.configuration.fadeOutSpeed.tooltip": "淡出速度，值越小越慢",
   "hint.momentum.click": "单击",
   "hint.momentum.double_click": "双击",
-  "hint.momentum.move_with_wall": "向墙移动"
+  "hint.momentum.move_with_wall": "向墙移动",
+  "hint.momentum.hit_toggle": "开关教程"
 }

@@ -1,6 +1,7 @@
 package com.akirahane.momentum.core.state.states.special;
 
 import com.akirahane.momentum.client.hud.HintManager;
+import com.akirahane.momentum.client.hud.WallHangHints;
 import com.akirahane.momentum.core.context.PlayerMovementContext;
 import com.akirahane.momentum.core.effect.MomentumEffectType;
 import com.akirahane.momentum.core.state.StateType;
@@ -61,6 +62,8 @@ public class BreakFallState extends BaseState {
         if (canOriginal(player, context)) {
             return StateType.ORIGINAL.getState();
         }
+        HintManager.add(WallHangHints.ORIGINAL_STATE);
+        HintManager.add(WallHangHints.TOGGLE_HINT);
         if (context.getBreakFallTimer() > 0) {
             return StateType.BREAK_FALL.getState();
         }

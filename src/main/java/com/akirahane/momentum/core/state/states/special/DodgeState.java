@@ -96,6 +96,8 @@ public class DodgeState extends BaseState {
         if (canOriginal(player, context)) {
             return StateType.ORIGINAL.getState();
         }
+        HintManager.add(WallHangHints.ORIGINAL_STATE);
+        HintManager.add(WallHangHints.TOGGLE_HINT);
         if (context.getDodgeTimer() > 0) {
             return StateType.DODGE.getState();
         }

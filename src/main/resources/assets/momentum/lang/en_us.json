@@ -8,7 +8,7 @@
   "key.momentum.toggle_hint": "change hint",
   "message.momentum.momentum_disabled": "Momentum disabled",
   "message.momentum.momentum_enabled": "Momentum enabled",
-  "state.momentum.original": "Original",
+  "state.momentum.original": "Go Back Original",
   "state.momentum.walk": "Walk",
   "state.momentum.prone": "Prone",
   "state.momentum.slide": "Slide",
@@ -41,5 +41,6 @@
   "momentum.configuration.fadeOutSpeed.tooltip": "Fade out speed, lower values are slower",
   "hint.momentum.click": "Click",
   "hint.momentum.double_click": "Double Click",
-  "hint.momentum.move_with_wall": "Move With Wall"
+  "hint.momentum.move_with_wall": "Move With Wall",
+  "hint.momentum.hit_toggle": "Tutorial Toggle"
 }

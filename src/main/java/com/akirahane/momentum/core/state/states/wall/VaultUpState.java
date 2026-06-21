@@ -49,6 +49,8 @@ public class VaultUpState extends BaseState {
         if (canOriginal(player, context)) {
             return StateType.ORIGINAL.getState();
         }
+        HintManager.add(WallHangHints.ORIGINAL_STATE);
+        HintManager.add(WallHangHints.TOGGLE_HINT);
         if (DodgeState.canDodge(player, context)) {
             return StateType.DODGE.getState();
         }

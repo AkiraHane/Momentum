@@ -2,6 +2,7 @@ package com.akirahane.momentum.core.state;
 
 import com.akirahane.momentum.Momentum;
 import com.akirahane.momentum.client.hud.HintManager;
+import com.akirahane.momentum.client.hud.WallHangHints;
 import com.akirahane.momentum.core.context.PlayerMovementContext;
 import com.akirahane.momentum.core.state.states.OriginalState;
 import com.akirahane.momentum.core.state.states.air.AirborneState;
@@ -71,6 +72,8 @@ public abstract class BaseState {
         if (OriginalState.canOriginal(player, context)) {
             return StateType.ORIGINAL.getState();
         }
+        HintManager.add(WallHangHints.ORIGINAL_STATE);
+        HintManager.add(WallHangHints.TOGGLE_HINT);
         if (DodgeState.canDodge(player, context)) {
             return StateType.DODGE.getState();
         }

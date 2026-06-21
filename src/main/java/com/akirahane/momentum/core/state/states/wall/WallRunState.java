@@ -100,6 +100,8 @@ public class WallRunState extends BaseState {
         if (OriginalState.canOriginal(player, context)) {
             return StateType.ORIGINAL.getState();
         }
+        HintManager.add(WallHangHints.ORIGINAL_STATE);
+        HintManager.add(WallHangHints.TOGGLE_HINT);
         if (DodgeState.canDodge(player, context)) {
             return StateType.DODGE.getState();
         }
