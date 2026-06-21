@@ -36,6 +36,7 @@ public class WallSlideState extends BaseState {
         context.addPermanentEffect(MomentumEffectType.ACCELERATION, AIR_ACCELERATION);
         context.addPermanentEffect(MomentumEffectType.LIMIT_ACCELERATION_SPEED, AIR_LIMIT_ACCELERATION);
         playStateAnimation(player, WALL_SLIDE, context, 4, 1);
+        context.setTargetArmTransform(-0.15F, 5F);
     }
 
     @Override

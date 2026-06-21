@@ -7,9 +7,12 @@ import com.akirahane.momentum.client.debug.MovementDebugEntry;
 import com.akirahane.momentum.client.hud.HintManager;
 import com.akirahane.momentum.core.state.MovementStateMachine;
 import com.akirahane.momentum.core.state.BaseState;
+import com.akirahane.momentum.core.state.StateType;
 import com.akirahane.momentum.init.InitAttachments;
 import com.akirahane.momentum.network.StateTransitionPacket;
+import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.logging.LogUtils;
+import com.mojang.math.Axis;
 import com.zigythebird.playeranim.api.PlayerAnimationFactory;
 import com.zigythebird.playeranimcore.enums.PlayState;
 import net.minecraft.client.Minecraft;
@@ -18,6 +21,7 @@ import net.minecraft.client.gui.components.debug.DebugScreenProfile;
 import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.resources.Identifier;
+import net.minecraft.world.entity.HumanoidArm;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.api.distmarker.Dist;
@@ -28,9 +32,7 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.config.ModConfig;
 import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
-import net.neoforged.neoforge.client.event.ClientTickEvent;
-import net.neoforged.neoforge.client.event.RegisterDebugEntriesEvent;
-import net.neoforged.neoforge.client.event.ViewportEvent;
+import net.neoforged.neoforge.client.event.*;
 import net.neoforged.neoforge.client.gui.ConfigurationScreen;
 import net.neoforged.neoforge.client.gui.IConfigScreenFactory;
 import net.neoforged.neoforge.client.network.ClientPacketDistributor;
@@ -118,7 +120,7 @@ public class MomentumClient {
 
     @SubscribeEvent
     public static void onCameraAngles(ViewportEvent.ComputeCameraAngles event) {
-        if (!ENABLE_CAMERA_OFFSET.get()){
+        if (!ENABLE_CAMERA_OFFSET.get()) {
             return;
         }
         Minecraft mc = Minecraft.getInstance();
@@ -139,7 +141,7 @@ public class MomentumClient {
 
     @SubscribeEvent
     public static void onComputeFov(ViewportEvent.ComputeFov event) {
-        if (!ENABLE_CAMERA_OFFSET.get()){
+        if (!ENABLE_CAMERA_OFFSET.get()) {
             return;
         }
         Minecraft mc = Minecraft.getInstance();
@@ -152,5 +154,24 @@ public class MomentumClient {
         if (bonus != 0F) {
             event.setFOV(event.getFOV() + bonus);
         }
+    }
+
+    @SubscribeEvent
+    public static void onRenderHand(RenderHandEvent event) {
+        Minecraft mc = Minecraft.getInstance();
+        if (mc.player == null) return;
+        if (!mc.player.hasData(InitAttachments.MOVEMENT_STATE)) return;
+        if (!mc.player.hasData(InitAttachments.MOVEMENT_STATE)) return;
+        LocalPlayer player = Minecraft.getInstance().player;
+        if (player == null) return;
+        if (!player.hasData(InitAttachments.MOVEMENT_STATE)) return;
+
+        var machine = mc.player.getData(InitAttachments.MOVEMENT_STATE);
+        var context = machine.getContext();
+        float pt = event.getPartialTick();
+
+        PoseStack pose = event.getPoseStack();
+        pose.translate(0, context.getRenderArmOffsetY(pt), 0);
+        pose.mulPose(Axis.XP.rotationDegrees(context.getRenderArmRotX(pt)));
     }
 }

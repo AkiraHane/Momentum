@@ -134,6 +134,14 @@ public class PlayerMovementContext {
     private float currentMomentumRoll = 0F;
     private float prevMomentumRoll = 0F;
 
+    private float armOffsetY = 0F;
+    private float prevArmOffsetY = 0F;
+    private float targetArmOffsetY = 0F;
+
+    private float armRotX = 0F;
+    private float prevArmRotX = 0F;
+    private float targetArmRotX = 0F;
+
     // 彩蛋随机数(1~100)
     private int luckyNumber = 0;
 
@@ -332,11 +340,33 @@ public class PlayerMovementContext {
         this.tickCameraRoll();
         this.tickFovBonus();
         this.tickMomentumRoll(player);
+        this.tickArmOffset();
     }
 
     public void clientTickRemote(Player player) {
         this.bodyHeadAngleDiff = Mth.wrapDegrees(player.getYHeadRot() - player.yBodyRot);
         remoteDetectWall(player);
+    }
+
+    public void tickArmOffset() {
+        prevArmOffsetY = armOffsetY;
+        prevArmRotX = armRotX;
+
+        armOffsetY = Mth.lerp(0.2F, armOffsetY, targetArmOffsetY);
+        armRotX = Mth.lerp(0.2F, armRotX, targetArmRotX);
+    }
+
+    public float getRenderArmOffsetY(float partialTick) {
+        return Mth.lerp(partialTick, prevArmOffsetY, armOffsetY);
+    }
+
+    public float getRenderArmRotX(float partialTick) {
+        return Mth.lerp(partialTick, prevArmRotX, armRotX);
+    }
+
+    public void setTargetArmTransform(float offsetY, float rotX) {
+        this.targetArmOffsetY = offsetY;
+        this.targetArmRotX = rotX;
     }
 
     // 设置一次随机数

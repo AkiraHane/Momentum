@@ -58,6 +58,7 @@ public class WallClimbState extends BaseState {
         }
         context.setNeedSoundTick(SOUND_TICK);
         context.playWallSound(player, STEP, 0.15F, 1);
+        context.setTargetArmTransform(0.15F, -20F);
     }
 
     @Override

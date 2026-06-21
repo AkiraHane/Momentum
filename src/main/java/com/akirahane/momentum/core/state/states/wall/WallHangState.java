@@ -124,6 +124,7 @@ public class WallHangState extends BaseState {
         context.addPermanentEffect(MomentumEffectType.FRICTION, WALL_FRICTION);
         context.setNeedSoundTick(SOUND_TICK);
         context.playWallSound(player, STEP, 0.15F, 1);
+        context.setTargetArmTransform(0.15F, -10F);
     }
 
     @Override

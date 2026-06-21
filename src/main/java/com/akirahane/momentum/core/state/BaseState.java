@@ -64,6 +64,7 @@ public abstract class BaseState {
 
     // 离开状态时调用一次。
     public void onExit(Player player, PlayerMovementContext context) {
+        context.setTargetArmTransform(0, 0);
     }
 
     // 状态转换检查
