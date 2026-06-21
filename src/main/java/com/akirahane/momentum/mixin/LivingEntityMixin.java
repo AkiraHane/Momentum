@@ -35,6 +35,9 @@ public abstract class LivingEntityMixin extends Entity implements Attackable, Wa
     @Shadow
     public float yBodyRot;
 
+    @Shadow
+    public float yHeadRot;
+
     protected LivingEntityMixin(EntityType<?> type, Level level) {
         super(type, level);
     }
@@ -268,6 +271,13 @@ public abstract class LivingEntityMixin extends Entity implements Attackable, Wa
                 // 平滑过渡到目标角度
                 float diff = Mth.wrapDegrees(targetBodyRot - this.yBodyRot);
                 this.yBodyRot += diff * 0.3f;
+                if (StateType.WALL_HANG.equals(state) && context.getSpeed().horizontalDistance() * 20 > 0.05) {
+                    float MAX_HEAD_DIFF = 60.0F; // 可调
+                    float headDiff = Mth.wrapDegrees(this.yHeadRot - this.yBodyRot);
+                    if (Math.abs(headDiff) > MAX_HEAD_DIFF) {
+                        this.yHeadRot = this.yBodyRot + Math.signum(headDiff) * MAX_HEAD_DIFF;
+                    }
+                }
             }
 
             ci.cancel();
