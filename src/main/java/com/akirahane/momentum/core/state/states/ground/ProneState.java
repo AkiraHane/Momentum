@@ -16,18 +16,26 @@ import net.minecraft.world.entity.Pose;
 import net.minecraft.world.entity.player.Player;
 
 import static com.akirahane.momentum.client.input.LowerCenterKey.LOWER_CENTER;
-import static com.akirahane.momentum.core.MomentumUtils.canPlayerFitAtPose;
 import static com.akirahane.momentum.core.state.states.ground.SlideState.canSlideSpeedCheck;
 
 
 public class ProneState extends BaseState {
     public static boolean canProne(Player player, PlayerMovementContext context) {
-        return (player.getPose() == Pose.SWIMMING && !canPlayerFitAtPose(player, Pose.CROUCHING)) ||
-                player.onGround() && !canSlideSpeedCheck(player, context) && checkKey(player, context);
+        if (player.onGround() && !canSlideSpeedCheck(player, context) && checkKey(player, context)){
+            context.setMomentumProne(true);
+            return true;
+        } else if (player.getPose() == Pose.SWIMMING){
+            context.setMomentumProne(false);
+            return true;
+        }
+        return false;
     }
-    public static boolean canProneNotSpeed(Player player, PlayerMovementContext context) {
-        return (player.getPose() == Pose.SWIMMING && !canPlayerFitAtPose(player, Pose.CROUCHING)) ||
-                player.onGround() && checkKey(player, context);
+    public static boolean canProneHold(Player player, PlayerMovementContext context) {
+        if (context.isMomentumProne()){
+            return player.onGround() && checkKey(player, context);
+        } else {
+            return player.getPose() == Pose.SWIMMING;
+        }
     }
 
     public static boolean checkKey(Player player, PlayerMovementContext context) {
@@ -57,7 +65,7 @@ public class ProneState extends BaseState {
             return StateType.SWIM.getState();
         }
         // 匍匐无法进入滑铲
-        if (ProneState.canProneNotSpeed(player, context)) {
+        if (ProneState.canProneHold(player, context)) {
             return StateType.PRONE.getState();
         }
         if (WallRunState.canWallRun(player, context)) {
@@ -94,7 +102,9 @@ public class ProneState extends BaseState {
     @Override
     public void onEnter(Player player, PlayerMovementContext context) {
         super.onEnter(player, context);
-        player.setForcedPose(Pose.SWIMMING);
+        if (context.isMomentumProne()){
+            player.setForcedPose(Pose.SWIMMING);
+        }
     }
 
     @Override
