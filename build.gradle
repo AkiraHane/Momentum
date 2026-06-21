@@ -150,13 +150,16 @@ dependencies {
 
     // Example project dependency using a sister or child project:
     // implementation project(":myproject")
-    implementation("com.zigythebird.playeranim:PlayerAnimationLibNeo:$pal_version") {
-        exclude group: "com.google.code.gson", module: "gson"
-        exclude group: "io.netty"
-        exclude group: "it.unimi.dsi", module: "fastutil"
-        exclude group: "org.slf4j", module: "slf4j-api"
-        exclude group: "org.joml", module: "joml"
-    }
+//    implementation("com.zigythebird.playeranim:PlayerAnimationLibNeo:$pal_version") {
+//        exclude group: "com.google.code.gson", module: "gson"
+//        exclude group: "io.netty"
+//        exclude group: "it.unimi.dsi", module: "fastutil"
+//        exclude group: "org.slf4j", module: "slf4j-api"
+//        exclude group: "org.joml", module: "joml"
+//    }
+    implementation files("libs/PlayerAnimationLibCore-1.2.3+mc.26.1.jar")
+    implementation files("libs/PlayerAnimationLibNeo-1.2.3+mc.26.1.jar")
+    implementation files("libs/mochafloats-5.0.0.jar")
 
     // For more info:
     // http://www.gradle.org/docs/current/userguide/artifact_dependencies_tutorial.html
