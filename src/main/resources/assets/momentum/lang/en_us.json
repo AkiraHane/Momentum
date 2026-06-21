@@ -43,5 +43,6 @@
   "hint.momentum.click": "Click",
   "hint.momentum.double_click": "Double Click",
   "hint.momentum.move_with_wall": "Move With Wall",
-  "hint.momentum.hit_toggle": "Tutorial Toggle"
+  "hint.momentum.hit_toggle": "Tutorial Toggle",
+  "hint.momentum.climb_acceleration": "Climb Acceleration"
 }

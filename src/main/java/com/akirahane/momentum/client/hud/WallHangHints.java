@@ -68,4 +68,8 @@ public class WallHangHints {
     // 进入原版状态
     public static final HintManager.KeyHint ORIGINAL_STATE =
             HintManager.KeyHint.single(CHANGE_MOMENTUM_KEY_MAPPING.get(), "state.momentum.original");
+
+    // 攀爬加速
+    public static final HintManager.KeyHint CLIMB_ACCELERATION =
+            HintManager.KeyHint.single(OPTIONS.keySprint, "hint.momentum.climb_acceleration");
 }

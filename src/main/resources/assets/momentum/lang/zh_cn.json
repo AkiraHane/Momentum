@@ -43,5 +43,6 @@
   "hint.momentum.click": "单击",
   "hint.momentum.double_click": "双击",
   "hint.momentum.move_with_wall": "向墙移动",
-  "hint.momentum.hit_toggle": "开关教程"
+  "hint.momentum.hit_toggle": "开关教程",
+  "hint.momentum.climb_acceleration": "加速攀爬/下滑"
 }

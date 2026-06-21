@@ -6,7 +6,6 @@ import com.akirahane.momentum.core.context.PlayerMovementContext;
 import com.akirahane.momentum.core.effect.MomentumEffectType;
 import com.akirahane.momentum.core.state.StateType;
 import com.akirahane.momentum.core.state.BaseState;
-import com.akirahane.momentum.mixin.LivingEntityAccessor;
 import net.minecraft.client.Minecraft;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
@@ -37,6 +36,7 @@ public class WallClimbState extends BaseState {
             HintManager.add(WallHangHints.WALL_CLIMB);
             return Minecraft.getInstance().options.keyJump.isDown();
         }
+        HintManager.add(WallHangHints.CLIMB_ACCELERATION);
         return true;
     }
 
@@ -63,7 +63,7 @@ public class WallClimbState extends BaseState {
     @Override
     public void clientTick(Player player, PlayerMovementContext context) {
         super.clientTick(player, context);
-        if (context.isHasJetBooster()){
+        if (context.isHasJetBooster() && !player.onClimbable()){
             player.setDeltaMovement(
                     player.getDeltaMovement().x,
                     Math.max(0.3, player.getDeltaMovement().y),

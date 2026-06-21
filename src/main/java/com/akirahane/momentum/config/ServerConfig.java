@@ -58,5 +58,11 @@ public class ServerConfig {
     public static final ModConfigSpec.DoubleValue AIR_FRICTION = BUILDER
             .comment("空气阻力（0.0 - 1.0）", "默认值: 0.998, 原版: 0.91")
             .defineInRange("airFriction", 0.998, 0.0, 1.0);
+
+    // 爬梯加速倍率
+    public static final ModConfigSpec.DoubleValue CLIMB_BOOST_MULTIPLIER = BUILDER
+            .comment("爬梯加速倍率", "默认值: 3.0")
+            .defineInRange("climbBoostMultiplier", 3.0, 0.0, 10.0);
+
     public static final ModConfigSpec SPEC = BUILDER.build();
 }

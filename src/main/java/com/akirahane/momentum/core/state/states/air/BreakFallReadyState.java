@@ -18,7 +18,9 @@ public class BreakFallReadyState extends BaseState {
     public static String BREAK_FALL_READY = "break_fall_ready";
 
     public static boolean canBreakFallReady(Player player, PlayerMovementContext context) {
-        return !player.onGround() && checkKey(player, context);
+        return !player.onGround() &&
+                player.fallDistance > Math.min(4, player.getAttributeValue(Attributes.SAFE_FALL_DISTANCE)) &&
+                checkKey(player, context);
     }
 
     public static boolean checkKey(Player player, PlayerMovementContext context) {

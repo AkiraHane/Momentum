@@ -5,8 +5,10 @@ import com.akirahane.momentum.core.context.PlayerMovementContext;
 import com.akirahane.momentum.core.state.MovementStateMachine;
 import com.akirahane.momentum.core.state.StateType;
 import com.akirahane.momentum.init.InitAttachments;
+import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
+import net.minecraft.client.Minecraft;
 import net.minecraft.tags.FluidTags;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Attackable;
@@ -23,6 +25,7 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.*;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import static com.akirahane.momentum.config.ServerConfig.CLIMB_BOOST_MULTIPLIER;
 import static com.akirahane.momentum.core.effect.MomentumEffectType.*;
 
 @Mixin(LivingEntity.class)
@@ -269,6 +272,35 @@ public abstract class LivingEntityMixin extends Entity implements Attackable, Wa
 
             ci.cancel();
         }
+    }
+
+    // 上下梯加速
+    @ModifyReturnValue(
+            method = "handleOnClimbable",
+            at = @At("RETURN")
+    )
+    private Vec3 momentum$boostClimbSpeed(Vec3 original) {
+        LivingEntity self = (LivingEntity) (Object) this;
+        if (!(self instanceof Player player)) return original;
+        if (!self.level().isClientSide()) return original;
+        if (!self.onClimbable()) return original;
+        if (!Minecraft.getInstance().options.keySprint.isDown()) return original;
+
+        MovementStateMachine stateMachine = player.getData(InitAttachments.MOVEMENT_STATE);
+        if (stateMachine.getCurrentState().getStateType().equals(StateType.ORIGINAL)) {
+            return original;
+        }
+
+        if (!stateMachine.getCurrentState().getStateType().equals(StateType.WALL_CLIMB) &&
+                !stateMachine.getCurrentState().getStateType().equals(StateType.WALL_SLIDE)){
+            return original;
+        }
+        Double multiplier = CLIMB_BOOST_MULTIPLIER.get();
+        return new Vec3(
+                original.x,
+                original.y * multiplier,
+                original.z
+        );
     }
 
 }

@@ -14,7 +14,6 @@ import lombok.Getter;
 import lombok.Setter;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.ai.attributes.Attributes;
@@ -365,6 +364,7 @@ public class PlayerMovementContext {
         float diff = targetFovBonus - currentFovBonus;
         currentFovBonus += diff * 0.15F;
     }
+
     public void tickMomentumRoll(Player player) {
         prevMomentumRoll = currentMomentumRoll;
 
@@ -425,6 +425,7 @@ public class PlayerMovementContext {
     public float getRenderMomentumRoll(float partialTick) {
         return Mth.lerp(partialTick, prevMomentumRoll, currentMomentumRoll);
     }
+
     public float getRenderCameraRoll(float partialTick) {
         return Mth.lerp(partialTick, prevCameraRoll, currentCameraRoll);
     }

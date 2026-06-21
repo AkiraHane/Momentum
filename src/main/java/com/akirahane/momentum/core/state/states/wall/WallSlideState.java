@@ -1,5 +1,7 @@
 package com.akirahane.momentum.core.state.states.wall;
 
+import com.akirahane.momentum.client.hud.HintManager;
+import com.akirahane.momentum.client.hud.WallHangHints;
 import com.akirahane.momentum.core.context.PlayerMovementContext;
 import com.akirahane.momentum.core.effect.MomentumEffectType;
 import com.akirahane.momentum.core.state.StateType;
@@ -18,10 +20,14 @@ public class WallSlideState extends BaseState {
     public static String WALL_SLIDE = "wall_slide";
 
     public static boolean canWallSlide(Player player, PlayerMovementContext context) {
+        if (player.onClimbable()){
+            HintManager.add(WallHangHints.CLIMB_ACCELERATION);
+        }
         return !player.onGround() &&
                 !Vec3.ZERO.equals(context.getWallNormal()) &&
                 (player.onClimbable() || context.isHasFaceWall()) &&
-                !Vec3.ZERO.equals(context.getInputVec()) && Mth.abs(context.getInputWallAngle()) < 60 &&
+                (player.onClimbable() ||
+                        !Vec3.ZERO.equals(context.getInputVec()) && Mth.abs(context.getInputWallAngle()) < 60) &&
                 context.getSpeed().y < 0 &&
                 Mth.abs(context.getLookWallAngle()) < 60;
     }
