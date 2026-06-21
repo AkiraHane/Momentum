@@ -22,6 +22,7 @@ import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
 
+import static com.akirahane.momentum.client.init.InitSounds.JET2;
 import static com.akirahane.momentum.core.context.PlayerMovementContext.STEP;
 
 public class WallRunState extends BaseState {
@@ -190,6 +191,7 @@ public class WallRunState extends BaseState {
                 double ySpeed = player.getDeltaMovement().y;
                 if (context.isHasJetBooster()) {
                     ySpeed = Math.max(0.62, ySpeed);
+                    player.playSound(JET2.value(), 1F, 1.0F + player.getRandom().nextFloat() * 0.4F - 0.2F);
                 }
                 player.setDeltaMovement(
                         tangent.x * Math.max(player.getDeltaMovement().horizontalDistance(), context.getJumpLimitSpeed()),

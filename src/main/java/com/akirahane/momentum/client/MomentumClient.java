@@ -5,9 +5,9 @@ import com.akirahane.momentum.client.animation.MomentumAnimationController;
 import com.akirahane.momentum.client.config.ClientConfig;
 import com.akirahane.momentum.client.debug.MovementDebugEntry;
 import com.akirahane.momentum.client.hud.HintManager;
+import com.akirahane.momentum.client.init.InitSounds;
 import com.akirahane.momentum.core.state.MovementStateMachine;
 import com.akirahane.momentum.core.state.BaseState;
-import com.akirahane.momentum.core.state.StateType;
 import com.akirahane.momentum.init.InitAttachments;
 import com.akirahane.momentum.network.StateTransitionPacket;
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -21,11 +21,11 @@ import net.minecraft.client.gui.components.debug.DebugScreenProfile;
 import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.resources.Identifier;
-import net.minecraft.world.entity.HumanoidArm;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.EventPriority;
+import net.neoforged.bus.api.IEventBus;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.EventBusSubscriber;
@@ -53,10 +53,11 @@ public class MomentumClient {
     public static final Identifier MOVEMENT_ANIM =
             Identifier.fromNamespaceAndPath(Momentum.MODID, "movement_anim");
 
-    public MomentumClient(ModContainer modContainer) {
+    public MomentumClient(ModContainer modContainer, IEventBus modEventBus) {
         // 注册 mod 的 ModConfigSpec，以便 FML 可以创建和加载配置文件
         modContainer.registerConfig(ModConfig.Type.CLIENT, ClientConfig.SPEC);
         modContainer.registerExtensionPoint(IConfigScreenFactory.class, ConfigurationScreen::new);
+        InitSounds.SOUND_EVENTS.register(modEventBus);
     }
 
     // 客户端驱动（用于移动和视觉效果）

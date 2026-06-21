@@ -13,6 +13,8 @@ import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
 
+import static com.akirahane.momentum.client.init.InitSounds.JET2;
+import static com.akirahane.momentum.client.init.InitSounds.JET3;
 import static com.akirahane.momentum.core.context.PlayerMovementContext.*;
 
 public class WallClimbState extends BaseState {
@@ -79,6 +81,9 @@ public class WallClimbState extends BaseState {
         playStateAnimation(player, WALL_CLIMB, context, 0, speed);
         context.setNeedSoundTick(context.getNeedSoundTick() - speed);
         if (context.getNeedSoundTick() <= 0){
+            if (context.isHasJetBooster()){
+                player.playSound(JET3.value(), 0.2F, 1.5F + player.getRandom().nextFloat() * 0.4F - 0.2F);
+            }
             context.playWallSound(player, STEP, 0.15F, 1);
             context.setNeedSoundTick(context.getNeedSoundTick() + SOUND_TICK);
         }

@@ -53,7 +53,7 @@ public class DodgeState extends BaseState {
             playStateAnimation(player, DODGE_UP, context, 4, 2f);
         }
         Vec3 direction = Vec3.directionFromRotation(4, yRot);
-        if (!context.isHasJetBooster()){
+        if (!context.isHasJetBooster()) {
             player.setDeltaMovement(direction.x * 0.8, player.getDeltaMovement().y, direction.z * 0.8);
         } else {
             player.setDeltaMovement(direction.x * 0.8, 0.3F, direction.z * 0.8);
@@ -76,7 +76,7 @@ public class DodgeState extends BaseState {
     public void clientTick(Player player, PlayerMovementContext context) {
         if (context.getDodgeTimer() > 6) {
             context.setMomentumRollIntensity(0F);
-            if (!player.onGround()){
+            if (!player.onGround()) {
                 playStateAnimation(player, IDLE, context);
             }
         }

@@ -1,0 +1,26 @@
+{
+  "jet1": {
+    "sounds": [
+      {
+        "name": "momentum:jet1",
+        "stream": false
+      }
+    ]
+  },
+  "jet2": {
+    "sounds": [
+      {
+        "name": "momentum:jet2",
+        "stream": false
+      }
+    ]
+  },
+  "jet3": {
+    "sounds": [
+      {
+        "name": "momentum:jet3",
+        "stream": false
+      }
+    ]
+  }
+}
