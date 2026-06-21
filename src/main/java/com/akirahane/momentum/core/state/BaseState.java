@@ -121,7 +121,7 @@ public abstract class BaseState {
             return StateType.WALK.getState();
         }
         LOGGER.error("evaluate error! 有状态没有覆盖!");
-        throw new RuntimeException("evaluate error! 有状态没有覆盖!");
+        return StateType.ORIGINAL.getState();
     }
 
     public abstract StateType getStateType();

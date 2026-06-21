@@ -12,6 +12,7 @@ import net.minecraft.world.entity.Pose;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
 
+import static com.akirahane.momentum.client.init.InitSounds.JET2;
 import static com.akirahane.momentum.config.ServerConfig.DODGE_COOLDOWN;
 import static com.akirahane.momentum.config.ServerConfig.DODGE_STORAGE;
 import static com.akirahane.momentum.core.MomentumUtils.canPlayerFitAtPose;
@@ -64,11 +65,15 @@ public class DodgeState extends BaseState {
         context.setNoJump(true);
         context.setNoMoveInput(true);
         context.addEffect(MomentumEffectType.BLOCK_FRICTION, context.DODGE_BLOCK_FRICTION, 3);
-        player.playSound(
-                SoundEvents.ARROW_SHOOT,
-                0.5F,
-                1.0F + player.getRandom().nextFloat() * 0.4F - 0.2F  // 0.8 ~ 1.2 随机音高
-        );
+        if (context.isHasJetBooster()){
+            player.playSound(JET2.value(), 1F, 1.0F + player.getRandom().nextFloat() * 0.4F - 0.2F);
+        } else {
+            player.playSound(
+                    SoundEvents.ARROW_SHOOT,
+                    0.5F,
+                    1.0F + player.getRandom().nextFloat() * 0.4F - 0.2F  // 0.8 ~ 1.2 随机音高
+            );
+        }
         context.setMomentumRollIntensity(20F);
     }
 

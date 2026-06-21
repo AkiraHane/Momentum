@@ -36,8 +36,8 @@ public class WallRunState extends BaseState {
         return !Vec3.ZERO.equals(context.getWallNormal()) &&
                 !Vec3.ZERO.equals(context.getInputVec()) &&
                 isLookAndSpeedSameSide(player, context) &&
-                Mth.abs(context.getLookWallAngle()) > 45 &&
-                Mth.abs(context.getInputWallAngle()) > 45 && Mth.abs(context.getInputWallAngle()) < 100 &&
+                Mth.abs(context.getLookWallAngle()) >= 30 &&
+                Mth.abs(context.getInputWallAngle()) >= 30 && Mth.abs(context.getInputWallAngle()) < 100 &&
                 (context.isHasJetBooster() || canWallRunSpeedCheck(player, context)) &&
                 checkKey(player, context) &&
                 !player.onGround();
@@ -47,7 +47,7 @@ public class WallRunState extends BaseState {
     public static boolean canWallRunHold(Player player, PlayerMovementContext context) {
         return !Vec3.ZERO.equals(context.getWallNormal()) &&
                 isLookAndSpeedSameSide(player, context) &&
-                Mth.abs(context.getLookWallAngle()) > 45 &&
+                Mth.abs(context.getLookWallAngle()) >= 30 &&
                 (context.isHasJetBooster() || canWallRunSpeedCheck(player, context)) &&
                 checkKeyHold(player, context) &&
                 !player.onGround();
@@ -118,13 +118,10 @@ public class WallRunState extends BaseState {
         if (SwimState.canSwim(player, context)) {
             return StateType.SWIM.getState();
         }
-        if (SlideState.canSlide(player, context)) {
-            return StateType.SLIDE.getState();
-        }
         if (ProneState.canProne(player, context)) {
             return StateType.PRONE.getState();
         }
-        if (WallKickState.canWallKick(player, context)) {
+        if (WallKickState.canWallKickRun(player, context)) {
             return StateType.WALL_KICK.getState();
         }
         if (WallRunState.canWallRunHold(player, context)) {

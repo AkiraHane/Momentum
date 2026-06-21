@@ -106,7 +106,7 @@ public class HintManager {
 
     private static final List<KeyHint> HINTS = new ArrayList<>();
     @Getter
-    private static boolean visible = true;
+    private static boolean visible = false;
 
     // 各种 tick 计数
     private static int contentChangeTick = 0;    // 提示内容上次变化时间

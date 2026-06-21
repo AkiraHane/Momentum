@@ -38,6 +38,7 @@ public class WallHangState extends BaseState {
     public static boolean canWallHang(Player player, PlayerMovementContext context) {
         return context.isHasLedge() &&
                 !Vec3.ZERO.equals(context.getWallNormal()) &&
+                (Mth.abs(context.getLookWallAngle()) < 60 || Mth.abs(context.getInputWallAngle()) < 60) &&
                 player.fallDistance <= player.getAttributeValue(Attributes.SAFE_FALL_DISTANCE) * 2 &&
                 !checkKey(player, context);
     }
@@ -70,20 +71,17 @@ public class WallHangState extends BaseState {
         if (SwimState.canSwim(player, context)) {
             return StateType.SWIM.getState();
         }
-        if (SlideState.canSlide(player, context)) {
-            return StateType.SLIDE.getState();
-        }
         if (ProneState.canProne(player, context)) {
             return StateType.PRONE.getState();
+        }
+        if (WallKickState.canWallKick(player, context)) {
+            return StateType.WALL_KICK.getState();
         }
         if (WallRunState.canWallRun(player, context)) {
             return StateType.WALL_RUN.getState();
         }
         if (VaultUpState.canVaultUp(player, context)) {
             return StateType.VAULT_UP.getState();
-        }
-        if (WallKickState.canWallKick(player, context)) {
-            return StateType.WALL_KICK.getState();
         }
         if (context.isHasLedge() && !Vec3.ZERO.equals(context.getWallNormal()) && !checkKey(player, context)) {
             return StateType.WALL_HANG.getState();

@@ -46,6 +46,9 @@ public class WallHangHints {
     public static final HintManager.KeyHint WALL_CLIMB =
             HintManager.KeyHint.single(OPTIONS.keyJump, "state.momentum.wall_climb");
 
+    public static final HintManager.KeyHint WALL_SLIDE =
+            HintManager.KeyHint.single(OPTIONS.keyJump, "state.momentum.wall_slide");
+
     public static final HintManager.KeyHint WALL_HANG =
             HintManager.KeyHint.single(OPTIONS.keyShift, "state.momentum.wall_hang");
 

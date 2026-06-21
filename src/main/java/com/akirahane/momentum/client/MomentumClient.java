@@ -31,6 +31,7 @@ import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.config.ModConfig;
+import net.neoforged.fml.event.config.ModConfigEvent;
 import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
 import net.neoforged.neoforge.client.event.*;
 import net.neoforged.neoforge.client.gui.ConfigurationScreen;
@@ -40,6 +41,7 @@ import net.neoforged.neoforge.event.tick.PlayerTickEvent;
 import org.slf4j.Logger;
 
 import static com.akirahane.momentum.client.config.ClientConfig.ENABLE_CAMERA_OFFSET;
+import static com.akirahane.momentum.client.config.ClientConfig.ENABLE_KEY_HINTS;
 
 // 此类不会在专用服务器上加载。在此处访问客户端代码是安全的。
 @Mod(value = Momentum.MODID, dist = Dist.CLIENT)
@@ -58,6 +60,10 @@ public class MomentumClient {
         modContainer.registerConfig(ModConfig.Type.CLIENT, ClientConfig.SPEC);
         modContainer.registerExtensionPoint(IConfigScreenFactory.class, ConfigurationScreen::new);
         InitSounds.SOUND_EVENTS.register(modEventBus);
+    }
+    @SubscribeEvent
+    public static void onConfigLoad(ModConfigEvent.Loading event) {
+        HintManager.setVisible(ENABLE_KEY_HINTS.getAsBoolean());
     }
 
     // 客户端驱动（用于移动和视觉效果）

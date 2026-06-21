@@ -5,6 +5,12 @@ import com.akirahane.momentum.client.hud.WallHangHints;
 import com.akirahane.momentum.core.context.PlayerMovementContext;
 import com.akirahane.momentum.core.state.BaseState;
 import com.akirahane.momentum.core.state.StateType;
+import com.akirahane.momentum.core.state.states.OriginalState;
+import com.akirahane.momentum.core.state.states.ground.ProneState;
+import com.akirahane.momentum.core.state.states.ground.SlideState;
+import com.akirahane.momentum.core.state.states.special.BreakFallState;
+import com.akirahane.momentum.core.state.states.special.DodgeState;
+import com.akirahane.momentum.core.state.states.water.SwimState;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Player;
@@ -23,9 +29,46 @@ public class WallKickState extends BaseState {
                 checkKey(player, context);
     }
 
+    // 跑墙特殊进入条件
+    public static boolean canWallKickRun(Player player, PlayerMovementContext context) {
+        return !Vec3.ZERO.equals(context.getWallNormal()) &&
+                checkKey(player, context);
+    }
+
     public static boolean checkKey(Player player, PlayerMovementContext context) {
         HintManager.add(WallHangHints.WALL_KICK);
         return context.getInputBuffer()[context.getInputBufferIndex()].contains(JUMP);
+    }
+
+    public BaseState evaluate(Player player, PlayerMovementContext context) {
+        HintManager.clear();
+        if (OriginalState.canOriginal(player, context)) {
+            return StateType.ORIGINAL.getState();
+        }
+        HintManager.add(WallHangHints.ORIGINAL_STATE);
+        HintManager.add(WallHangHints.TOGGLE_HINT);
+        if (DodgeState.canDodge(player, context)) {
+            return StateType.DODGE.getState();
+        }
+        if (SlideState.canSlide(player, context)) {
+            return StateType.SLIDE.getState();
+        }
+        if (BreakFallState.canBreakFall(player, context)) {
+            return StateType.BREAK_FALL.getState();
+        }
+        if (VaultInState.canVaultIn(player, context)) {
+            return StateType.VAULT_IN.getState();
+        }
+        if (SwimState.canSwim(player, context)) {
+            return StateType.SWIM.getState();
+        }
+        if (ProneState.canProne(player, context)) {
+            return StateType.PRONE.getState();
+        }
+        if (context.getWallJumpTimer() > 0) {
+            return StateType.WALL_KICK.getState();
+        }
+        return super.evaluate(player, context);
     }
 
 
@@ -37,19 +80,30 @@ public class WallKickState extends BaseState {
             playStateAnimation(player, WALL_JUMP_RIGHT, context);
         }
         context.setLeftFootJump(!context.isLeftFootJump());
-        player.addDeltaMovement(
-                new Vec3(
-                        context.getInputVec().x * 0.3,
-                        0.6,
-                        context.getInputVec().z * 0.3
-                )
-        );
+        if (Mth.abs(context.getInputWallAngle()) >= 100) {
+            player.addDeltaMovement(
+                    new Vec3(
+                            context.getInputVec().x * 0.3,
+                            0.6,
+                            context.getInputVec().z * 0.3
+                    )
+            );
+        } else {
+            player.addDeltaMovement(
+                    new Vec3(
+                            -context.getWallNormal().x * 0.6,
+                            0,
+                            -context.getWallNormal().z * 0.6
+                    )
+            );
+        }
         context.playWallSound(player, FALL, 0.15F, 1);
         player.playSound(
                 SoundEvents.ARROW_SHOOT,
                 0.5F,
                 1.0F + player.getRandom().nextFloat() * 0.4F - 0.2F  // 0.8 ~ 1.2 随机音高
         );
+        context.setWallJumpTimer(5);
     }
 
     @Override

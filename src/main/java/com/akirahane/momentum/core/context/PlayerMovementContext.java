@@ -177,6 +177,8 @@ public class PlayerMovementContext {
     private int vaultTimer = 0;
     // 受身计数器
     private int breakFallReadyCount = -1;
+    // 墙跳计时器
+    private int wallJumpTimer = 0;
 
     // 状态中进行变动的数值
     // 滞空计时器
@@ -268,12 +270,6 @@ public class PlayerMovementContext {
         }
     }
 
-    // 用于检测跳变
-    private static double lastA = Double.NaN;
-    private static double lastB = Double.NaN;
-    private static double lastResult = Double.NaN;
-    private static long callCount = 0;
-
     private void bindVariables() {
         Value value = this.mocha.scope().get("math");
         if (value instanceof ObjectValue math) {
@@ -312,6 +308,7 @@ public class PlayerMovementContext {
         if (this.vaultTimer > 0) this.vaultTimer--;
         if (this.jumpCooldown > 0) this.jumpCooldown--;
         if (this.breakFallReadyCount > 0) this.breakFallReadyCount--;
+        if (this.wallJumpTimer > 0) this.wallJumpTimer--;
         boolean newHasJetBooster = checkBoosterEquipped(player);
         if (newHasJetBooster != this.hasJetBooster) {
             this.hasJetBooster = newHasJetBooster;

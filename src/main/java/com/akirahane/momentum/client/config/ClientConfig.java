@@ -12,6 +12,10 @@ public class ClientConfig {
     static {
         BUILDER.push("key_hints");
     }
+    // 默认是否开启按键提示
+    public static final ModConfigSpec.BooleanValue ENABLE_KEY_HINTS = BUILDER
+            .comment("是否开启按键教程")
+            .define("enableKeyHints", false);
     public static final ModConfigSpec.DoubleValue MIN_ALPHA_WHEN_MOVING = BUILDER
             .comment("移动时最低透明度", "范围: 0.0 - 1.0", "默认值: 0.4")
             .defineInRange("minAlphaWhenMoving", 0.4, 0.0, 1.0);
