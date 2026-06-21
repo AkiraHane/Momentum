@@ -13,6 +13,9 @@ public class WallHangHints {
     public static final HintManager.KeyHint BREAK_FALL_READY =
             HintManager.KeyHint.single(LOWER_CENTER.get(), "state.momentum.break_fall_ready");
 
+    public static final HintManager.KeyHint BREAK_FALL_READY_EGG =
+            HintManager.KeyHint.single(LOWER_CENTER.get(), "state.momentum.break_fall_ready_egg");
+
     public static final HintManager.KeyHint PRONE =
             HintManager.KeyHint.single(LOWER_CENTER.get(), "state.momentum.prone");
 

@@ -14,6 +14,7 @@
   "state.momentum.slide": "Slide",
   "state.momentum.airborne": "Airborne",
   "state.momentum.break_fall_ready": "Break Fall Ready",
+  "state.momentum.break_fall_ready_egg": "Die Ready(?)",
   "state.momentum.swim": "Swim",
   "state.momentum.break_fall": "Break Fall",
   "state.momentum.dodge": "Dodge",

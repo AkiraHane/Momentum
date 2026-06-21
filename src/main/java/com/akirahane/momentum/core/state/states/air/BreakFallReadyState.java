@@ -22,7 +22,11 @@ public class BreakFallReadyState extends BaseState {
     }
 
     public static boolean checkKey(Player player, PlayerMovementContext context) {
-        HintManager.add(WallHangHints.BREAK_FALL_READY);
+        if (context.getLuckyNumber() > 95){
+            HintManager.add(WallHangHints.BREAK_FALL_READY_EGG);
+        } else {
+            HintManager.add(WallHangHints.BREAK_FALL_READY);
+        }
         return LOWER_CENTER.get().isDown();
     }
 

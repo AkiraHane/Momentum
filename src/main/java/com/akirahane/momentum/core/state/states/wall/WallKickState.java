@@ -5,6 +5,7 @@ import com.akirahane.momentum.client.hud.WallHangHints;
 import com.akirahane.momentum.core.context.PlayerMovementContext;
 import com.akirahane.momentum.core.state.BaseState;
 import com.akirahane.momentum.core.state.StateType;
+import net.minecraft.sounds.SoundEvents;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
@@ -44,6 +45,11 @@ public class WallKickState extends BaseState {
                 )
         );
         context.playWallSound(player, FALL, 0.15F, 1);
+        player.playSound(
+                SoundEvents.ARROW_SHOOT,
+                0.5F,
+                1.0F + player.getRandom().nextFloat() * 0.4F - 0.2F  // 0.8 ~ 1.2 随机音高
+        );
     }
 
     @Override

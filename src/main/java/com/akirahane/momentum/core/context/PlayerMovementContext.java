@@ -135,6 +135,9 @@ public class PlayerMovementContext {
     private float currentMomentumRoll = 0F;
     private float prevMomentumRoll = 0F;
 
+    // 彩蛋随机数(1~100)
+    private int luckyNumber = 0;
+
 
     // 当前播放的动画名称
     private String currentAnimationName = null;
@@ -335,6 +338,11 @@ public class PlayerMovementContext {
     public void clientTickRemote(Player player) {
         this.bodyHeadAngleDiff = Mth.wrapDegrees(player.getYHeadRot() - player.yBodyRot);
         remoteDetectWall(player);
+    }
+
+    // 设置一次随机数
+    public void setLuckyNumber(Player player) {
+        this.luckyNumber = player.getRandom().nextInt(100);
     }
 
     public void tickCameraRoll() {

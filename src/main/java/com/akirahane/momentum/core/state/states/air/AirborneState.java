@@ -21,6 +21,7 @@ public class AirborneState extends BaseState {
 
     @Override
     public void onEnter(Player player, PlayerMovementContext context) {
+        context.setLuckyNumber(player);
         if (!WallKickState.WALL_JUMP_RIGHT.equals(context.getCurrentAnimationName()) &&
                 !WallKickState.WALL_JUMP_LEFT.equals(context.getCurrentAnimationName())) {
             super.onEnter(player, context);

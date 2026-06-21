@@ -14,6 +14,7 @@
   "state.momentum.slide": "滑铲",
   "state.momentum.airborne": "滞空",
   "state.momentum.break_fall_ready": "准备受身",
+  "state.momentum.break_fall_ready_egg": "准备受死(?)",
   "state.momentum.swim": "游泳",
   "state.momentum.break_fall": "受身",
   "state.momentum.dodge": "闪避",
