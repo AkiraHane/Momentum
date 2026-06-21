@@ -77,6 +77,9 @@ public abstract class BaseState {
         if (DodgeState.canDodge(player, context)) {
             return StateType.DODGE.getState();
         }
+        if (SlideState.canSlide(player, context)) {
+            return StateType.SLIDE.getState();
+        }
         if (BreakFallState.canBreakFall(player, context)) {
             return StateType.BREAK_FALL.getState();
         }
@@ -85,9 +88,6 @@ public abstract class BaseState {
         }
         if (SwimState.canSwim(player, context)) {
             return StateType.SWIM.getState();
-        }
-        if (SlideState.canSlide(player, context)) {
-            return StateType.SLIDE.getState();
         }
         if (ProneState.canProne(player, context)) {
             return StateType.PRONE.getState();
