@@ -21,9 +21,9 @@ public class WallHangHints {
             HintManager.KeyHint.builder("state.momentum.dodge")
                     .key(OPTIONS.keySprint).plus()
                     .translatable("hint.momentum.double_click")
-                    .key(OPTIONS.keyUp).slash()
-                    .key(OPTIONS.keyLeft).slash()
-                    .key(OPTIONS.keyDown).slash()
+                    .key(OPTIONS.keyUp)
+                    .key(OPTIONS.keyLeft)
+                    .key(OPTIONS.keyDown)
                     .key(OPTIONS.keyRight)
                     .build();
 
