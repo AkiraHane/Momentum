@@ -18,11 +18,12 @@ public class WallSlideState extends BaseState {
     public static String WALL_SLIDE = "wall_slide";
 
     public static boolean canWallSlide(Player player, PlayerMovementContext context) {
-        return player.onClimbable() || (!player.onGround() &&
+        return !player.onGround() &&
                 !Vec3.ZERO.equals(context.getWallNormal()) &&
-                context.isHasFaceWall() &&
+                (player.onClimbable() || context.isHasFaceWall()) &&
                 !Vec3.ZERO.equals(context.getInputVec()) && Mth.abs(context.getInputWallAngle()) < 60 &&
-                Mth.abs(context.getLookWallAngle()) < 60);
+                context.getSpeed().y < 0 &&
+                Mth.abs(context.getLookWallAngle()) < 60;
     }
 
     @Override

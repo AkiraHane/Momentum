@@ -23,8 +23,7 @@ public class WallClimbState extends BaseState {
     private static final int SOUND_TICK = 10;
 
     public static boolean canWallClimb(Player player, PlayerMovementContext context) {
-        return player.onClimbable() || (
-                !Vec3.ZERO.equals(context.getWallNormal()) &&
+        return  (!Vec3.ZERO.equals(context.getWallNormal()) &&
                         context.isHasFaceWall() &&
                         !Vec3.ZERO.equals(context.getInputVec()) && Mth.abs(context.getInputWallAngle()) < 60 &&
                         Mth.abs(context.getLookWallAngle()) < 60 &&
@@ -34,24 +33,29 @@ public class WallClimbState extends BaseState {
     }
 
     public static boolean checkKey(Player player, PlayerMovementContext context) {
-        HintManager.add(WallHangHints.WALL_CLIMB);
-        return Minecraft.getInstance().options.keyJump.isDown();
+        if (!player.onClimbable()){
+            HintManager.add(WallHangHints.WALL_CLIMB);
+            return Minecraft.getInstance().options.keyJump.isDown();
+        }
+        return true;
     }
 
     @Override
     public void onEnter(Player player, PlayerMovementContext context) {
-        context.addPermanentEffect(MomentumEffectType.ACCELERATION, AIR_ACCELERATION);
-        context.addPermanentEffect(MomentumEffectType.LIMIT_ACCELERATION_SPEED, AIR_LIMIT_ACCELERATION);
         playStateAnimation(player, WALL_CLIMB, context);
-        var instance = player.getAttribute(Attributes.GRAVITY);
-        if (instance != null && instance.getModifier(WALL_GRAVITY_ID) == null) {
-            instance.addOrReplacePermanentModifier(new AttributeModifier(
-                    WALL_GRAVITY_ID,
-                    -0.8,
-                    AttributeModifier.Operation.ADD_MULTIPLIED_BASE
-            ));
+        if (!player.onClimbable()){
+            context.addPermanentEffect(MomentumEffectType.ACCELERATION, AIR_ACCELERATION);
+            context.addPermanentEffect(MomentumEffectType.LIMIT_ACCELERATION_SPEED, AIR_LIMIT_ACCELERATION);
+            var instance = player.getAttribute(Attributes.GRAVITY);
+            if (instance != null && instance.getModifier(WALL_GRAVITY_ID) == null) {
+                instance.addOrReplacePermanentModifier(new AttributeModifier(
+                        WALL_GRAVITY_ID,
+                        -0.8,
+                        AttributeModifier.Operation.ADD_MULTIPLIED_BASE
+                ));
+            }
+            player.addDeltaMovement(new Vec3(0, player.getDeltaMovement().y * 0.2, 0));
         }
-        player.addDeltaMovement(new Vec3(0, player.getDeltaMovement().y * 0.2, 0));
         context.setNeedSoundTick(SOUND_TICK);
         context.playWallSound(player, STEP, 0.15F, 1);
     }

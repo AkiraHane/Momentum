@@ -16,7 +16,6 @@ public class OriginalState extends BaseState {
                 || player.getAbilities().flying    // 飞行
                 || player.isFallFlying()           // 鞘翅
                 || player.isPassenger()            // 骑乘
-                || player.onClimbable()            // 爬梯子
                 || player.isSleeping()             // 睡觉
                 || player.isSpectator()            // 旁观者
                 || player.isAutoSpinAttack()       // 旋转攻击(三叉戟)
