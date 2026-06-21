@@ -11,19 +11,19 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
 
+import static com.akirahane.momentum.core.context.PlayerMovementContext.JUMP;
 import static com.akirahane.momentum.core.state.states.OriginalState.canOriginal;
 
 public class VaultUpState extends BaseState {
 
     public static boolean canVaultUp(Player player, PlayerMovementContext context) {
         return context.isHasLedge() &&
-                !Vec3.ZERO.equals(context.getInputVec()) && Mth.abs(context.getInputWallAngle()) < 90 &&
                 checkKey(player, context);
     }
 
     public static boolean checkKey(Player player, PlayerMovementContext context) {
         HintManager.add(WallHangHints.VAULT_UP);
-        return Minecraft.getInstance().options.keyJump.isDown();
+        return context.getInputBuffer()[context.getInputBufferIndex()].contains(JUMP);
     }
 
     @Override

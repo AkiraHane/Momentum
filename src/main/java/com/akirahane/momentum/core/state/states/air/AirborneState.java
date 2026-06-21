@@ -23,7 +23,9 @@ public class AirborneState extends BaseState {
     public void onEnter(Player player, PlayerMovementContext context) {
         context.setLuckyNumber(player);
         if (!WallKickState.WALL_JUMP_RIGHT.equals(context.getCurrentAnimationName()) &&
-                !WallKickState.WALL_JUMP_LEFT.equals(context.getCurrentAnimationName())) {
+                !WallKickState.WALL_JUMP_LEFT.equals(context.getCurrentAnimationName()) &&
+                player.fallDistance < player.getAttributeValue(Attributes.SAFE_FALL_DISTANCE) * 2
+        ) {
             super.onEnter(player, context);
         }
         context.addPermanentEffect(MomentumEffectType.LIMIT_ACCELERATION_SPEED, AIR_LIMIT_ACCELERATION);
