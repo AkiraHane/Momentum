@@ -480,6 +480,17 @@ public class PlayerMovementContext {
         }
     }
 
+    private static class WallCandidate {
+        Vec3 normal;
+        AABB expanded;
+        boolean hasFaceWall;
+        boolean hasLedge;
+        float lookAngle;        // 有符号，用于输出
+        float inputAngle;       // 有符号，用于输出
+        float lookAngleDiff;    // 无符号，用于排序
+        float inputAngleDiff;   // 无符号，用于排序
+    }
+
     // 客户端墙面数据判断
     public void detectWall(Player player) {
         AABB box = player.getBoundingBox();
@@ -497,129 +508,132 @@ public class PlayerMovementContext {
         boolean hasInput = inputVec.lengthSqr() > 0.001;
         Vec3 inputNorm = hasInput ? inputVec.normalize() : lookVec;
 
-        Vec3 bestNormal = null;
-        float bestLookAngle = 360F;
-        float bestInputAngle = 360F;
-        float bestAngleDiff = Float.MAX_VALUE;
-
-        // 先检测四个正方向
         Vec3[] cardinals = {
                 new Vec3(0, 0, -1),  // NORTH
                 new Vec3(0, 0, 1),   // SOUTH
                 new Vec3(1, 0, 0),   // EAST
                 new Vec3(-1, 0, 0),  // WEST
         };
+        Vec3[] diagonals = {
+                new Vec3(1, 0, 1).normalize(),
+                new Vec3(1, 0, -1).normalize(),
+                new Vec3(-1, 0, 1).normalize(),
+                new Vec3(-1, 0, -1).normalize(),
+        };
 
-        for (Vec3 normal : cardinals) {
-            AABB expanded = box.expandTowards(normal.x * reach, 0, normal.z * reach);
+        // 先在 4 个垂直方向找候选，按优先级挑
+        List<WallCandidate> cardCands = collectWallCandidates(
+                player, level, box, cardinals, lookVec, inputVec, inputNorm, hasInput, reach);
+        WallCandidate best = pickByPriority(cardCands, hasInput);
 
-            if (!level.noCollision(player, expanded)) {
-                double dot = inputNorm.x * normal.x + inputNorm.z * normal.z;
-                float angleDiff = (float) Math.toDegrees(Math.acos(Math.min(1.0, Math.max(-1.0, dot))));
-
-                if (angleDiff < bestAngleDiff) {
-                    bestAngleDiff = angleDiff;
-                    bestNormal = normal;
-
-                    double cross = lookVec.x * normal.z - lookVec.z * normal.x;
-                    double lookDot = lookVec.dot(normal);
-                    bestLookAngle = (float) Math.toDegrees(Math.atan2(cross, lookDot));
-
-                    if (hasInput) {
-                        cross = inputVec.x * normal.z - inputVec.z * normal.x;
-                        double inputDot = inputVec.dot(normal);
-                        bestInputAngle = (float) Math.toDegrees(Math.atan2(cross, inputDot));
-                    }
-
-                    wallBlocks.clear();
-                    BlockPos.betweenClosedStream(expanded).forEach(pos -> {
-                        BlockState state = level.getBlockState(pos);
-                        if (!state.isAir()) {
-                            wallBlocks.add(pos.immutable());
-                        }
-                    });
-                }
-            }
+        // 垂直方向都没合适的，再看 4 个斜向
+        if (best == null) {
+            List<WallCandidate> diagCands = collectWallCandidates(
+                    player, level, box, diagonals, lookVec, inputVec, inputNorm, hasInput, reach);
+            best = pickByPriority(diagCands, hasInput);
         }
 
-        // 正方向没有命中，再检测斜角
-        if (bestNormal == null) {
-            Vec3[] diagonals = {
-                    new Vec3(1, 0, 1).normalize(),
-                    new Vec3(1, 0, -1).normalize(),
-                    new Vec3(-1, 0, 1).normalize(),
-                    new Vec3(-1, 0, -1).normalize(),
-            };
-
-            for (Vec3 normal : diagonals) {
-                AABB expanded = box.expandTowards(normal.x * reach, 0, normal.z * reach);
-
-                if (!level.noCollision(player, expanded)) {
-                    double dot = inputNorm.x * normal.x + inputNorm.z * normal.z;
-                    float angleDiff = (float) Math.toDegrees(Math.acos(Math.min(1.0, Math.max(-1.0, dot))));
-
-                    if (angleDiff < bestAngleDiff) {
-                        bestAngleDiff = angleDiff;
-                        bestNormal = normal;
-
-                        double cross = lookVec.x * normal.z - lookVec.z * normal.x;
-                        double lookDot = lookVec.dot(normal);
-                        bestLookAngle = (float) Math.toDegrees(Math.atan2(cross, lookDot));
-
-                        if (hasInput) {
-                            cross = inputVec.x * normal.z - inputVec.z * normal.x;
-                            double inputDot = inputVec.dot(normal);
-                            bestInputAngle = (float) Math.toDegrees(Math.atan2(cross, inputDot));
-                        }
-
-                        wallBlocks.clear();
-                        BlockPos.betweenClosedStream(expanded).forEach(pos -> {
-                            BlockState state = level.getBlockState(pos);
-                            if (!state.isAir()) {
-                                wallBlocks.add(pos.immutable());
-                            }
-                        });
-                    }
-                }
-            }
-        }
-
-        if (bestNormal == null) {
+        if (best == null) {
             this.hasFaceWall = false;
             this.hasLedge = false;
             this.wallNormal = Vec3.ZERO;
             this.lookWallAngle = 360F;
             this.inputWallAngle = 360F;
+            this.wallBlocks.clear();
             return;
         }
+
+        // 应用结果
+        wallBlocks.clear();
+        BlockPos.betweenClosedStream(best.expanded).forEach(pos -> {
+            BlockState state = level.getBlockState(pos);
+            if (!state.isAir()) {
+                wallBlocks.add(pos.immutable());
+            }
+        });
+        this.hasFaceWall = best.hasFaceWall;
+        this.hasLedge = best.hasLedge;
+        this.wallNormal = best.normal;
+        this.lookWallAngle = best.lookAngle;
+        this.inputWallAngle = hasInput ? best.inputAngle : 360F;
+    }
+
+    private List<WallCandidate> collectWallCandidates(
+            Player player, Level level, AABB box, Vec3[] normals,
+            Vec3 lookVec, Vec3 inputVec, Vec3 inputNorm, boolean hasInput, double reach) {
+        List<WallCandidate> result = new ArrayList<>();
 
         double eyeY = player.getEyeY();
         double topY = box.maxY;
         double headHalf = topY - eyeY;
         double chinY = eyeY - headHalf * 2;
 
-        AABB ledgeBox = new AABB(
-                box.minX + bestNormal.x * reach,
-                eyeY,
-                box.minZ + bestNormal.z * reach,
-                box.maxX + bestNormal.x * reach,
-                topY,
-                box.maxZ + bestNormal.z * reach
-        );
-        AABB chinBox = new AABB(
-                box.minX + bestNormal.x * reach,
-                chinY,
-                box.minZ + bestNormal.z * reach,
-                box.maxX + bestNormal.x * reach,
-                eyeY,
-                box.maxZ + bestNormal.z * reach
-        );
+        for (Vec3 normal : normals) {
+            AABB expanded = box.expandTowards(normal.x * reach, 0, normal.z * reach);
+            if (level.noCollision(player, expanded)) continue;
 
-        this.hasFaceWall = !level.noCollision(player, chinBox);
-        this.hasLedge = level.noCollision(player, ledgeBox) && this.hasFaceWall;
-        this.wallNormal = bestNormal;
-        this.lookWallAngle = bestLookAngle;
-        this.inputWallAngle = bestInputAngle;
+            WallCandidate c = new WallCandidate();
+            c.normal = normal;
+            c.expanded = expanded;
+
+            // 视角角度
+            double lookDot = lookVec.x * normal.x + lookVec.z * normal.z;
+            double lookCross = lookVec.x * normal.z - lookVec.z * normal.x;
+            c.lookAngle = (float) Math.toDegrees(Math.atan2(lookCross, lookDot));
+            c.lookAngleDiff = (float) Math.toDegrees(
+                    Math.acos(Math.min(1.0, Math.max(-1.0, lookDot))));
+
+            // 输入角度
+            if (hasInput) {
+                double inputDot = inputVec.x * normal.x + inputVec.z * normal.z;
+                double inputCross = inputVec.x * normal.z - inputVec.z * normal.x;
+                c.inputAngle = (float) Math.toDegrees(Math.atan2(inputCross, inputDot));
+                double normDot = inputNorm.x * normal.x + inputNorm.z * normal.z;
+                c.inputAngleDiff = (float) Math.toDegrees(
+                        Math.acos(Math.min(1.0, Math.max(-1.0, normDot))));
+            } else {
+                c.inputAngle = 360F;
+                c.inputAngleDiff = 360F;
+            }
+
+            // 边缘检测
+            AABB ledgeBox = new AABB(
+                    box.minX + normal.x * reach, eyeY, box.minZ + normal.z * reach,
+                    box.maxX + normal.x * reach, topY, box.maxZ + normal.z * reach
+            );
+            AABB chinBox = new AABB(
+                    box.minX + normal.x * reach, chinY, box.minZ + normal.z * reach,
+                    box.maxX + normal.x * reach, eyeY, box.maxZ + normal.z * reach
+            );
+            c.hasFaceWall = !level.noCollision(player, chinBox);
+            c.hasLedge = level.noCollision(player, ledgeBox) && c.hasFaceWall;
+
+            result.add(c);
+        }
+        return result;
+    }
+
+    private WallCandidate pickByPriority(List<WallCandidate> candidates, boolean hasInput) {
+        if (candidates.isEmpty()) return null;
+
+        // 优先选有边缘的；如果没有，回退到所有候选
+        List<WallCandidate> ledged = new ArrayList<>();
+        for (WallCandidate c : candidates) {
+            if (c.hasLedge) ledged.add(c);
+        }
+        List<WallCandidate> pool = !ledged.isEmpty() ? ledged : candidates;
+
+        // 池内：有输入按输入选最近，没输入按视角选最近
+        WallCandidate best = null;
+        float bestDiff = Float.MAX_VALUE;
+        for (WallCandidate c : pool) {
+            float diff = hasInput ? c.inputAngleDiff : c.lookAngleDiff;
+            if (diff < bestDiff) {
+                bestDiff = diff;
+                best = c;
+            }
+        }
+        return best;
     }
 
 
@@ -652,70 +666,39 @@ public class PlayerMovementContext {
                 Math.cos(Math.toRadians(yaw))
         ).normalize();
 
-        Vec3 bestNormal = null;
-        float bestLookAngle = 360F;
-        float bestAngleDiff = Float.MAX_VALUE;
-
         Vec3[] cardinals = {
                 new Vec3(0, 0, -1),
                 new Vec3(0, 0, 1),
                 new Vec3(1, 0, 0),
                 new Vec3(-1, 0, 0),
         };
+        Vec3[] diagonals = {
+                new Vec3(1, 0, 1).normalize(),
+                new Vec3(1, 0, -1).normalize(),
+                new Vec3(-1, 0, 1).normalize(),
+                new Vec3(-1, 0, -1).normalize(),
+        };
 
-        for (Vec3 normal : cardinals) {
-            AABB expanded = box.expandTowards(normal.x * reach, 0, normal.z * reach);
+        // 垂直方向：先 ledged 后普通
+        List<WallCandidate> cardCands = collectWallCandidates(
+                player, level, box, cardinals, lookVec, Vec3.ZERO, lookVec, false, reach);
+        WallCandidate best = pickByPriority(cardCands, false);
 
-            if (!level.noCollision(player, expanded)) {
-                double dot = lookVec.x * normal.x + lookVec.z * normal.z;
-                float angleDiff = (float) Math.toDegrees(Math.acos(Math.min(1.0, Math.max(-1.0, dot))));
-
-                if (angleDiff < bestAngleDiff) {
-                    bestAngleDiff = angleDiff;
-                    bestNormal = normal;
-
-                    double cross = lookVec.x * normal.z - lookVec.z * normal.x;
-                    double lookDot = lookVec.dot(normal);
-                    bestLookAngle = (float) Math.toDegrees(Math.atan2(cross, lookDot));
-                }
-            }
+        // 斜向兜底
+        if (best == null) {
+            List<WallCandidate> diagCands = collectWallCandidates(
+                    player, level, box, diagonals, lookVec, Vec3.ZERO, lookVec, false, reach);
+            best = pickByPriority(diagCands, false);
         }
 
-        if (bestNormal == null) {
-            Vec3[] diagonals = {
-                    new Vec3(1, 0, 1).normalize(),
-                    new Vec3(1, 0, -1).normalize(),
-                    new Vec3(-1, 0, 1).normalize(),
-                    new Vec3(-1, 0, -1).normalize(),
-            };
-
-            for (Vec3 normal : diagonals) {
-                AABB expanded = box.expandTowards(normal.x * reach, 0, normal.z * reach);
-
-                if (!level.noCollision(player, expanded)) {
-                    double dot = lookVec.x * normal.x + lookVec.z * normal.z;
-                    float angleDiff = (float) Math.toDegrees(Math.acos(Math.min(1.0, Math.max(-1.0, dot))));
-
-                    if (angleDiff < bestAngleDiff) {
-                        bestAngleDiff = angleDiff;
-                        bestNormal = normal;
-
-                        double cross = lookVec.x * normal.z - lookVec.z * normal.x;
-                        double lookDot = lookVec.dot(normal);
-                        bestLookAngle = (float) Math.toDegrees(Math.atan2(cross, lookDot));
-                    }
-                }
-            }
-        }
-
-        if (bestNormal == null) {
+        if (best == null) {
             this.setLookWallAngle(360F);
             this.setWallNormal(Vec3.ZERO);
             return;
         }
 
-        this.setWallNormal(bestNormal);
-        this.setLookWallAngle(bestLookAngle);
+        this.setWallNormal(best.normal);
+        this.setLookWallAngle(best.lookAngle);
     }
 
     public void playWallSound(Player player, Function<SoundType, SoundEvent> kind, float volumeMultiplier, float pitchMultiplier) {
