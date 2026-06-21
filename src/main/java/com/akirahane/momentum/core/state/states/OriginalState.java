@@ -7,6 +7,7 @@ import com.akirahane.momentum.init.InitAttachments;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
 
+import static com.akirahane.momentum.config.ServerConfig.MANEUVER_CONSUME_HUNGER;
 import static com.akirahane.momentum.core.context.PlayerMovementContext.DEFAULT_FRICTION;
 import static com.akirahane.momentum.core.effect.MomentumEffectType.FRICTION;
 
@@ -20,7 +21,7 @@ public class OriginalState extends BaseState {
                 || player.isSpectator()            // 旁观者
                 || player.isAutoSpinAttack()       // 旋转攻击(三叉戟)
                 || player.isDeadOrDying()          // 死亡
-                || player.getFoodData().getFoodLevel() <= 6.0F
+                || MANEUVER_CONSUME_HUNGER.get() && player.getFoodData().getFoodLevel() <= 6.0F
                 ;
     }
 
