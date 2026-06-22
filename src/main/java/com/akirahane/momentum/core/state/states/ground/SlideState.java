@@ -58,6 +58,9 @@ public class SlideState extends BaseState {
             jumpPower /= 2;
             jumpPower *= ((float) (slideAccelerationCooldown - context.getSlideCooldown()) / slideAccelerationCooldown);
         }
+        if (context.getSpeed().horizontalDistance() >= context.getJumpLimitSpeed()){
+            jumpPower = 0;
+        }
 
         player.addDeltaMovement(
                 new Vec3(

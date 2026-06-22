@@ -57,7 +57,26 @@ public class DodgeState extends BaseState {
         if (!context.isHasJetBooster()) {
             player.setDeltaMovement(direction.x * 0.8, player.getDeltaMovement().y, direction.z * 0.8);
         } else {
-            player.setDeltaMovement(direction.x * 0.8, 0.3F, direction.z * 0.8);
+            double currentSpeed = player.getDeltaMovement().horizontalDistance();
+            double targetSpeed = direction.horizontalDistance() * 0.8;
+            if (currentSpeed > targetSpeed) {
+                // 根据转向角度衰减速度
+                Vec3 currentHorizontal = player.getDeltaMovement().multiply(1, 0, 1).normalize();
+                Vec3 targetHorizontal = new Vec3(direction.x, 0, direction.z).normalize();
+                double dot = currentHorizontal.dot(targetHorizontal); // 1=同向, 0=90度, -1=反向
+                double factor = Math.max(0, dot); // 90度以上直接归零
+
+                double finalSpeed = currentSpeed * factor;
+
+                if (finalSpeed < targetSpeed) {
+                    finalSpeed = targetSpeed;
+                }
+
+                Vec3 normalized = new Vec3(direction.x, 0, direction.z).normalize();
+                player.setDeltaMovement(normalized.x * finalSpeed, 0.3F, normalized.z * finalSpeed);
+            } else {
+                player.setDeltaMovement(direction.x * 0.8, 0.3F, direction.z * 0.8);
+            }
             player.fallDistance = 0;
         }
         context.setDodgeTimer(8);
@@ -65,7 +84,7 @@ public class DodgeState extends BaseState {
         context.setNoJump(true);
         context.setNoMoveInput(true);
         context.addEffect(MomentumEffectType.BLOCK_FRICTION, context.DODGE_BLOCK_FRICTION, 3);
-        if (context.isHasJetBooster()){
+        if (context.isHasJetBooster()) {
             player.playSound(JET2.value(), 1F, 1.0F + player.getRandom().nextFloat() * 0.4F - 0.2F);
         } else {
             player.playSound(

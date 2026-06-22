@@ -11,6 +11,7 @@ import com.akirahane.momentum.core.state.states.ground.SlideState;
 import com.akirahane.momentum.core.state.states.special.BreakFallState;
 import com.akirahane.momentum.core.state.states.special.DodgeState;
 import com.akirahane.momentum.core.state.states.water.SwimState;
+import com.akirahane.momentum.mixin.LivingEntityAccessor;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Player;
@@ -80,20 +81,21 @@ public class WallKickState extends BaseState {
             playStateAnimation(player, WALL_JUMP_RIGHT, context);
         }
         context.setLeftFootJump(!context.isLeftFootJump());
+        float jumpPower = ((LivingEntityAccessor) player).invokeGetJumpPower();
         if (Mth.abs(context.getInputWallAngle()) >= 100) {
             player.addDeltaMovement(
                     new Vec3(
-                            context.getInputVec().x * 0.3,
-                            0.6,
-                            context.getInputVec().z * 0.3
+                            context.getInputVec().x * jumpPower * 0.5,
+                            jumpPower,
+                            context.getInputVec().z * jumpPower * 0.5
                     )
             );
         } else {
             player.addDeltaMovement(
                     new Vec3(
-                            -context.getWallNormal().x * 0.6,
+                            -context.getWallNormal().x * jumpPower,
                             0,
-                            -context.getWallNormal().z * 0.6
+                            -context.getWallNormal().z * jumpPower
                     )
             );
         }
