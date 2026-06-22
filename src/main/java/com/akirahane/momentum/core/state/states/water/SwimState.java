@@ -11,8 +11,7 @@ import static com.akirahane.momentum.client.input.LowerCenterKey.LOWER_CENTER;
 public class SwimState extends BaseState {
 
     public static boolean canSwim(Player player, PlayerMovementContext context) {
-        return (LOWER_CENTER.get().isDown() || player.isSprinting() && player.isUnderWater()) &&
-                player.isInWater() &&
+        return ((LOWER_CENTER.get().isDown() || player.isSprinting()) && player.isUnderWater()) &&
                 Minecraft.getInstance().options.keyUp.isDown();
     }
 

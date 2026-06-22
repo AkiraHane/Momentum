@@ -11,6 +11,8 @@ import com.akirahane.momentum.core.state.states.special.DodgeState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Pose;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
 
@@ -46,18 +48,27 @@ public class VaultInState extends BaseState {
     public void onEnter(Player player, PlayerMovementContext context) {
         player.setForcedPose(Pose.SWIMMING);
         context.setVaultTimer(10);
-        player.setDeltaMovement(
-                0,
-                0.6,
-                0
-        );
+        var instance = player.getAttribute(Attributes.STEP_HEIGHT);
+        if (instance != null && instance.getModifier(UP_SLOPE_ID) == null) {
+            instance.addOrReplacePermanentModifier(new AttributeModifier(
+                    UP_SLOPE_ID,
+                    0.6,
+                    AttributeModifier.Operation.ADD_VALUE
+            ));
+        }
         playStateAnimation(player, VAULT_IN, context, 2, 1.5F);
+        context.setMomentumProne(true);
     }
 
     @Override
     public void onExit(Player player, PlayerMovementContext context) {
         super.onExit(player, context);
+        var instance = player.getAttribute(Attributes.STEP_HEIGHT);
+        if (instance != null) {
+            instance.removeModifier(UP_SLOPE_ID);
+        }
         player.setForcedPose(null);
+        context.setMomentumProne(false);
     }
 
     @Override

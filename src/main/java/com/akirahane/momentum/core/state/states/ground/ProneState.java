@@ -18,28 +18,30 @@ import net.minecraft.world.entity.Pose;
 import net.minecraft.world.entity.player.Player;
 
 import static com.akirahane.momentum.client.input.LowerCenterKey.LOWER_CENTER;
+import static com.akirahane.momentum.core.MomentumUtils.canPlayerFitAtPose;
 import static com.akirahane.momentum.core.state.states.ground.SlideState.canSlideSpeedCheck;
 
 
 public class ProneState extends BaseState {
     public static boolean canProne(Player player, PlayerMovementContext context) {
-        if (!ServerConfig.ENABLE_PRONE.getAsBoolean() || !ClientConfig.ENABLE_PRONE.getAsBoolean()){
+        if (!ServerConfig.ENABLE_PRONE.getAsBoolean() || !ClientConfig.ENABLE_PRONE.getAsBoolean()) {
             return false;
         }
-        if (player.onGround() && !canSlideSpeedCheck(player, context) && checkKey(player, context)){
+        if (!canPlayerFitAtPose(player, Pose.CROUCHING) || player.onGround() && !canSlideSpeedCheck(player, context) && checkKey(player, context)) {
             context.setMomentumProne(true);
             return true;
-        } else if (player.getPose() == Pose.SWIMMING && !context.isMomentumProne()){
+        } else if (player.getPose() == Pose.SWIMMING && !context.isMomentumProne()) {
             context.setMomentumProne(false);
             return true;
         }
         return false;
     }
+
     public static boolean canProneHold(Player player, PlayerMovementContext context) {
-        if (!ServerConfig.ENABLE_PRONE.getAsBoolean() || !ClientConfig.ENABLE_PRONE.getAsBoolean()){
+        if (!ServerConfig.ENABLE_PRONE.getAsBoolean() || !ClientConfig.ENABLE_PRONE.getAsBoolean()) {
             return false;
         }
-        if (context.isMomentumProne()){
+        if (context.isMomentumProne()) {
             return player.onGround() && checkKey(player, context);
         } else {
             return player.getPose() == Pose.SWIMMING && !context.isMomentumProne();
@@ -47,11 +49,12 @@ public class ProneState extends BaseState {
     }
 
     public static boolean checkKey(Player player, PlayerMovementContext context) {
-        if (!HintManager.contains(WallHangHints.VAULT_IN_STAND)){
+        if (!HintManager.contains(WallHangHints.VAULT_IN_STAND)) {
             HintManager.add(WallHangHints.PRONE);
         }
         return LOWER_CENTER.get().isDown();
     }
+
     // 状态转换检查
     public BaseState evaluate(Player player, PlayerMovementContext context) {
         HintManager.clear();

@@ -4,6 +4,7 @@ import com.akirahane.momentum.core.context.PlayerMovementContext;
 import com.akirahane.momentum.core.effect.MomentumEffectType;
 import com.akirahane.momentum.core.state.StateType;
 import com.akirahane.momentum.core.state.BaseState;
+import com.akirahane.momentum.core.state.states.ground.SlideState;
 import com.akirahane.momentum.core.state.states.wall.*;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
@@ -23,7 +24,9 @@ public class AirborneState extends BaseState {
     public void onEnter(Player player, PlayerMovementContext context) {
         context.setLuckyNumber(player);
         if (!WallKickState.WALL_JUMP_RIGHT.equals(context.getCurrentAnimationName()) &&
-                !WallKickState.WALL_JUMP_LEFT.equals(context.getCurrentAnimationName())
+                !WallKickState.WALL_JUMP_LEFT.equals(context.getCurrentAnimationName()) &&
+                !SlideState.SLIDE.equals(context.getCurrentAnimationName()) &&
+                player.fallDistance < player.getAttributeValue(Attributes.SAFE_FALL_DISTANCE) * 2
         ) {
             super.onEnter(player, context);
         }

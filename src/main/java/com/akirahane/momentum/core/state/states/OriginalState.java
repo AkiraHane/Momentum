@@ -34,6 +34,10 @@ public class OriginalState extends BaseState {
         if (instance != null) {
             instance.removeModifier(WALL_GRAVITY_ID);
         }
+        instance = player.getAttribute(Attributes.STEP_HEIGHT);
+        if (instance != null) {
+            instance.removeModifier(UP_SLOPE_ID);
+        }
     }
 
     @Override
@@ -49,6 +53,10 @@ public class OriginalState extends BaseState {
         var instance = player.getAttribute(Attributes.GRAVITY);
         if (instance != null) {
             instance.removeModifier(WALL_GRAVITY_ID);
+        }
+        instance = player.getAttribute(Attributes.STEP_HEIGHT);
+        if (instance != null) {
+            instance.removeModifier(UP_SLOPE_ID);
         }
         context.addPermanentEffect(FRICTION, DEFAULT_FRICTION);
     }
