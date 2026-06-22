@@ -40,8 +40,7 @@ public class BreakFallReadyState extends BaseState {
     public void onEnter(Player player, PlayerMovementContext context) {
         context.setLuckyNumber(player);
         if (!WallKickState.WALL_JUMP_RIGHT.equals(context.getCurrentAnimationName()) &&
-                !WallKickState.WALL_JUMP_LEFT.equals(context.getCurrentAnimationName()) &&
-                player.fallDistance > player.getAttributeValue(Attributes.SAFE_FALL_DISTANCE) * 2
+                !WallKickState.WALL_JUMP_LEFT.equals(context.getCurrentAnimationName())
         ) {
             super.onEnter(player, context);
         }
@@ -61,8 +60,8 @@ public class BreakFallReadyState extends BaseState {
         } else if (FALL.equals(context.getCurrentAnimationName())) {
             playStateAnimation(player, IDLE, context);
         }
-        if (!IDLE.equals(context.getCurrentAnimationName()) &&
-                !FALL.equals(context.getCurrentAnimationName())) {
+        if (WallKickState.WALL_JUMP_RIGHT.equals(context.getCurrentAnimationName()) &&
+                WallKickState.WALL_JUMP_LEFT.equals(context.getCurrentAnimationName())) {
             if (context.getSpeed().y > 0) {
                 context.setJumpAnimationSpeed(context.getJumpAnimationSpeed() * 0.9F);
             } else {

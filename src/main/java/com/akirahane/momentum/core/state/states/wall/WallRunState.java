@@ -41,7 +41,7 @@ public class WallRunState extends BaseState {
                 isLookAndSpeedSameSide(player, context) &&
                 Mth.abs(context.getLookWallAngle()) >= 30 &&
                 Mth.abs(context.getInputWallAngle()) >= 30 && Mth.abs(context.getInputWallAngle()) < 100 &&
-                (context.isHasJetBooster() || canWallRunSpeedCheck(player, context)) &&
+                canWallRunSpeedCheck(player, context) &&
                 checkKey(player, context) &&
                 !player.onGround();
     }
@@ -53,7 +53,7 @@ public class WallRunState extends BaseState {
                 context.getWallNormal().equals(context.getRunWallNormal()) &&
                 isLookAndSpeedSameSide(player, context) &&
                 Mth.abs(context.getLookWallAngle()) >= 30 &&
-                (context.isHasJetBooster() || canWallRunSpeedCheck(player, context)) &&
+                canWallRunSpeedCheck(player, context) &&
                 checkKeyHold(player, context) &&
                 !player.onGround();
     }
@@ -86,7 +86,7 @@ public class WallRunState extends BaseState {
 
     public static boolean canWallRunSpeedCheck(Player player, PlayerMovementContext context) {
         return context.getSpeed().horizontalDistance() * 20 > ServerConfig.MIN_WALL_RUN_SPEED.get() &&
-                context.getSpeed().horizontalDistance() > (float) -context.getSpeed().y;
+                (context.isHasJetBooster() || context.getSpeed().horizontalDistance() > (float) -context.getSpeed().y);
     }
 
     public static boolean checkKey(Player player, PlayerMovementContext context) {
