@@ -37,6 +37,7 @@ public class WallRunState extends BaseState {
         return ServerConfig.ENABLE_WALL_RUN.getAsBoolean() && ClientConfig.ENABLE_WALL_RUN.getAsBoolean() &&
                 !Vec3.ZERO.equals(context.getWallNormal()) &&
                 !Vec3.ZERO.equals(context.getInputVec()) &&
+                context.isHasFaceWall() &&
                 isLookAndSpeedSameSide(player, context) &&
                 Mth.abs(context.getLookWallAngle()) >= 30 &&
                 Mth.abs(context.getInputWallAngle()) >= 30 && Mth.abs(context.getInputWallAngle()) < 100 &&
@@ -213,7 +214,6 @@ public class WallRunState extends BaseState {
     public void clientTick(Player player, PlayerMovementContext context) {
         super.clientTick(player, context);
         Vec3 wallNormal = context.getWallNormal();
-        float inputWallAngle = context.getInputWallAngle();
         Vec3 currentMovement = player.getDeltaMovement();
         context.setNoMoveInput(true);
         Vec3 tangent = new Vec3(-wallNormal.z, 0, wallNormal.x);
