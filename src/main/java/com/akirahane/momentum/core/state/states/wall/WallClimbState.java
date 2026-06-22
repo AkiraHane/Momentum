@@ -103,7 +103,7 @@ public class WallClimbState extends BaseState {
         if (WallClimbState.canWallClimbHold(player, context)) {
             return StateType.WALL_CLIMB.getState();
         }
-        if (WallSlideState.canWallSlide(player, context)) {
+        if (WallSlideState.canWallSlideHold(player, context)) {
             return StateType.WALL_SLIDE.getState();
         }
         if (BreakFallReadyState.canBreakFallReady(player, context)) {
@@ -123,7 +123,6 @@ public class WallClimbState extends BaseState {
     public void onEnter(Player player, PlayerMovementContext context) {
         playStateAnimation(player, WALL_CLIMB, context);
         if (!player.onClimbable()){
-            context.addPermanentEffect(MomentumEffectType.ACCELERATION, AIR_ACCELERATION);
             context.addPermanentEffect(MomentumEffectType.LIMIT_ACCELERATION_SPEED, AIR_LIMIT_ACCELERATION);
             var instance = player.getAttribute(Attributes.GRAVITY);
             if (instance != null && instance.getModifier(WALL_GRAVITY_ID) == null) {
@@ -169,7 +168,6 @@ public class WallClimbState extends BaseState {
     @Override
     public void onExit(Player player, PlayerMovementContext context) {
         super.onExit(player, context);
-        context.removeEffect(MomentumEffectType.ACCELERATION, AIR_ACCELERATION);
         context.removeEffect(MomentumEffectType.LIMIT_ACCELERATION_SPEED, AIR_LIMIT_ACCELERATION);
         var instance = player.getAttribute(Attributes.GRAVITY);
         if (instance != null) {

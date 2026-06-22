@@ -167,8 +167,14 @@ public class WallRunState extends BaseState {
         }
         playStateAnimation(player, inputWallAngle > 0 ? WALL_RUN_LEFT : WALL_RUN_RIGHT, context);
         var instance = player.getAttribute(Attributes.GRAVITY);
+        double ySpeed = player.getDeltaMovement().y;
+        if (context.isHasJetBooster()) {
+            ySpeed = Math.max(0.62, ySpeed);
+            player.playSound(JET2.value(), 1F, 1.0F + player.getRandom().nextFloat() * 0.4F - 0.2F);
+            player.fallDistance = 0;
+        }
         if (instance != null) {
-            if (context.isHasLedge()) {
+            if (context.isHasLedge() || context.isHasJetBooster()) {
                 instance.addOrReplacePermanentModifier(new AttributeModifier(
                         WALL_GRAVITY_ID,
                         -1,
@@ -180,6 +186,7 @@ public class WallRunState extends BaseState {
                         0,
                         tangent.z * Math.max(player.getDeltaMovement().horizontalDistance(), context.getJumpLimitSpeed())
                 );
+                player.fallDistance = 0;
             } else {
                 instance.addOrReplacePermanentModifier(new AttributeModifier(
                         WALL_GRAVITY_ID,
@@ -187,11 +194,6 @@ public class WallRunState extends BaseState {
                         AttributeModifier.Operation.ADD_MULTIPLIED_BASE
                 ));
                 context.setGravityModify(-0.6F);
-                double ySpeed = player.getDeltaMovement().y;
-                if (context.isHasJetBooster()) {
-                    ySpeed = Math.max(0.62, ySpeed);
-                    player.playSound(JET2.value(), 1F, 1.0F + player.getRandom().nextFloat() * 0.4F - 0.2F);
-                }
                 player.setDeltaMovement(
                         tangent.x * Math.max(player.getDeltaMovement().horizontalDistance(), context.getJumpLimitSpeed()),
                         ySpeed,
@@ -231,7 +233,7 @@ public class WallRunState extends BaseState {
                         0,
                         tangent.z * Math.max(player.getDeltaMovement().horizontalDistance(), context.getJumpLimitSpeed()) + wallNormal.z * pushStrength
                 );
-            } else if (context.getGravityModify() != -0.6) {
+            } else if (!context.isHasLedge() && !context.isHasJetBooster() && context.getGravityModify() != -0.6) {
                 instance.addOrReplacePermanentModifier(new AttributeModifier(
                         WALL_GRAVITY_ID,
                         -0.6,

@@ -54,7 +54,6 @@ public class WallSlideState extends BaseState {
                         !Vec3.ZERO.equals(context.getInputVec()) && Mth.abs(context.getInputWallAngle()) < 60 ||
                         checkKey(player, context)
                 ) &&
-                context.getSpeed().y < 0 &&
                 Mth.abs(context.getLookWallAngle()) < 60;
     }
 
@@ -101,7 +100,7 @@ public class WallSlideState extends BaseState {
         if (WallHangState.canWallHang(player, context)) {
             return StateType.WALL_HANG.getState();
         }
-        if (WallClimbState.canWallClimb(player, context)) {
+        if (WallClimbState.canWallClimbHold(player, context)) {
             return StateType.WALL_CLIMB.getState();
         }
         if (WallSlideState.canWallSlideHold(player, context)) {
@@ -122,7 +121,6 @@ public class WallSlideState extends BaseState {
 
     @Override
     public void onEnter(Player player, PlayerMovementContext context) {
-        context.addPermanentEffect(MomentumEffectType.ACCELERATION, AIR_ACCELERATION);
         context.addPermanentEffect(MomentumEffectType.LIMIT_ACCELERATION_SPEED, AIR_LIMIT_ACCELERATION);
         playStateAnimation(player, WALL_SLIDE, context, 4, 1);
         context.setTargetArmTransform(-0.15F, 5F);
@@ -166,7 +164,6 @@ public class WallSlideState extends BaseState {
     @Override
     public void onExit(Player player, PlayerMovementContext context) {
         super.onExit(player, context);
-        context.removeEffect(MomentumEffectType.ACCELERATION, AIR_ACCELERATION);
         context.removeEffect(MomentumEffectType.LIMIT_ACCELERATION_SPEED, AIR_LIMIT_ACCELERATION);
         var instance = player.getAttribute(Attributes.GRAVITY);
         if (instance != null) {

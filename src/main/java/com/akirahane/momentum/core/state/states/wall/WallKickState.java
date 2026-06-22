@@ -90,6 +90,7 @@ public class WallKickState extends BaseState {
                             context.getInputVec().z * jumpPower * 0.5
                     )
             );
+            player.fallDistance = 0;
         } else {
             player.addDeltaMovement(
                     new Vec3(

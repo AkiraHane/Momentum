@@ -43,9 +43,6 @@ public class MovementDebugEntry implements DebugScreenEntry {
 //        displayer.addToGroup(group, String.format("[Momentum] xRot: %.4f", xRot));
         double fallDistance = mc.player.fallDistance;
         displayer.addToGroup(group, String.format("[Momentum] Fall Distance: %.4f", fallDistance));
-        // lastFallDistance
-        double lastFallDistance = context.getLastFallDistance();
-        displayer.addToGroup(group, String.format("[Momentum] LastFallDistance: %.4f", lastFallDistance));
 //        // getWorldInputVec
 //        Vec3 inputVec = context.getInputVec();
 //        displayer.addToGroup(group, String.format("[Momentum] InputVec: %s", inputVec));
@@ -66,38 +63,5 @@ public class MovementDebugEntry implements DebugScreenEntry {
         //
         float jumpPower = ((LivingEntityAccessor) player).invokeGetJumpPower();
         displayer.addToGroup(group, String.format("[Momentum] JumpPower: %.4f", jumpPower));
-
-//        double jumpAcceleration = context.getJumpAcceleration();
-//        displayer.addToGroup(group, String.format("[Momentum] JumpAcceleration: %.4f", jumpAcceleration));
-//        double safeFallDistance = player.getAttributeValue(Attributes.SAFE_FALL_DISTANCE);
-//        displayer.addToGroup(group, String.format("[Momentum] SafeFallDistance: %.4f", safeFallDistance));
-        // context.getInputVec()
-        displayer.addToGroup(group, String.format("[Momentum] InputVec: %s", context.getInputVec()));
-        MomentumAnimationController controller = (MomentumAnimationController) PlayerAnimationAccess.getPlayerAnimationLayer(
-                player, MomentumClient.MOVEMENT_ANIM
-        );
-        if (context.getController() != null) {
-            MochaEngine<AnimationController> mocha = context.getMocha();
-//            // query.ground_speed
-//            displayer.addToGroup(group, String.format("[Momentum] GroundSpeed: %.4f", mocha.eval("variable.movement_speed()")));
-//            // query.body_x_rotation
-//            displayer.addToGroup(group, String.format("[Momentum] BodyXRotation: %.4f", mocha.eval("query.body_x_rotation")));
-//            // query.body_y_rotation
-//            displayer.addToGroup(group, String.format("[Momentum] BodyYRotation: %.4f", mocha.eval("query.body_y_rotation")));
-//            // query.camera_rotation
-//            displayer.addToGroup(group, String.format("[Momentum] CameraRotation: %.4f", mocha.eval("query.camera_rotation")));
-//            // query.eye_target_x_rotation
-//            displayer.addToGroup(group, String.format("[Momentum] EyeTargetXRotation: %.4f", mocha.eval("query.eye_target_x_rotation")));
-//            displayer.addToGroup(group, String.format("[Momentum] EyeTargetYRotation: %.4f", mocha.eval("query.eye_target_y_rotation")));
-//            // query.head_x_rotation
-//            displayer.addToGroup(group, String.format("[Momentum] HeadXRotation: %.4f", mocha.eval("query.head_x_rotation")));
-//            displayer.addToGroup(group, String.format("[Momentum] HeadYRotation: %.4f", mocha.eval("query.head_y_rotation")));
-//            // query.is_swimming
-//            displayer.addToGroup(group, String.format("[Momentum] IsSwimming: %s", mocha.eval("query.is_swimming")));
-//            // math.mod(query.head_y_rotation - query.body_y_rotation, 360)
-//            displayer.addToGroup(group, String.format("[Momentum] HeadYRotation - BodyYRotation: %.4f", mocha.eval("query.head_y_rotation - query.body_y_rotation")));
-//            displayer.addToGroup(group, String.format("[Momentum] get_movement_y_speed: %.4f", mocha.eval("variable.get_movement_y_speed()")));
-//            displayer.addToGroup(group, String.format("[Momentum] get_movement_speed: %.4f", mocha.eval("variable.get_movement_speed()")));
-        }
     }
 }
