@@ -213,7 +213,7 @@ public class WallRunState extends BaseState {
     @Override
     public void clientTick(Player player, PlayerMovementContext context) {
         super.clientTick(player, context);
-        Vec3 wallNormal = context.getWallNormal();
+        Vec3 wallNormal = context.getRunWallNormal();
         Vec3 currentMovement = player.getDeltaMovement();
         context.setNoMoveInput(true);
         Vec3 tangent = new Vec3(-wallNormal.z, 0, wallNormal.x);
