@@ -122,7 +122,7 @@ public class WallHangState extends BaseState {
                     AttributeModifier.Operation.ADD_MULTIPLIED_BASE
             ));
         }
-        player.setDeltaMovement(0, 0, 0);
+        player.setDeltaMovement(player.getDeltaMovement().x, 0, player.getDeltaMovement().z);
         player.fallDistance = 0;
         context.addPermanentEffect(MomentumEffectType.FRICTION, WALL_FRICTION);
         context.setNeedSoundTick(SOUND_TICK);
