@@ -1,7 +1,9 @@
 package com.akirahane.momentum.core.state.states.wall;
 
+import com.akirahane.momentum.client.config.ClientConfig;
 import com.akirahane.momentum.client.hud.HintManager;
 import com.akirahane.momentum.client.hud.WallHangHints;
+import com.akirahane.momentum.config.ServerConfig;
 import com.akirahane.momentum.core.context.PlayerMovementContext;
 import com.akirahane.momentum.core.effect.MomentumEffectType;
 import com.akirahane.momentum.core.state.StateType;
@@ -30,6 +32,9 @@ public class WallSlideState extends BaseState {
     public static String WALL_SLIDE = "wall_slide";
 
     public static boolean canWallSlide(Player player, PlayerMovementContext context) {
+        if (ServerConfig.ENABLE_WALL_SLIDE.getAsBoolean() && ClientConfig.ENABLE_WALL_SLIDE.getAsBoolean()){
+            return false;
+        }
         if (player.onClimbable()){
             HintManager.add(WallHangHints.CLIMB_ACCELERATION);
         }

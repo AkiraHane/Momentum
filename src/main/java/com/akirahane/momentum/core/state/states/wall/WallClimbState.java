@@ -1,7 +1,9 @@
 package com.akirahane.momentum.core.state.states.wall;
 
+import com.akirahane.momentum.client.config.ClientConfig;
 import com.akirahane.momentum.client.hud.HintManager;
 import com.akirahane.momentum.client.hud.WallHangHints;
+import com.akirahane.momentum.config.ServerConfig;
 import com.akirahane.momentum.core.context.PlayerMovementContext;
 import com.akirahane.momentum.core.effect.MomentumEffectType;
 import com.akirahane.momentum.core.state.StateType;
@@ -33,7 +35,8 @@ public class WallClimbState extends BaseState {
     private static final int SOUND_TICK = 10;
 
     public static boolean canWallClimb(Player player, PlayerMovementContext context) {
-        return  (!Vec3.ZERO.equals(context.getWallNormal()) &&
+        return  ServerConfig.ENABLE_WALL_CLIMB.getAsBoolean() && ClientConfig.ENABLE_WALL_CLIMB.getAsBoolean() &&
+                (!Vec3.ZERO.equals(context.getWallNormal()) &&
                         context.isHasFaceWall() &&
                         !Vec3.ZERO.equals(context.getInputVec()) && Mth.abs(context.getInputWallAngle()) < 30 &&
                         Mth.abs(context.getLookWallAngle()) < 30 &&
@@ -44,7 +47,8 @@ public class WallClimbState extends BaseState {
 
     // 维持
     public static boolean canWallClimbHold(Player player, PlayerMovementContext context) {
-        return (!Vec3.ZERO.equals(context.getWallNormal()) &&
+        return ServerConfig.ENABLE_WALL_CLIMB.getAsBoolean() && ClientConfig.ENABLE_WALL_CLIMB.getAsBoolean() &&
+                (!Vec3.ZERO.equals(context.getWallNormal()) &&
                 context.isHasFaceWall() &&
                 !Vec3.ZERO.equals(context.getInputVec()) && Mth.abs(context.getInputWallAngle()) < 60 &&
                 Mth.abs(context.getLookWallAngle()) < 60 &&

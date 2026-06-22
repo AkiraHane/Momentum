@@ -1,7 +1,9 @@
 package com.akirahane.momentum.core.state.states.wall;
 
+import com.akirahane.momentum.client.config.ClientConfig;
 import com.akirahane.momentum.client.hud.HintManager;
 import com.akirahane.momentum.client.hud.WallHangHints;
+import com.akirahane.momentum.config.ServerConfig;
 import com.akirahane.momentum.core.context.PlayerMovementContext;
 import com.akirahane.momentum.core.state.BaseState;
 import com.akirahane.momentum.core.state.StateType;
@@ -25,14 +27,16 @@ public class WallKickState extends BaseState {
     public static String WALL_JUMP_RIGHT = "wall_jump_right";
 
     public static boolean canWallKick(Player player, PlayerMovementContext context) {
-        return !Vec3.ZERO.equals(context.getWallNormal()) &&
+        return ServerConfig.ENABLE_WALL_KICK.getAsBoolean() && ClientConfig.ENABLE_WALL_KICK.getAsBoolean() &&
+                !Vec3.ZERO.equals(context.getWallNormal()) &&
                 context.getInputVec().horizontalDistance() > 0.01 && Mth.abs(context.getInputWallAngle()) >= 100 &&
                 checkKey(player, context);
     }
 
     // 跑墙特殊进入条件
     public static boolean canWallKickRun(Player player, PlayerMovementContext context) {
-        return !Vec3.ZERO.equals(context.getWallNormal()) &&
+        return ServerConfig.ENABLE_WALL_KICK.getAsBoolean() && ClientConfig.ENABLE_WALL_KICK.getAsBoolean() &&
+                !Vec3.ZERO.equals(context.getWallNormal()) &&
                 checkKey(player, context);
     }
 

@@ -1,7 +1,9 @@
 package com.akirahane.momentum.core.state.states.special;
 
+import com.akirahane.momentum.client.config.ClientConfig;
 import com.akirahane.momentum.client.hud.HintManager;
 import com.akirahane.momentum.client.hud.WallHangHints;
+import com.akirahane.momentum.config.ServerConfig;
 import com.akirahane.momentum.core.context.PlayerMovementContext;
 import com.akirahane.momentum.core.effect.MomentumEffectType;
 import com.akirahane.momentum.core.state.StateType;
@@ -20,7 +22,8 @@ public class BreakFallState extends BaseState {
     public static String BREAK_FALL = "break_fall";
 
     public static boolean canBreakFall(Player player, PlayerMovementContext context) {
-        return context.isToBreakFallState();
+        return ServerConfig.ENABLE_BREAK_FALL.getAsBoolean() && ClientConfig.ENABLE_BREAK_FALL.getAsBoolean() &&
+                context.isToBreakFallState();
     }
 
     @Override

@@ -1,7 +1,9 @@
 package com.akirahane.momentum.core.state.states.special;
 
+import com.akirahane.momentum.client.config.ClientConfig;
 import com.akirahane.momentum.client.hud.HintManager;
 import com.akirahane.momentum.client.hud.WallHangHints;
+import com.akirahane.momentum.config.ServerConfig;
 import com.akirahane.momentum.core.context.PlayerMovementContext;
 import com.akirahane.momentum.core.effect.MomentumEffectType;
 import com.akirahane.momentum.core.state.StateType;
@@ -26,7 +28,8 @@ public class DodgeState extends BaseState {
     public static String DODGE_RIGHT = "dodge_right";
 
     public static boolean canDodge(Player player, PlayerMovementContext context) {
-        return (player.onGround() || context.isHasJetBooster()) &&
+        return ServerConfig.ENABLE_DODGE.getAsBoolean() && ClientConfig.ENABLE_DODGE.getAsBoolean() &&
+                (player.onGround() || context.isHasJetBooster()) &&
                 !(player.getPose() == Pose.SWIMMING && !canPlayerFitAtPose(player, Pose.CROUCHING)) &&
                 DODGE_COOLDOWN.get() * DODGE_STORAGE.get() - context.getDodgeCooldown() > DODGE_COOLDOWN.get() &&
                 checkKey(player, context);

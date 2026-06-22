@@ -1,7 +1,9 @@
 package com.akirahane.momentum.core.state.states.wall;
 
+import com.akirahane.momentum.client.config.ClientConfig;
 import com.akirahane.momentum.client.hud.HintManager;
 import com.akirahane.momentum.client.hud.WallHangHints;
+import com.akirahane.momentum.config.ServerConfig;
 import com.akirahane.momentum.core.context.PlayerMovementContext;
 import com.akirahane.momentum.core.state.StateType;
 import com.akirahane.momentum.core.state.BaseState;
@@ -17,7 +19,8 @@ import static com.akirahane.momentum.core.state.states.OriginalState.canOriginal
 public class VaultUpState extends BaseState {
 
     public static boolean canVaultUp(Player player, PlayerMovementContext context) {
-        return context.isHasLedge() &&
+        return ServerConfig.ENABLE_VAULT_UP.getAsBoolean() && ClientConfig.ENABLE_VAULT_UP.getAsBoolean() &&
+                context.isHasLedge() &&
                 checkKey(player, context);
     }
 

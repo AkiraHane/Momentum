@@ -1,5 +1,6 @@
 package com.akirahane.momentum.core.state.states.ground;
 
+import com.akirahane.momentum.client.config.ClientConfig;
 import com.akirahane.momentum.client.hud.HintManager;
 import com.akirahane.momentum.client.hud.WallHangHints;
 import com.akirahane.momentum.core.effect.MomentumEffect;
@@ -26,7 +27,8 @@ public class SlideState extends BaseState {
     protected int JUMP_DECELERATION_WINDOW = 5;
 
     public static boolean canSlide(Player player, PlayerMovementContext context) {
-        return player.onGround() &&
+        return ServerConfig.ENABLE_SLIDE.getAsBoolean() && ClientConfig.ENABLE_SLIDE.getAsBoolean() &&
+                player.onGround() &&
                 canSlideSpeedCheck(player, context) &&
                 checkKey(player, context);
     }

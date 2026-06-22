@@ -1,5 +1,14 @@
 package com.akirahane.momentum.client.config;
 
+import com.akirahane.momentum.core.state.states.air.AirborneState;
+import com.akirahane.momentum.core.state.states.air.BreakFallReadyState;
+import com.akirahane.momentum.core.state.states.ground.ProneState;
+import com.akirahane.momentum.core.state.states.ground.SlideState;
+import com.akirahane.momentum.core.state.states.ground.WalkState;
+import com.akirahane.momentum.core.state.states.special.BreakFallState;
+import com.akirahane.momentum.core.state.states.special.DodgeState;
+import com.akirahane.momentum.core.state.states.wall.*;
+import com.akirahane.momentum.core.state.states.water.SwimState;
 import net.neoforged.neoforge.common.ModConfigSpec;
 
 public class ClientConfig {
@@ -44,6 +53,48 @@ public class ClientConfig {
     public static final ModConfigSpec.DoubleValue FADE_OUT_SPEED = BUILDER
             .comment("淡出速度（值越小越慢）", "范围: 0 - 1.0", "默认值: 0.18")
             .defineInRange("fadeOutSpeed", 0.18, 0, 1.0);
+    // 功能开关
+    static {
+        BUILDER.pop();
+        BUILDER.push("function_switches");
+    }
+    public static final ModConfigSpec.BooleanValue ENABLE_PRONE = BUILDER
+            .comment("是否开启趴下")
+            .define("enableProne", true);
+    public static final ModConfigSpec.BooleanValue ENABLE_SLIDE = BUILDER
+            .comment("是否开启滑铲")
+            .define("enableSlide", true);
+    public static final ModConfigSpec.BooleanValue ENABLE_BREAK_FALL_READY = BUILDER
+            .comment("是否开启受身准备")
+            .define("enableBreakFallReady", true);
+    public static final ModConfigSpec.BooleanValue ENABLE_BREAK_FALL = BUILDER
+            .comment("是否开启受身")
+            .define("enableBreakFall", true);
+    public static final ModConfigSpec.BooleanValue ENABLE_DODGE = BUILDER
+            .comment("是否开启闪避")
+            .define("enableDodge", true);
+    public static final ModConfigSpec.BooleanValue ENABLE_WALL_CLIMB = BUILDER
+            .comment("是否开启爬墙")
+            .define("enableWallClimb", true);
+    public static final ModConfigSpec.BooleanValue ENABLE_WALL_SLIDE = BUILDER
+            .comment("是否开启滑墙")
+            .define("enableWallSlide", true);
+    public static final ModConfigSpec.BooleanValue ENABLE_WALL_RUN = BUILDER
+            .comment("是否开启墙跑")
+            .define("enableWallRun", true);
+    public static final ModConfigSpec.BooleanValue ENABLE_WALL_HANG = BUILDER
+            .comment("是否开启挂墙")
+            .define("enableWallHang", true);
+    public static final ModConfigSpec.BooleanValue ENABLE_WALL_KICK = BUILDER
+            .comment("是否开启蹬墙跳")
+            .define("enableWallKick", true);
+    public static final ModConfigSpec.BooleanValue ENABLE_VAULT_UP = BUILDER
+            .comment("是否开启翻越")
+            .define("enableVaultUp", true);
+    public static final ModConfigSpec.BooleanValue ENABLE_VAULT_IN = BUILDER
+            .comment("是否开启翻入")
+            .define("enableVaultIn", true);
+
 
     public static final ModConfigSpec SPEC = BUILDER.build();
 }

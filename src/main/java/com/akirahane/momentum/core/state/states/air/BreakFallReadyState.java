@@ -1,7 +1,9 @@
 package com.akirahane.momentum.core.state.states.air;
 
+import com.akirahane.momentum.client.config.ClientConfig;
 import com.akirahane.momentum.client.hud.HintManager;
 import com.akirahane.momentum.client.hud.WallHangHints;
+import com.akirahane.momentum.config.ServerConfig;
 import com.akirahane.momentum.core.context.PlayerMovementContext;
 import com.akirahane.momentum.core.effect.MomentumEffectType;
 import com.akirahane.momentum.core.state.BaseState;
@@ -18,7 +20,8 @@ public class BreakFallReadyState extends BaseState {
     public static String BREAK_FALL_READY = "break_fall_ready";
 
     public static boolean canBreakFallReady(Player player, PlayerMovementContext context) {
-        return !player.onGround() &&
+        return ServerConfig.ENABLE_BREAK_FALL_READY.getAsBoolean() && ClientConfig.ENABLE_BREAK_FALL_READY.getAsBoolean() &&
+                !player.onGround() &&
                 player.fallDistance > Math.min(4, player.getAttributeValue(Attributes.SAFE_FALL_DISTANCE)) &&
                 checkKey(player, context);
     }

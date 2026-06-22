@@ -1,7 +1,9 @@
 package com.akirahane.momentum.core.state.states.ground;
 
+import com.akirahane.momentum.client.config.ClientConfig;
 import com.akirahane.momentum.client.hud.HintManager;
 import com.akirahane.momentum.client.hud.WallHangHints;
+import com.akirahane.momentum.config.ServerConfig;
 import com.akirahane.momentum.core.state.StateType;
 import com.akirahane.momentum.core.state.BaseState;
 import com.akirahane.momentum.core.context.PlayerMovementContext;
@@ -21,6 +23,9 @@ import static com.akirahane.momentum.core.state.states.ground.SlideState.canSlid
 
 public class ProneState extends BaseState {
     public static boolean canProne(Player player, PlayerMovementContext context) {
+        if (!ServerConfig.ENABLE_PRONE.getAsBoolean() || !ClientConfig.ENABLE_PRONE.getAsBoolean()){
+            return false;
+        }
         if (player.onGround() && !canSlideSpeedCheck(player, context) && checkKey(player, context)){
             context.setMomentumProne(true);
             return true;
@@ -31,6 +36,9 @@ public class ProneState extends BaseState {
         return false;
     }
     public static boolean canProneHold(Player player, PlayerMovementContext context) {
+        if (!ServerConfig.ENABLE_PRONE.getAsBoolean() || !ClientConfig.ENABLE_PRONE.getAsBoolean()){
+            return false;
+        }
         if (context.isMomentumProne()){
             return player.onGround() && checkKey(player, context);
         } else {

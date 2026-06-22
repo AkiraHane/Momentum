@@ -1,5 +1,6 @@
 package com.akirahane.momentum.core.state.states.wall;
 
+import com.akirahane.momentum.client.config.ClientConfig;
 import com.akirahane.momentum.client.hud.HintManager;
 import com.akirahane.momentum.client.hud.WallHangHints;
 import com.akirahane.momentum.config.ServerConfig;
@@ -33,7 +34,8 @@ public class WallRunState extends BaseState {
     private static final int SOUND_TICK = 10;
 
     public static boolean canWallRun(Player player, PlayerMovementContext context) {
-        return !Vec3.ZERO.equals(context.getWallNormal()) &&
+        return ServerConfig.ENABLE_WALL_RUN.getAsBoolean() && ClientConfig.ENABLE_WALL_RUN.getAsBoolean() &&
+                !Vec3.ZERO.equals(context.getWallNormal()) &&
                 !Vec3.ZERO.equals(context.getInputVec()) &&
                 isLookAndSpeedSameSide(player, context) &&
                 Mth.abs(context.getLookWallAngle()) >= 30 &&
@@ -45,7 +47,8 @@ public class WallRunState extends BaseState {
 
     // 维持
     public static boolean canWallRunHold(Player player, PlayerMovementContext context) {
-        return !Vec3.ZERO.equals(context.getWallNormal()) &&
+        return ServerConfig.ENABLE_WALL_RUN.getAsBoolean() && ClientConfig.ENABLE_WALL_RUN.getAsBoolean() &&
+                !Vec3.ZERO.equals(context.getWallNormal()) &&
                 context.getWallNormal().equals(context.getRunWallNormal()) &&
                 isLookAndSpeedSameSide(player, context) &&
                 Mth.abs(context.getLookWallAngle()) >= 30 &&

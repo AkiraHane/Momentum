@@ -1,7 +1,9 @@
 package com.akirahane.momentum.core.state.states.wall;
 
+import com.akirahane.momentum.client.config.ClientConfig;
 import com.akirahane.momentum.client.hud.HintManager;
 import com.akirahane.momentum.client.hud.WallHangHints;
+import com.akirahane.momentum.config.ServerConfig;
 import com.akirahane.momentum.core.context.PlayerMovementContext;
 import com.akirahane.momentum.core.state.BaseState;
 import com.akirahane.momentum.core.state.StateType;
@@ -20,7 +22,8 @@ public class VaultInState extends BaseState {
     public static final String VAULT_IN = "vault_in";
 
     public static boolean canVaultIn(Player player, PlayerMovementContext context) {
-        return (context.isHasLedge() || player.onGround() && !context.isHasFaceWall()) &&
+        return ServerConfig.ENABLE_VAULT_IN.getAsBoolean() && ClientConfig.ENABLE_VAULT_IN.getAsBoolean() &&
+                (context.isHasLedge() || player.onGround() && !context.isHasFaceWall()) &&
                 !Vec3.ZERO.equals(context.getInputVec()) && Mth.abs(context.getInputWallAngle()) < 90 &&
                 checkKey(player, context)
                 ;

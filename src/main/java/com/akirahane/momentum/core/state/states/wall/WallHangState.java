@@ -1,7 +1,9 @@
 package com.akirahane.momentum.core.state.states.wall;
 
+import com.akirahane.momentum.client.config.ClientConfig;
 import com.akirahane.momentum.client.hud.HintManager;
 import com.akirahane.momentum.client.hud.WallHangHints;
+import com.akirahane.momentum.config.ServerConfig;
 import com.akirahane.momentum.core.context.PlayerMovementContext;
 import com.akirahane.momentum.core.effect.MomentumEffectType;
 import com.akirahane.momentum.core.state.StateType;
@@ -36,7 +38,8 @@ public class WallHangState extends BaseState {
     public static final String WALL_HANG_LEFT = "wall_hang_left";
 
     public static boolean canWallHang(Player player, PlayerMovementContext context) {
-        return !player.onGround() &&
+        return ServerConfig.ENABLE_WALL_HANG.getAsBoolean() && ClientConfig.ENABLE_WALL_HANG.getAsBoolean() &&
+                !player.onGround() &&
                 context.isHasLedge() &&
                 !Vec3.ZERO.equals(context.getWallNormal()) &&
                 (Mth.abs(context.getLookWallAngle()) < 60 || Mth.abs(context.getInputWallAngle()) < 60) &&
