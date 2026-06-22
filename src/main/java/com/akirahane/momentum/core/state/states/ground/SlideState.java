@@ -74,6 +74,7 @@ public class SlideState extends BaseState {
         playStateAnimation(player, SLIDE, context, 6, 1.0f);
         context.setMomentumRollIntensity(15F);
         context.setTargetArmTransform(0.15F, -15F);
+        context.setMomentumProne(true);
     }
 
     @Override
@@ -110,6 +111,7 @@ public class SlideState extends BaseState {
         context.setSlopeUnitVector(Vec3.ZERO);
         context.setSlideCooldown(ServerConfig.SLIDE_ACCELERATION_COOLDOWN.get());
         context.setMomentumRollIntensity(0F);  // 退出时关闭
+        context.setMomentumProne(false);
     }
 
     @Override

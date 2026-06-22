@@ -19,6 +19,7 @@ import com.zigythebird.playeranimcore.animation.layered.modifier.AbstractFadeMod
 import com.zigythebird.playeranimcore.easing.EasingType;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.player.Player;
+import org.apache.commons.lang3.ObjectUtils;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 
@@ -137,7 +138,7 @@ public abstract class BaseState {
             return;
         }
         context.getController().setAnimationSpeed(speed);
-        if (animName.equals(context.getCurrentAnimationName())) {
+        if (ObjectUtils.isEmpty(animName) || animName.equals(context.getCurrentAnimationName())) {
             return;
         }
         if (context.getController() == null) {

@@ -24,7 +24,7 @@ public class AirborneState extends BaseState {
         context.setLuckyNumber(player);
         if (!WallKickState.WALL_JUMP_RIGHT.equals(context.getCurrentAnimationName()) &&
                 !WallKickState.WALL_JUMP_LEFT.equals(context.getCurrentAnimationName()) &&
-                player.fallDistance < player.getAttributeValue(Attributes.SAFE_FALL_DISTANCE) * 2
+                player.fallDistance > player.getAttributeValue(Attributes.SAFE_FALL_DISTANCE) * 2
         ) {
             super.onEnter(player, context);
         }
@@ -44,8 +44,8 @@ public class AirborneState extends BaseState {
         } else if (FALL.equals(context.getCurrentAnimationName())) {
             playStateAnimation(player, IDLE, context);
         }
-        if (WallKickState.WALL_JUMP_RIGHT.equals(context.getCurrentAnimationName()) &&
-                WallKickState.WALL_JUMP_LEFT.equals(context.getCurrentAnimationName())) {
+        if (!IDLE.equals(context.getCurrentAnimationName()) &&
+                !FALL.equals(context.getCurrentAnimationName())) {
             if (context.getSpeed().y > 0) {
                 context.setJumpAnimationSpeed(context.getJumpAnimationSpeed() * 0.9F);
             } else {

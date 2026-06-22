@@ -8,6 +8,7 @@ import com.akirahane.momentum.core.context.PlayerMovementContext;
 import com.akirahane.momentum.core.effect.MomentumEffectType;
 import com.akirahane.momentum.core.state.BaseState;
 import com.akirahane.momentum.core.state.StateType;
+import com.akirahane.momentum.core.state.states.wall.WallKickState;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
 
@@ -37,19 +38,37 @@ public class BreakFallReadyState extends BaseState {
 
     @Override
     public void onEnter(Player player, PlayerMovementContext context) {
-        context.setBreakFallReadyCount(6);
+        context.setLuckyNumber(player);
+        if (!WallKickState.WALL_JUMP_RIGHT.equals(context.getCurrentAnimationName()) &&
+                !WallKickState.WALL_JUMP_LEFT.equals(context.getCurrentAnimationName()) &&
+                player.fallDistance > player.getAttributeValue(Attributes.SAFE_FALL_DISTANCE) * 2
+        ) {
+            super.onEnter(player, context);
+        }
         context.addPermanentEffect(MomentumEffectType.LIMIT_ACCELERATION_SPEED, AIR_LIMIT_ACCELERATION);
         context.setJumpCooldown(15);
+        context.setJumpAnimationSpeed(1F);
+        context.setMomentumRollIntensity(8F);
+        context.setBreakFallReadyCount(6);
     }
 
     @Override
     public void clientTickRemote(Player player, PlayerMovementContext context) {
-        if (player.fallDistance > player.getAttributeValue(Attributes.SAFE_FALL_DISTANCE)) {
+        if (player.fallDistance > player.getAttributeValue(Attributes.SAFE_FALL_DISTANCE) * 2) {
             float t = (float) ((player.fallDistance - 3.0f) / (70.0f - 3.0f));
             float speed = Math.clamp(t, 0.0f, 1.0f) * 1.5F + 0.5F;
             playStateAnimation(player, FALL, context, 20, speed);
-        } else {
+        } else if (FALL.equals(context.getCurrentAnimationName())) {
             playStateAnimation(player, IDLE, context);
+        }
+        if (!IDLE.equals(context.getCurrentAnimationName()) &&
+                !FALL.equals(context.getCurrentAnimationName())) {
+            if (context.getSpeed().y > 0) {
+                context.setJumpAnimationSpeed(context.getJumpAnimationSpeed() * 0.9F);
+            } else {
+                context.setJumpAnimationSpeed(context.getJumpAnimationSpeed() * 1.5F);
+            }
+            playStateAnimation(player, context.getCurrentAnimationName(), context, 0, context.getJumpAnimationSpeed());
         }
     }
 
@@ -58,6 +77,7 @@ public class BreakFallReadyState extends BaseState {
         super.onExit(player, context);
         context.setBreakFallReadyCount(-1);
         context.setToBreakFallState(false);
+        context.setMomentumRollIntensity(0);
         context.removeEffect(MomentumEffectType.LIMIT_ACCELERATION_SPEED, AIR_LIMIT_ACCELERATION);
     }
 

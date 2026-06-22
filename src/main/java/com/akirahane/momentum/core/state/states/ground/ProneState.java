@@ -29,7 +29,7 @@ public class ProneState extends BaseState {
         if (player.onGround() && !canSlideSpeedCheck(player, context) && checkKey(player, context)){
             context.setMomentumProne(true);
             return true;
-        } else if (player.getPose() == Pose.SWIMMING){
+        } else if (player.getPose() == Pose.SWIMMING && !context.isMomentumProne()){
             context.setMomentumProne(false);
             return true;
         }
@@ -42,7 +42,7 @@ public class ProneState extends BaseState {
         if (context.isMomentumProne()){
             return player.onGround() && checkKey(player, context);
         } else {
-            return player.getPose() == Pose.SWIMMING;
+            return player.getPose() == Pose.SWIMMING && !context.isMomentumProne();
         }
     }
 
