@@ -224,12 +224,14 @@ public class WallRunState extends BaseState {
         var instance = player.getAttribute(Attributes.GRAVITY);
         if (instance != null) {
             double pushStrength = 0.05;
-            if ((context.isHasLedge() || context.isHasJetBooster() && player.getDeltaMovement().y <= 0) && context.getGravityModify() != -1) {
-                instance.addOrReplacePermanentModifier(new AttributeModifier(
-                        WALL_GRAVITY_ID,
-                        -1,
-                        AttributeModifier.Operation.ADD_MULTIPLIED_BASE
-                ));
+            if ((context.isHasLedge() || context.isHasJetBooster() && player.getDeltaMovement().y <= 0)) {
+                if (context.getGravityModify() != -1) {
+                    instance.addOrReplacePermanentModifier(new AttributeModifier(
+                            WALL_GRAVITY_ID,
+                            -1,
+                            AttributeModifier.Operation.ADD_MULTIPLIED_BASE
+                    ));
+                }
 
                 player.setDeltaMovement(
                         tangent.x * Math.max(player.getDeltaMovement().horizontalDistance(), context.getJumpLimitSpeed()) + wallNormal.x * pushStrength,
