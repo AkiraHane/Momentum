@@ -174,7 +174,7 @@ public class WallRunState extends BaseState {
             player.fallDistance = 0;
         }
         if (instance != null) {
-            if (context.isHasLedge() || context.isHasJetBooster()) {
+            if (context.isHasLedge()) {
                 instance.addOrReplacePermanentModifier(new AttributeModifier(
                         WALL_GRAVITY_ID,
                         -1,
