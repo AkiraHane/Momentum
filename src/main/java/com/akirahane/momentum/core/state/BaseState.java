@@ -70,11 +70,11 @@ public abstract class BaseState {
     // 状态转换检查
     public BaseState evaluate(Player player, PlayerMovementContext context) {
         HintManager.clear();
+        HintManager.add(WallHangHints.ORIGINAL_STATE);
+        HintManager.add(WallHangHints.TOGGLE_HINT);
         if (OriginalState.canOriginal(player, context)) {
             return StateType.ORIGINAL.getState();
         }
-        HintManager.add(WallHangHints.ORIGINAL_STATE);
-        HintManager.add(WallHangHints.TOGGLE_HINT);
         if (DodgeState.canDodge(player, context)) {
             return StateType.DODGE.getState();
         }

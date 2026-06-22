@@ -1,14 +1,6 @@
 package com.akirahane.momentum.client.config;
 
-import com.akirahane.momentum.core.state.states.air.AirborneState;
-import com.akirahane.momentum.core.state.states.air.BreakFallReadyState;
-import com.akirahane.momentum.core.state.states.ground.ProneState;
-import com.akirahane.momentum.core.state.states.ground.SlideState;
-import com.akirahane.momentum.core.state.states.ground.WalkState;
-import com.akirahane.momentum.core.state.states.special.BreakFallState;
-import com.akirahane.momentum.core.state.states.special.DodgeState;
 import com.akirahane.momentum.core.state.states.wall.*;
-import com.akirahane.momentum.core.state.states.water.SwimState;
 import net.neoforged.neoforge.common.ModConfigSpec;
 
 public class ClientConfig {
@@ -23,8 +15,8 @@ public class ClientConfig {
     }
     // 默认是否开启按键提示
     public static final ModConfigSpec.BooleanValue ENABLE_KEY_HINTS = BUILDER
-            .comment("是否开启按键教程")
-            .define("enableKeyHints", false);
+            .comment("是否显示按键教程")
+            .define("enableKeyHints", true);
     public static final ModConfigSpec.DoubleValue MIN_ALPHA_WHEN_MOVING = BUILDER
             .comment("移动时最低透明度", "范围: 0.0 - 1.0", "默认值: 0.4")
             .defineInRange("minAlphaWhenMoving", 0.4, 0.0, 1.0);

@@ -7,6 +7,10 @@ import net.neoforged.neoforge.common.ModConfigSpec;
 public class ServerConfig {
     private static final ModConfigSpec.Builder BUILDER = new ModConfigSpec.Builder();
 
+    // 功能配置
+    static {
+        BUILDER.push("function_settings");
+    }
     public static final ModConfigSpec.BooleanValue ALLOW_MANEUVER_WITHOUT_BOOSTER = BUILDER
             .comment("是否允许在不使用助推器的情况下进行机动操作")
             .define("allowManeuverWithoutThruster", true);

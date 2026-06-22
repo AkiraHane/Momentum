@@ -151,7 +151,9 @@ public class HintManager {
     }
 
     public static void toggleVisible() {
-        visible = !visible;
+        ENABLE_KEY_HINTS.set(!ENABLE_KEY_HINTS.get());
+        ENABLE_KEY_HINTS.save();
+        HintManager.setVisible(ENABLE_KEY_HINTS.get());
     }
 
     // ========== Tick 更新 ==========
