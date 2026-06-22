@@ -70,6 +70,7 @@ public class ServerConfig {
 
     // 功能开关
     static {
+        BUILDER.pop();
         BUILDER.push("function_switches");
     }
     public static final ModConfigSpec.BooleanValue ENABLE_PRONE = BUILDER
