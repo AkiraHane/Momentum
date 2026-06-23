@@ -15,7 +15,9 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
 
 import static com.akirahane.momentum.client.input.LowerCenterKey.LOWER_CENTER;
+import static com.akirahane.momentum.core.MomentumUtils.UPHILL_DECEL_FACTOR;
 import static com.akirahane.momentum.core.effect.MomentumEffect.EffectType.LOCAL_VALUE;
+import static com.akirahane.momentum.core.effect.MomentumEffectType.ACCELERATION;
 import static net.minecraft.world.level.block.SoundType.GRASS;
 
 
@@ -77,6 +79,23 @@ public class SlideState extends BaseState {
     }
 
     @Override
+    public void clientTick(Player player, PlayerMovementContext context) {
+        super.clientTick(player, context);
+        Vec3 slopeDir = context.getSlopeUnitVector();
+        if (Vec3.ZERO.equals(slopeDir) && context.getBlockStep() > 0){
+            double riseHeight = context.getBlockStep();
+            float deceleration = (float) (UPHILL_DECEL_FACTOR * Math.min(riseHeight * riseHeight, 1.0));
+            context.SLIDE_ACCELERATION.setValue(new Vec3(
+                    slopeDir.x * deceleration,
+                    context.getBlockStep() * player.getDeltaMovement().horizontalDistance() * 1.5,
+                    slopeDir.z * deceleration)
+            );
+            context.addEffect(ACCELERATION, context.SLIDE_ACCELERATION, 1);
+            context.setBlockStep(0);
+        }
+    }
+
+    @Override
     public void clientTickRemote(Player player, PlayerMovementContext context) {
         if (player.tickCount % 2 == 0) {
             player.playSound(
@@ -89,6 +108,18 @@ public class SlideState extends BaseState {
 
     public void onExit(Player player, PlayerMovementContext context) {
         super.onExit(player, context);
+        Vec3 slopeDir = context.getSlopeUnitVector();
+        if (Vec3.ZERO.equals(slopeDir) && context.getBlockStep() > 0){
+            double riseHeight = context.getBlockStep();
+            float deceleration = (float) (UPHILL_DECEL_FACTOR * Math.min(riseHeight * riseHeight, 1.0));
+            context.SLIDE_ACCELERATION.setValue(new Vec3(
+                    slopeDir.x * deceleration,
+                    context.getBlockStep() * player.getDeltaMovement().horizontalDistance() * 0.5,
+                    slopeDir.z * deceleration)
+            );
+            context.addEffect(ACCELERATION, context.SLIDE_ACCELERATION, 1);
+            context.setBlockStep(0);
+        }
         if (JUMP_DECELERATION_WINDOW >= (ServerConfig.SLIDE_ACCELERATION_COOLDOWN.get() - context.getSlideCooldown())) {
             // 如果跳跃的时间小于冷却, 则增加移动方向的阻力
             context.addEffect(

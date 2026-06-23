@@ -30,10 +30,16 @@ public class MomentumUtils {
     private static final Identifier BOOSTER_SPEED_ID = Identifier.fromNamespaceAndPath(Momentum.MODID, "booster_speed");
     private static final Identifier BOOSTER_JUMP_ID = Identifier.fromNamespaceAndPath(Momentum.MODID, "booster_jump");
     private static final Identifier BOOSTER_STEP_ID = Identifier.fromNamespaceAndPath(Momentum.MODID, "booster_step");
+    // 滑行最大速度上限（格/tick）
+    public static final double MAX_SLIDE_SPEED = 0.98;
+    // 下坡基础加速系数
+    public static final float DOWNHILL_ACCEL_FACTOR = 0.08F;
+    // 上坡减速系数
+    public static final float UPHILL_DECEL_FACTOR = 0.12F;
 
 
     // 滑行上下坡加速和减速
-    public static void setSlideAcceleration(Vec3 movement, double movementStepY, MovementStateMachine stateMachine) {
+    public static void setSlideAcceleration(Vec3 movement, double movementStepY, MovementStateMachine stateMachine, Player player) {
 
         if (!stateMachine.getCurrentState().getStateType().equals(StateType.SLIDE)) {
             return;
@@ -41,15 +47,7 @@ public class MomentumUtils {
 
 
         double currentSpeed = movement.horizontalDistance();
-        stateMachine.getContext().setBlockStep(movementStepY);
-
-        // === 核心参数 ===
-        // 滑行最大速度上限（格/tick）
-        final double MAX_SLIDE_SPEED = 0.98;
-        // 下坡基础加速系数
-        final float DOWNHILL_ACCEL_FACTOR = 0.08F;
-        // 上坡减速系数
-        final float UPHILL_DECEL_FACTOR = 0.12F;
+        stateMachine.getContext().setBlockStep((movementStepY + stateMachine.getContext().getBlockStep()) / 2);
 
         // duration 固定为 1 tick，因为每次阶梯变化都会重新调用
         // 避免低速时 duration 过长导致效果堆积
@@ -81,7 +79,10 @@ public class MomentumUtils {
             // 不会一步减到 0，保留滑行惯性感
             float deceleration = (float) (UPHILL_DECEL_FACTOR * Math.min(riseHeight * riseHeight, 1.0));
 
-            stateMachine.getContext().SLIDE_ACCELERATION.setValue(new Vec3(slopeDir.x * deceleration, movementStepY * currentSpeed * 0.5, slopeDir.z * deceleration));
+            stateMachine.getContext().SLIDE_ACCELERATION.setValue(new Vec3(
+                    slopeDir.x * deceleration,
+                    0,
+                    slopeDir.z * deceleration));
             stateMachine.getContext().addEffect(ACCELERATION, stateMachine.getContext().SLIDE_ACCELERATION, duration);
         }
     }

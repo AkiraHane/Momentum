@@ -182,7 +182,7 @@ public abstract class EntityMixin {
 
         // 已经上坡则不需要下坡
         if (cir.getReturnValue().y > 0) {
-            setSlideAcceleration(movement, cir.getReturnValue().y, stateMachine);
+            setSlideAcceleration(movement, cir.getReturnValue().y, stateMachine, player);
             return;
         }
 
@@ -248,7 +248,7 @@ public abstract class EntityMixin {
                     }if (!colliders.isEmpty()) {
                         stateMachine.getContext().setSlopeUnitVector(momentum$getSlopeDirection(player, colliders.getFirst()));
                     }
-                    setSlideAcceleration(movement, stepFromGround.y, stateMachine);
+                    setSlideAcceleration(movement, stepFromGround.y, stateMachine, player);
                     return;
                 }
             }
