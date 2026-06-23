@@ -8,6 +8,7 @@ import com.akirahane.momentum.core.state.states.ground.SlideState;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
 
+import static com.akirahane.momentum.core.MomentumUtils.isDivingEdge;
 import static com.akirahane.momentum.core.context.PlayerMovementContext.AIR_LIMIT_ACCELERATION;
 
 public class AirborneState extends BaseState {
@@ -25,6 +26,9 @@ public class AirborneState extends BaseState {
         context.setJumpCooldown(15);
         context.setJumpAnimationSpeed(1F);
         context.setMomentumRollIntensity(8F);
+        if (context.isHasJetBooster() && isDivingEdge(player, context)) {
+            LOGGER.info("Diving Edge");
+        }
         if (BaseState.JUMP_RIGHT.equals(context.getCurrentAnimationName()) ||
                 BaseState.JUMP_LEFT.equals(context.getCurrentAnimationName())){
             return;
