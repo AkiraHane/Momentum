@@ -4,6 +4,8 @@ import com.akirahane.momentum.core.state.MovementStateMachine;
 import com.akirahane.momentum.core.state.StateType;
 import com.akirahane.momentum.init.InitAttachments;
 import com.google.common.collect.ImmutableList;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Local;
 import it.unimi.dsi.fastutil.doubles.DoubleList;
 import it.unimi.dsi.fastutil.floats.*;
@@ -25,6 +27,7 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.List;
@@ -49,6 +52,80 @@ public abstract class EntityMixin {
     public abstract boolean onGround();
 
     protected EntityMixin(EntityType<?> type, Level level) {
+    }
+
+
+    @ModifyVariable(method = "collide", at = @At(value = "STORE", ordinal = 0), name = "stepUpAABB")
+    private AABB momentum$modifyStepUpAABB(AABB original, Vec3 movement) {
+        Entity self = (Entity) (Object) this;
+        if (!(self instanceof Player player)) {
+            return original;
+        }
+        MovementStateMachine stateMachine = player.getData(InitAttachments.MOVEMENT_STATE);
+        if (stateMachine.getCurrentState().getStateType().equals(StateType.ORIGINAL)) {
+            return original;
+        }
+        return original.expandTowards(0, Math.ceil(Math.max(Math.abs(movement.x), Math.abs(movement.z))), 0); // 示例
+    }
+
+    @WrapOperation(method = "collide", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;collectCandidateStepUpHeights(Lnet/minecraft/world/phys/AABB;Ljava/util/List;FF)[F"))
+    private float[] momentum$wrapCollectCandidateStepUpHeights(
+            AABB boundingBox, List<VoxelShape> colliders, float maxStepHeight, float stepHeightToSkip, Operation<float[]> original,
+            @Local(name = "movement", argsOnly = true) Vec3 movement
+    ) {
+        Entity self = (Entity) (Object) this;
+        if (!(self instanceof Player player)) {
+            return original.call(boundingBox, colliders, maxStepHeight, stepHeightToSkip);
+        }
+        MovementStateMachine stateMachine = player.getData(InitAttachments.MOVEMENT_STATE);
+        if (stateMachine.getCurrentState().getStateType().equals(StateType.ORIGINAL)) {
+            return original.call(boundingBox, colliders, maxStepHeight, stepHeightToSkip);
+        }
+
+        // 修改入参
+        float customMaxStep = (float) (maxStepHeight + Math.ceil(Math.max(Math.abs(movement.x), Math.abs(movement.z))));
+
+
+//        float[] result = original.call(boundingBox, colliders, customMaxStep, stepHeightToSkip);
+        AABB movementRange = boundingBox.expandTowards(movement.x, 0, movement.z);
+        FloatSet candidates = new FloatArraySet(4);
+
+        for (VoxelShape collider : colliders) {
+            collider.forAllBoxes((minX, minY, minZ, maxX, maxY, maxZ) -> {
+                // 水平方向是否能碰到
+                AABB subBoxFlat = new AABB(minX, movementRange.minY, minZ, maxX, movementRange.maxY, maxZ);
+                if (!movementRange.intersects(subBoxFlat)) return;
+
+                float relativeCoord = (float) (maxY - boundingBox.minY);
+                if (relativeCoord < 0.0F || relativeCoord == stepHeightToSkip) return;
+                if (relativeCoord > customMaxStep) return;
+
+                candidates.add(relativeCoord);
+            });
+        }
+
+        float[] result = candidates.toFloatArray();
+        FloatArrays.unstableSort(result);
+
+        // 过滤返回值
+        FloatList filtered = new FloatArrayList();
+        float lastHeight = 0.0F;
+        for (float current : result) {
+            if (current - lastHeight <= this.maxUpStep()) {
+                filtered.add(current);
+                lastHeight = current;
+            } else {
+                break;
+            }
+        }
+        result = filtered.toFloatArray();
+        float tmp;
+        for (int i = 0, j = result.length - 1; i < j; i++, j--) {
+            tmp = result[i];
+            result[i] = result[j];
+            result[j] = tmp;
+        }
+        return result;
     }
 
     // 自动下坡
