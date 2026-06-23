@@ -17,6 +17,7 @@ import net.minecraft.world.entity.player.Player;
 
 import static com.akirahane.momentum.client.input.LowerCenterKey.LOWER_CENTER;
 import static com.akirahane.momentum.core.MomentumUtils.canPlayerFitAtPose;
+import static com.akirahane.momentum.core.state.states.ground.SlideState.canSlideSpeedCheck;
 
 
 public class ProneState extends BaseState {
@@ -30,7 +31,7 @@ public class ProneState extends BaseState {
     }
 
     public static boolean checkKey(Player player, PlayerMovementContext context) {
-        if (!HintManager.contains(WallHangHints.VAULT_IN_STAND)) {
+        if (!canSlideSpeedCheck(player, context) && !HintManager.contains(WallHangHints.VAULT_IN_STAND)) {
             HintManager.add(WallHangHints.PRONE);
         }
         return LOWER_CENTER.get().isDown();
