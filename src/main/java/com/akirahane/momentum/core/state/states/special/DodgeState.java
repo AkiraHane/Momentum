@@ -25,6 +25,7 @@ import static com.akirahane.momentum.client.init.InitSounds.JET2;
 import static com.akirahane.momentum.config.ServerConfig.DODGE_COOLDOWN;
 import static com.akirahane.momentum.config.ServerConfig.DODGE_STORAGE;
 import static com.akirahane.momentum.core.MomentumUtils.canPlayerFitAtPose;
+import static com.akirahane.momentum.core.context.PlayerMovementContext.SPRINT;
 import static com.akirahane.momentum.core.state.states.OriginalState.canOriginal;
 
 public class DodgeState extends BaseState {
@@ -35,14 +36,22 @@ public class DodgeState extends BaseState {
     public static String DODGE_RIGHT = "dodge_right";
 
     public static boolean canDodge(Player player, PlayerMovementContext context) {
-        return ServerConfig.ENABLE_DODGE.getAsBoolean() && ClientConfig.ENABLE_DODGE.getAsBoolean() &&
-                (player.onGround() || context.isHasJetBooster()) &&
-                !(player.getPose() == Pose.SWIMMING && !canPlayerFitAtPose(player, Pose.CROUCHING)) &&
-                DODGE_COOLDOWN.get() * DODGE_STORAGE.get() - context.getDodgeCooldown() > DODGE_COOLDOWN.get() &&
-                checkKey(player, context);
-    }
-
-    public static boolean checkKey(Player player, PlayerMovementContext context) {
+        if (!ServerConfig.ENABLE_DODGE.getAsBoolean() || !ClientConfig.ENABLE_DODGE.getAsBoolean()) {
+            return false;
+        }
+        if (!player.onGround() && !context.isHasJetBooster() && !player.isSwimming()) {
+            return false;
+        }
+        if (!player.isSwimming() && (player.getPose() == Pose.SWIMMING) && !canPlayerFitAtPose(player, Pose.CROUCHING)) {
+            return false;
+        }
+        if (DODGE_COOLDOWN.get() * DODGE_STORAGE.get() - context.getDodgeCooldown() <= DODGE_COOLDOWN.get()) {
+            return false;
+        }
+        if (player.isSwimming()) {
+            HintManager.add(WallHangHints.PUSH);
+            return context.getInputBuffer()[context.getInputBufferIndex()].contains(SPRINT);
+        }
         HintManager.add(WallHangHints.DODGE);
         return Minecraft.getInstance().options.keySprint.isDown() &&
                 (context.isDoubleClickUp() || context.isDoubleClickDown() || context.isDoubleClickLeft() || context.isDoubleClickRight());
@@ -50,21 +59,29 @@ public class DodgeState extends BaseState {
 
     @Override
     public void onEnter(Player player, PlayerMovementContext context) {
+        String animationName;
         float yRot = player.getYRot();
+        float xRot = player.getXRot();
         if (context.isDoubleClickDown()) {
             yRot += 180;
-            playStateAnimation(player, DODGE_DOWN, context, 4, 2f);
+            animationName = DODGE_DOWN;
         } else if (context.isDoubleClickLeft()) {
             yRot -= 90;
-            playStateAnimation(player, DODGE_LEFT, context, 4, 2f);
+            animationName = DODGE_LEFT;
         } else if (context.isDoubleClickRight()) {
             yRot += 90;
-            playStateAnimation(player, DODGE_RIGHT, context, 4, 2f);
+            animationName = DODGE_RIGHT;
         } else {
-            playStateAnimation(player, DODGE_UP, context, 4, 2f);
+            animationName = DODGE_UP;
         }
-        Vec3 direction = Vec3.directionFromRotation(4, yRot);
-        if (!context.isHasJetBooster()) {
+        Vec3 direction;
+        if (!player.isSwimming()){
+            direction = Vec3.directionFromRotation(4, yRot);
+            playStateAnimation(player, animationName, context, 4, 2f);
+        } else {
+            direction = Vec3.directionFromRotation(xRot, yRot);
+        }
+        if (!context.isHasJetBooster() && !player.isSwimming()) {
             player.setDeltaMovement(direction.x * 0.8, player.getDeltaMovement().y, direction.z * 0.8);
         } else {
             double currentSpeed = player.getDeltaMovement().horizontalDistance();
@@ -82,10 +99,17 @@ public class DodgeState extends BaseState {
                     finalSpeed = targetSpeed;
                 }
 
-                Vec3 normalized = new Vec3(direction.x, 0, direction.z).normalize();
-                player.setDeltaMovement(normalized.x * finalSpeed, 0.3F, normalized.z * finalSpeed);
+                Vec3 normalized = new Vec3(
+                        direction.x,
+                        !player.isSwimming() ? 0.3F : direction.y,
+                        direction.z
+                ).normalize();
+                player.setDeltaMovement(normalized.x * finalSpeed, normalized.y, normalized.z * finalSpeed);
             } else {
-                player.setDeltaMovement(direction.x * 0.8, 0.3F, direction.z * 0.8);
+                player.setDeltaMovement(
+                        direction.x * 0.8,
+                        !player.isSwimming() ? 0.3F : direction.y,
+                        direction.z * 0.8);
             }
             player.fallDistance = 0;
         }
@@ -96,11 +120,19 @@ public class DodgeState extends BaseState {
         context.addEffect(MomentumEffectType.BLOCK_FRICTION, context.DODGE_BLOCK_FRICTION, 3);
         if (context.isHasJetBooster()) {
             player.playSound(JET2.value(), 1F, 1.0F + player.getRandom().nextFloat() * 0.4F - 0.2F);
-        } else {
+        } else if (!player.isSwimming()){
             player.playSound(
                     SoundEvents.ARROW_SHOOT,
                     0.5F,
                     1.0F + player.getRandom().nextFloat() * 0.4F - 0.2F  // 0.8 ~ 1.2 随机音高
+            );
+        }
+        if (player.isSwimming()){
+            // 入水的声音
+            player.playSound(
+                    SoundEvents.PLAYER_SWIM,
+                    0.5F,
+                    1.0F + player.getRandom().nextFloat() * 0.4F - 0.2F
             );
         }
         context.setMomentumRollIntensity(20F);
@@ -110,7 +142,7 @@ public class DodgeState extends BaseState {
     public void clientTick(Player player, PlayerMovementContext context) {
         if (context.getDodgeTimer() > 6) {
             context.setMomentumRollIntensity(0F);
-            if (!player.onGround()) {
+            if (!player.onGround() && !player.isSwimming()) {
                 playStateAnimation(player, IDLE, context);
             }
         }
@@ -134,7 +166,8 @@ public class DodgeState extends BaseState {
         }
         if (context.getDodgeTimer() > 0) {
             return StateType.DODGE.getState();
-        }if (SlideState.canSlide(player, context)) {
+        }
+        if (SlideState.canSlide(player, context)) {
             return StateType.SLIDE.getState();
         }
         if (BreakFallState.canBreakFall(player, context)) {

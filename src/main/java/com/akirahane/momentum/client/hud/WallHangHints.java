@@ -75,4 +75,20 @@ public class WallHangHints {
     // 攀爬加速
     public static final HintManager.KeyHint CLIMB_ACCELERATION =
             HintManager.KeyHint.single(OPTIONS.keySprint, "hint.momentum.climb_acceleration");
+
+    // 游泳
+    public static final HintManager.KeyHint SWIM =
+            HintManager.KeyHint.and("state.momentum.swim", OPTIONS.keySprint, OPTIONS.keyUp);
+
+    // 游泳维持
+    public static final HintManager.KeyHint SWIM_HOLD =
+            HintManager.KeyHint.single(OPTIONS.keyUp, "state.momentum.swim");
+
+    // 主动游泳
+    public static final HintManager.KeyHint SWIM_ACTIVE =
+            HintManager.KeyHint.and("state.momentum.swim", LOWER_CENTER.get(), OPTIONS.keyUp);
+
+    // 推进
+    public static final HintManager.KeyHint PUSH =
+            HintManager.KeyHint.single(OPTIONS.keySprint, "hint.momentum.push");
 }

@@ -77,5 +77,6 @@
   "hint.momentum.hit_toggle": "开关教程",
   "hint.momentum.momentum_toggle": "开关动量",
   "hint.momentum.climb_acceleration": "加速攀爬/下滑",
+  "hint.momentum.push": "推进",
   "subtitles.momentum.jet": "喷气声"
 }

@@ -42,7 +42,7 @@ public class PlayerMovementContext {
     // 日志
     protected static final Logger LOGGER = LogUtils.getLogger();
     // 键位
-    public static final int UP = 0, DOWN = 1, LEFT = 2, RIGHT = 3, JUMP = 4;
+    public static final int UP = 0, DOWN = 1, LEFT = 2, RIGHT = 3, JUMP = 4, SPRINT = 5;
     // 音效
 //    HIT(SoundType::getHitSound),
 //    BREAK(SoundType::getBreakSound),
@@ -181,6 +181,8 @@ public class PlayerMovementContext {
     private int breakFallReadyCount = -1;
     // 墙跳计时器
     private int wallJumpTimer = 0;
+    // 游泳推进冷却
+    private int swimAdvanceCooldown = 0;
 
     // 状态中进行变动的数值
     // 滞空计时器
@@ -311,6 +313,7 @@ public class PlayerMovementContext {
         if (this.jumpCooldown > 0) this.jumpCooldown--;
         if (this.breakFallReadyCount > 0) this.breakFallReadyCount--;
         if (this.wallJumpTimer > 0) this.wallJumpTimer--;
+        if (this.swimAdvanceCooldown > 0) this.swimAdvanceCooldown--;
         boolean newHasJetBooster = checkBoosterEquipped(player);
         if (newHasJetBooster != this.hasJetBooster) {
             this.hasJetBooster = newHasJetBooster;
