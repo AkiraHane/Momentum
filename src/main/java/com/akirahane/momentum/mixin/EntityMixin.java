@@ -30,6 +30,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static com.akirahane.momentum.core.MomentumUtils.setSlideAcceleration;
@@ -82,34 +83,50 @@ public abstract class EntityMixin {
             return original.call(boundingBox, colliders, maxStepHeight, stepHeightToSkip);
         }
 
-        // 修改入参
         float customMaxStep = (float) (maxStepHeight + Math.ceil(Math.max(Math.abs(movement.x), Math.abs(movement.z))));
         if (!colliders.isEmpty()) {
             stateMachine.getContext().setSlopeUnitVector(momentum$getSlopeDirection(player, colliders.getFirst()));
         }
 
-//        float[] result = original.call(boundingBox, colliders, customMaxStep, stepHeightToSkip);
         AABB movementRange = boundingBox.expandTowards(movement.x, 0, movement.z);
-        FloatSet candidates = new FloatArraySet(4);
 
+        // 1. 收集所有路径相关的 sub-box
+        List<AABB> allBoxes = new ArrayList<>();
         for (VoxelShape collider : colliders) {
             collider.forAllBoxes((minX, minY, minZ, maxX, maxY, maxZ) -> {
-                // 水平方向是否能碰到
                 AABB subBoxFlat = new AABB(minX, movementRange.minY, minZ, maxX, movementRange.maxY, maxZ);
                 if (!movementRange.intersects(subBoxFlat)) return;
-
-                float relativeCoord = (float) (maxY - boundingBox.minY);
-                if (relativeCoord < 0.0F || relativeCoord == stepHeightToSkip) return;
-                if (relativeCoord > customMaxStep) return;
-
-                candidates.add(relativeCoord);
+                allBoxes.add(new AABB(minX, minY, minZ, maxX, maxY, maxZ));
             });
+        }
+
+        FloatSet candidates = new FloatArraySet(4);
+
+        for (AABB a : allBoxes) {
+            float relativeTop = (float) (a.maxY - boundingBox.minY);
+            if (relativeTop < 0.0F) continue;
+            if (relativeTop == stepHeightToSkip) continue;
+            if (relativeTop > customMaxStep) continue;
+
+            // 2. 顶面暴露检查
+            boolean covered = false;
+            for (AABB b : allBoxes) {
+                if (b == a) continue;
+                if (b.minY < a.maxY) continue;
+                if (b.maxX <= a.minX || b.minX >= a.maxX) continue;
+                if (b.maxZ <= a.minZ || b.minZ >= a.maxZ) continue;
+                covered = true;
+                break;
+            }
+            if (!covered) {
+                candidates.add(relativeTop);
+            }
         }
 
         float[] result = candidates.toFloatArray();
         FloatArrays.unstableSort(result);
 
-        // 过滤返回值
+        // 3. 相邻差过滤
         FloatList filtered = new FloatArrayList();
         float lastHeight = 0.0F;
         for (float current : result) {
@@ -121,11 +138,11 @@ public abstract class EntityMixin {
             }
         }
         result = filtered.toFloatArray();
+
+        // 反转成降序
         float tmp;
         for (int i = 0, j = result.length - 1; i < j; i++, j--) {
-            tmp = result[i];
-            result[i] = result[j];
-            result[j] = tmp;
+            tmp = result[i]; result[i] = result[j]; result[j] = tmp;
         }
         return result;
     }
@@ -208,7 +225,7 @@ public abstract class EntityMixin {
             float[] candidateStepDownHeights = momentum$collectCandidateStepDownHeights(aabb, colliders, -maxDownStep, stepHeightToSkip, this.maxUpStep());
 
             for (float candidateStepDHeight : candidateStepDownHeights) {
-                if (candidateStepDHeight == 0){
+                if (candidateStepDHeight == 0) {
                     continue;
                 }
                 Vec3 stepFromGround = momentum$collideWithShapesDown(new Vec3(movement.x, candidateStepDHeight, movement.z), aabb, colliders);
@@ -216,7 +233,8 @@ public abstract class EntityMixin {
                     cir.setReturnValue(stepFromGround);
                     if (!stateMachine.getCurrentState().getStateType().equals(StateType.SLIDE)) {
                         return;
-                    }if (!colliders.isEmpty()) {
+                    }
+                    if (!colliders.isEmpty()) {
                         stateMachine.getContext().setSlopeUnitVector(momentum$getSlopeDirection(player, colliders.getFirst()));
                     }
                     setSlideAcceleration(movement, stepFromGround.y, stateMachine);
@@ -231,37 +249,53 @@ public abstract class EntityMixin {
             AABB boundingBox, List<VoxelShape> colliders, float maxStepHeight, float stepHeightToSkip,
             float original_StepHeight
     ) {
+        // 1. 收集所有 sub-box
+        List<AABB> allBoxes = new ArrayList<>();
+        for (VoxelShape collider : colliders) {
+            collider.forAllBoxes((minX, minY, minZ, maxX, maxY, maxZ) ->
+                    allBoxes.add(new AABB(minX, minY, minZ, maxX, maxY, maxZ)));
+        }
+
         FloatSet candidates = new FloatArraySet(4);
 
-        for (VoxelShape collider : colliders) {
-            DoubleList coords = collider.getCoords(Direction.Axis.Y);
-            // 需要从高到低，所以和原版上坡逻辑是反着的
-            for (int i = coords.size() - 1; i >= 0; i--) {
-                float relativeCoord = (float) (coords.getDouble(i) - boundingBox.minY);
-                if (!(relativeCoord > 0.0F) && relativeCoord != stepHeightToSkip) {
-                    if (relativeCoord < maxStepHeight) {
-                        break;
-                    }
+        for (AABB a : allBoxes) {
+            float relativeTop = (float) (a.maxY - boundingBox.minY);
+            // Y 范围预过滤
+            if (relativeTop >= 0.0F) continue;           // 不在脚底之下
+            if (relativeTop < maxStepHeight) continue;   // 超出最大下降范围
+            if (relativeTop == stepHeightToSkip) continue;
 
-                    candidates.add(relativeCoord);
-                }
+            // 2. 检查 a 的顶面有没有被其它 box 盖住
+            boolean covered = false;
+            for (AABB b : allBoxes) {
+                if (b == a) continue;
+                if (b.minY < a.maxY) continue;                              // b 不在 a 上方
+                if (b.maxX <= a.minX || b.minX >= a.maxX) continue;         // XZ 不相交
+                if (b.maxZ <= a.minZ || b.minZ >= a.maxZ) continue;
+                covered = true;
+                break;
+            }
+            if (!covered) {
+                candidates.add(relativeTop);
             }
         }
 
-        float[] sortedCandidates = candidates.toFloatArray();
-        FloatArrays.unstableSort(sortedCandidates);
+        float[] sorted = candidates.toFloatArray();
+        FloatArrays.unstableSort(sorted);  // 升序: [-3, -2, -1]
+
+        // 3. 相邻差过滤: 防止悬崖直接下到底
         FloatList filtered = new FloatArrayList();
         float lastHeight = 0.0F;
-
-        for (int i = sortedCandidates.length - 1; i >= 0; i--) {
-            float current = sortedCandidates[i];
-            if (Math.abs(current - lastHeight) <= original_StepHeight) {
+        for (int i = sorted.length - 1; i >= 0; i--) {  // 从最浅开始累进
+            float current = sorted[i];
+            if (lastHeight - current <= original_StepHeight) {
                 filtered.add(current);
                 lastHeight = current;
             } else {
-                break; // 超过单次限制，后面更低的都舍弃
+                break;
             }
         }
+
         float[] result = filtered.toFloatArray();
         FloatArrays.unstableSort(result);
         return result;

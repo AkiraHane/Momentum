@@ -28,6 +28,7 @@ public class MomentumUtils {
 
     private static final Identifier BOOSTER_SPEED_ID = Identifier.fromNamespaceAndPath(Momentum.MODID, "booster_speed");
     private static final Identifier BOOSTER_JUMP_ID = Identifier.fromNamespaceAndPath(Momentum.MODID, "booster_jump");
+    private static final Identifier BOOSTER_STEP_ID = Identifier.fromNamespaceAndPath(Momentum.MODID, "booster_step");
 
 
     // 滑行上下坡加速和减速
@@ -86,14 +87,17 @@ public class MomentumUtils {
     public static void applyBoosterAttributes(Player player, boolean apply) {
         AttributeInstance speed = player.getAttribute(Attributes.MOVEMENT_SPEED);
         AttributeInstance jump = player.getAttribute(Attributes.JUMP_STRENGTH);
-        if (speed == null || jump == null) return;
+        AttributeInstance step = player.getAttribute(Attributes.STEP_HEIGHT);
+        if (speed == null || jump == null || step == null) return;
 
         speed.removeModifier(BOOSTER_SPEED_ID);
         jump.removeModifier(BOOSTER_JUMP_ID);
+        step.removeModifier(BOOSTER_STEP_ID);
 
         if (apply) {
             speed.addOrReplacePermanentModifier(new AttributeModifier(BOOSTER_SPEED_ID, 0.04, AttributeModifier.Operation.ADD_VALUE));
             jump.addOrReplacePermanentModifier(new AttributeModifier(BOOSTER_JUMP_ID, 0.2, AttributeModifier.Operation.ADD_VALUE));
+            step.addOrReplacePermanentModifier(new AttributeModifier(BOOSTER_STEP_ID, 0.4, AttributeModifier.Operation.ADD_VALUE));
         }
     }
 
