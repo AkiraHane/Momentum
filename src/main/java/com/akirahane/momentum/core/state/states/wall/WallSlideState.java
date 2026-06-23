@@ -40,12 +40,12 @@ public class WallSlideState extends BaseState {
         }
         return !player.onGround() &&
                 !Vec3.ZERO.equals(context.getWallNormal()) &&
+                context.getSpeed().y < 0 &&
+                Mth.abs(context.getLookWallAngle()) < 30 &&
                 (player.onClimbable() ||
                         !Vec3.ZERO.equals(context.getInputVec()) && Mth.abs(context.getInputWallAngle()) < 30 ||
                         checkKey(player, context)
-                ) &&
-                context.getSpeed().y < 0 &&
-                Mth.abs(context.getLookWallAngle()) < 30;
+                );
     }
 
     // 维持
@@ -58,11 +58,11 @@ public class WallSlideState extends BaseState {
         }
         return !player.onGround() &&
                 !Vec3.ZERO.equals(context.getWallNormal()) &&
+                Mth.abs(context.getLookWallAngle()) < 60 &&
                 (player.onClimbable() ||
                         !Vec3.ZERO.equals(context.getInputVec()) && Mth.abs(context.getInputWallAngle()) < 60 ||
                         checkKey(player, context)
-                ) &&
-                Mth.abs(context.getLookWallAngle()) < 60;
+                );
     }
 
     public static boolean checkKey(Player player, PlayerMovementContext context) {
