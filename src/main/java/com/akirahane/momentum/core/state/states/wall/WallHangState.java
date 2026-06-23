@@ -44,7 +44,7 @@ public class WallHangState extends BaseState {
                 !Vec3.ZERO.equals(context.getWallNormal()) &&
                 (Mth.abs(context.getLookWallAngle()) < 60 || Mth.abs(context.getInputWallAngle()) < 60) &&
                 player.fallDistance <= player.getAttributeValue(Attributes.SAFE_FALL_DISTANCE) * 2 &&
-                player.getDeltaMovement().y <= 0 &&
+                player.getDeltaMovement().y <= 0.1 &&
                 !checkKey(player, context);
     }
 
