@@ -32,7 +32,7 @@ public class WallSlideState extends BaseState {
     public static String WALL_SLIDE = "wall_slide";
 
     public static boolean canWallSlide(Player player, PlayerMovementContext context) {
-        if (ServerConfig.ENABLE_WALL_SLIDE.getAsBoolean() && ClientConfig.ENABLE_WALL_SLIDE.getAsBoolean()){
+        if (!ServerConfig.ENABLE_WALL_SLIDE.getAsBoolean() || !ClientConfig.ENABLE_WALL_SLIDE.getAsBoolean()){
             return false;
         }
         if (player.onClimbable()){
@@ -50,6 +50,9 @@ public class WallSlideState extends BaseState {
 
     // 维持
     public static boolean canWallSlideHold(Player player, PlayerMovementContext context) {
+        if (!ServerConfig.ENABLE_WALL_SLIDE.getAsBoolean() || !ClientConfig.ENABLE_WALL_SLIDE.getAsBoolean()){
+            return false;
+        }
         if (player.onClimbable()){
             HintManager.add(WallHangHints.CLIMB_ACCELERATION);
         }
