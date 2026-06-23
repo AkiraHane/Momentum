@@ -9,7 +9,9 @@ import com.akirahane.momentum.core.state.states.ground.WalkState;
 import com.akirahane.momentum.core.state.states.special.BreakFallState;
 import com.akirahane.momentum.core.state.states.special.DodgeState;
 import com.akirahane.momentum.core.state.states.wall.*;
+import com.akirahane.momentum.core.state.states.water.SwimDashState;
 import com.akirahane.momentum.core.state.states.water.SwimState;
+import com.akirahane.momentum.core.state.states.water.WaterRunState;
 import com.mojang.logging.LogUtils;
 import lombok.Getter;
 import org.slf4j.Logger;
@@ -33,6 +35,8 @@ public enum StateType {
     WALL_KICK(new WallKickState(), "state.momentum.wall_kick"),
     VAULT_UP(new VaultUpState(), "state.momentum.vault_up"),
     VAULT_IN(new VaultInState(), "state.momentum.vault_in"),
+    SWIM_DASH(new SwimDashState(), "state.momentum.swim_dash"),
+    WATER_RUN(new WaterRunState(), "state.momentum.water_run")
     ;
     // 日志
     static final Logger LOGGER = LogUtils.getLogger();

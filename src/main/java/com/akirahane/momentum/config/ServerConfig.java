@@ -43,6 +43,11 @@ public class ServerConfig {
             .comment("墙跑最低速度（米/秒）", "默认值: 4.0")
             .defineInRange("minWallRunSpeed", 4.0, 1.0, 100.0);
 
+    // 水上漂最低速度
+    public static final ModConfigSpec.DoubleValue MIN_WATER_SWIM_SPEED = BUILDER
+            .comment("水上漂最低速度（米/秒）", "默认值: 10.0")
+            .defineInRange("minWaterSwimSpeed", 10.0, 1.0, 100.0);
+
     // 滑铲加速冷却
     public static final ModConfigSpec.IntValue SLIDE_ACCELERATION_COOLDOWN = BUILDER
             .comment("滑铲加速冷却（tick）", "默认值: 40")
@@ -57,6 +62,16 @@ public class ServerConfig {
     public static final ModConfigSpec.IntValue DODGE_STORAGE = BUILDER
             .comment("闪避可储存次数", "默认值: 2")
             .defineInRange("airDodgeStorage", 2, 0, 10);
+
+    // 单次水中冲刺冷却
+    public static final ModConfigSpec.IntValue WATER_SPRINT_COOLDOWN = BUILDER
+            .comment("水中冲刺冷却（tick）", "默认值: 40")
+            .defineInRange("waterSprintCooldown", 40, 0, 200);
+
+    // 水上冲刺可储存次数
+    public static final ModConfigSpec.IntValue WATER_SPRINT_STORAGE = BUILDER
+            .comment("水上冲刺可储存次数", "默认值: 2")
+            .defineInRange("waterSprintStorage", 2, 0, 10);
 
     // 空气阻力
     public static final ModConfigSpec.DoubleValue AIR_FRICTION = BUILDER
