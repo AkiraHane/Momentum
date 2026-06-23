@@ -7,7 +7,6 @@ import com.google.common.collect.ImmutableList;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Local;
-import it.unimi.dsi.fastutil.doubles.DoubleList;
 import it.unimi.dsi.fastutil.floats.*;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -53,20 +52,6 @@ public abstract class EntityMixin {
     public abstract boolean onGround();
 
     protected EntityMixin(EntityType<?> type, Level level) {
-    }
-
-
-    @ModifyVariable(method = "collide", at = @At(value = "STORE", ordinal = 0), name = "stepUpAABB")
-    private AABB momentum$modifyStepUpAABB(AABB original, Vec3 movement) {
-        Entity self = (Entity) (Object) this;
-        if (!(self instanceof Player player)) {
-            return original;
-        }
-        MovementStateMachine stateMachine = player.getData(InitAttachments.MOVEMENT_STATE);
-        if (stateMachine.getCurrentState().getStateType().equals(StateType.ORIGINAL)) {
-            return original;
-        }
-        return original.expandTowards(0, Math.ceil(Math.max(Math.abs(movement.x), Math.abs(movement.z))), 0); // 示例
     }
 
     @WrapOperation(method = "collide", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;collectCandidateStepUpHeights(Lnet/minecraft/world/phys/AABB;Ljava/util/List;FF)[F"))
