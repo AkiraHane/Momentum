@@ -42,7 +42,7 @@ public class WallHangState extends BaseState {
                 !player.onGround() &&
                 context.isHasLedge() &&
                 !Vec3.ZERO.equals(context.getWallNormal()) &&
-                (Mth.abs(context.getLookWallAngle()) < 60 || Mth.abs(context.getInputWallAngle()) < 60) &&
+//                (Mth.abs(context.getLookWallAngle()) < 60 || Mth.abs(context.getInputWallAngle()) < 60) &&
                 player.fallDistance <= player.getAttributeValue(Attributes.SAFE_FALL_DISTANCE) * 2 &&
                 player.getDeltaMovement().y <= 0.1 &&
                 !checkKey(player, context);
@@ -134,18 +134,22 @@ public class WallHangState extends BaseState {
     public void clientTick(Player player, PlayerMovementContext context) {
         super.clientTick(player, context);
         // 如果没有按后键, 给个向墙的速度防止失误掉落
-        if (!Minecraft.getInstance().options.keyDown.isDown()) {
-            Vec3 wallNormal = context.getWallNormal();
-            Vec3 currentMovement = player.getDeltaMovement();
-
-            // 给一个轻微的朝墙速度，防止玩家因为微小偏移脱离墙面
-            double pushStrength = 0.05;
-            player.setDeltaMovement(
-                    currentMovement.x + wallNormal.x * pushStrength,
-                    currentMovement.y,
-                    currentMovement.z + wallNormal.z * pushStrength
-            );
+        if (Minecraft.getInstance().options.keyDown.isDown() ||
+                Mth.abs(context.getInputWallAngle()) > 150 && Mth.abs(context.getInputWallAngle()) < 360 &&
+                        Mth.abs(context.getLookWallAngle()) > 150
+        ){
+            return;
         }
+        Vec3 wallNormal = context.getWallNormal();
+        Vec3 currentMovement = player.getDeltaMovement();
+
+        // 给一个轻微的朝墙速度，防止玩家因为微小偏移脱离墙面
+        double pushStrength = 0.05;
+        player.setDeltaMovement(
+                currentMovement.x + wallNormal.x * pushStrength,
+                currentMovement.y,
+                currentMovement.z + wallNormal.z * pushStrength
+        );
     }
 
     @Override
