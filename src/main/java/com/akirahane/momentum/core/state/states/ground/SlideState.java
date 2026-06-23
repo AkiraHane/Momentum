@@ -76,6 +76,7 @@ public class SlideState extends BaseState {
         playStateAnimation(player, SLIDE, context, 6, 1.0f);
         context.setMomentumRollIntensity(15F);
         context.setTargetArmTransform(0.15F, -15F);
+        context.setSlideCooldown(slideAccelerationCooldown);
     }
 
     @Override
@@ -125,7 +126,7 @@ public class SlideState extends BaseState {
             context.addEffect(
                     MomentumEffectType.FRICTION,
                     new MomentumEffect(
-                            new Vec3(0.1, 0, 0),
+                            new Vec3(0.2, 0, 0),
                             Vec3.ZERO,
                             LOCAL_VALUE,
                             5
