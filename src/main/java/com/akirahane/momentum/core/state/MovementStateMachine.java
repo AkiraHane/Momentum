@@ -73,6 +73,9 @@ public class MovementStateMachine {
 
     // 客户端向服务端同步状态
     public void setStateFromClient(StateType newStateType, Player player) {
+        if (StateType.PRONE.equals(newStateType.getState().getStateType())){
+            context.setMomentumProne(true);
+        }
         transition(newStateType.getState(), player);
         dirty = true;
     }

@@ -113,9 +113,7 @@ public class ProneState extends BaseState {
     @Override
     public void onEnter(Player player, PlayerMovementContext context) {
         super.onEnter(player, context);
-        if (context.isMomentumProne()){
-            player.setForcedPose(Pose.SWIMMING);
-        }
+        player.setForcedPose(Pose.SWIMMING);
     }
 
     @Override
