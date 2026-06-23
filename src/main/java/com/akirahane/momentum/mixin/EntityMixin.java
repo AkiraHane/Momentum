@@ -51,6 +51,11 @@ public abstract class EntityMixin {
     @Shadow
     public abstract boolean onGround();
 
+    @Shadow
+    private static Vec3 collideWithShapes(Vec3 movement, AABB boundingBox, List<VoxelShape> shapes){
+        throw new UnsupportedOperationException("Implemented via mixin");
+    }
+
     protected EntityMixin(EntityType<?> type, Level level) {
     }
 
@@ -71,7 +76,8 @@ public abstract class EntityMixin {
     @WrapOperation(method = "collide", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;collectCandidateStepUpHeights(Lnet/minecraft/world/phys/AABB;Ljava/util/List;FF)[F"))
     private float[] momentum$wrapCollectCandidateStepUpHeights(
             AABB boundingBox, List<VoxelShape> colliders, float maxStepHeight, float stepHeightToSkip, Operation<float[]> original,
-            @Local(name = "movement", argsOnly = true) Vec3 movement
+            @Local(name = "movement", argsOnly = true) Vec3 movement,
+            @Local(name = "movementStep") Vec3 movementStep
     ) {
         Entity self = (Entity) (Object) this;
         if (!(self instanceof Player player)) {
@@ -113,13 +119,28 @@ public abstract class EntityMixin {
         FloatList filtered = new FloatArrayList();
         float lastHeight = 0.0F;
         for (float current : result) {
-            if (current - lastHeight <= this.maxUpStep()) {
-                filtered.add(current);
-                lastHeight = current;
-            } else {
+            if (current - lastHeight > this.maxUpStep()) {
                 break;
             }
+
+            Vec3 stepFromGround = collideWithShapes(
+                    new Vec3(movement.x, current, movement.z),
+                    boundingBox,
+                    colliders
+            );
+
+            if (stepFromGround.horizontalDistanceSqr() <= movementStep.horizontalDistanceSqr()) {
+                continue;
+            }
+
+            if (!momentum$hasGroundUnder(boundingBox.move(stepFromGround), colliders)) {
+                break;
+            }
+
+            filtered.add(current);
+            lastHeight = current;
         }
+
         result = filtered.toFloatArray();
         float tmp;
         for (int i = 0, j = result.length - 1; i < j; i++, j--) {
@@ -212,6 +233,14 @@ public abstract class EntityMixin {
                     continue;
                 }
                 Vec3 stepFromGround = momentum$collideWithShapesDown(new Vec3(movement.x, candidateStepDHeight, movement.z), aabb, colliders);
+                if (stepFromGround.horizontalDistanceSqr() <= 0) {
+                    continue;
+                }
+
+                // 位移后脚底没有踩到碰撞面，就尝试更高的那个候选高度
+                if (!momentum$hasGroundUnder(aabb.move(stepFromGround), colliders)) {
+                    continue;
+                }
                 if (stepFromGround.horizontalDistanceSqr() > 0) {
                     cir.setReturnValue(stepFromGround);
                     if (!stateMachine.getCurrentState().getStateType().equals(StateType.SLIDE)) {
@@ -224,6 +253,44 @@ public abstract class EntityMixin {
                 }
             }
         }
+    }
+
+    @Unique
+    private static boolean momentum$hasGroundUnder(AABB movedAABB, List<VoxelShape> colliders) {
+        double epsilon = 1.0E-5D;
+
+        for (VoxelShape collider : colliders) {
+            final boolean[] result = {false};
+
+            collider.forAllBoxes((minX, minY, minZ, maxX, maxY, maxZ) -> {
+                if (result[0]) {
+                    return;
+                }
+
+                boolean xzIntersects =
+                        movedAABB.minX < maxX && movedAABB.maxX > minX &&
+                                movedAABB.minZ < maxZ && movedAABB.maxZ > minZ;
+
+                if (!xzIntersects) {
+                    return;
+                }
+
+                if (Math.abs(movedAABB.minY - maxY) <= epsilon) {
+                    result[0] = true;
+                }
+            });
+
+            if (result[0]) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+
+    @Unique
+    private record MomentumStepDownCandidate(float height, AABB box) {
     }
 
     @Unique
