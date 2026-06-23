@@ -50,8 +50,8 @@ public class ServerConfig {
 
     // 单次闪避冷却
     public static final ModConfigSpec.IntValue DODGE_COOLDOWN = BUILDER
-            .comment("单次闪避冷却（tick）", "默认值: 20")
-            .defineInRange("airDodgeCooldown", 20, 0, 200);
+            .comment("单次闪避冷却（tick）", "默认值: 40")
+            .defineInRange("airDodgeCooldown", 40, 0, 200);
 
     // 闪避可储存次数
     public static final ModConfigSpec.IntValue DODGE_STORAGE = BUILDER
