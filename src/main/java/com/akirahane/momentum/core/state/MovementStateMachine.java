@@ -40,6 +40,9 @@ public class MovementStateMachine {
         context.clientTick(player);
         currentState.clientTick(player, context);
         BaseState next = currentState.evaluate(player, context);
+        if (!StateType.PRONE.equals(next.getStateType())){
+            context.setMomentumProne(false);
+        }
         transition(next, player);
         if (!org.equals(next)) {
             return next;

@@ -8,8 +8,11 @@ import com.akirahane.momentum.core.context.PlayerMovementContext;
 import com.akirahane.momentum.core.state.BaseState;
 import com.akirahane.momentum.core.state.StateType;
 import com.akirahane.momentum.core.state.states.OriginalState;
+import com.akirahane.momentum.core.state.states.air.AirborneState;
+import com.akirahane.momentum.core.state.states.air.BreakFallReadyState;
 import com.akirahane.momentum.core.state.states.ground.ProneState;
 import com.akirahane.momentum.core.state.states.ground.SlideState;
+import com.akirahane.momentum.core.state.states.ground.WalkState;
 import com.akirahane.momentum.core.state.states.special.BreakFallState;
 import com.akirahane.momentum.core.state.states.special.DodgeState;
 import com.akirahane.momentum.core.state.states.water.SwimState;
@@ -47,11 +50,11 @@ public class WallKickState extends BaseState {
 
     public BaseState evaluate(Player player, PlayerMovementContext context) {
         HintManager.clear();
+        HintManager.add(WallHangHints.ORIGINAL_STATE);
+        HintManager.add(WallHangHints.TOGGLE_HINT);
         if (OriginalState.canOriginal(player, context)) {
             return StateType.ORIGINAL.getState();
         }
-        HintManager.add(WallHangHints.ORIGINAL_STATE);
-        HintManager.add(WallHangHints.TOGGLE_HINT);
         if (DodgeState.canDodge(player, context)) {
             return StateType.DODGE.getState();
         }
@@ -73,6 +76,31 @@ public class WallKickState extends BaseState {
         if (context.getWallJumpTimer() > 0) {
             return StateType.WALL_KICK.getState();
         }
+        if (WallRunState.canWallRun(player, context)) {
+            return StateType.WALL_RUN.getState();
+        }
+        if (VaultUpState.canVaultUp(player, context)) {
+            return StateType.VAULT_UP.getState();
+        }
+        if (WallHangState.canWallHang(player, context)) {
+            return StateType.WALL_HANG.getState();
+        }
+        if (WallClimbState.canWallClimb(player, context)) {
+            return StateType.WALL_CLIMB.getState();
+        }
+        if (WallSlideState.canWallSlide(player, context)) {
+            return StateType.WALL_SLIDE.getState();
+        }
+        if (BreakFallReadyState.canBreakFallReady(player, context)) {
+            return StateType.BREAK_FALL_READY.getState();
+        }
+        if (AirborneState.canAirborne(player, context)) {
+            return StateType.AIRBORNE.getState();
+        }
+        if (WalkState.canWalk(player, context)) {
+            return StateType.WALK.getState();
+        }
+        LOGGER.warn("evaluate error! 有状态没有覆盖!");
         return super.evaluate(player, context);
     }
 

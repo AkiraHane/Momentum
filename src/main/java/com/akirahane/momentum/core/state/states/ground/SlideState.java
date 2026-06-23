@@ -111,7 +111,6 @@ public class SlideState extends BaseState {
         context.setSlopeUnitVector(Vec3.ZERO);
         context.setSlideCooldown(ServerConfig.SLIDE_ACCELERATION_COOLDOWN.get());
         context.setMomentumRollIntensity(0F);  // 退出时关闭
-        context.setMomentumProne(false);
     }
 
     @Override

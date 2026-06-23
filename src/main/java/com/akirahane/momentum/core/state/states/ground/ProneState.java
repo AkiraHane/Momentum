@@ -42,7 +42,7 @@ public class ProneState extends BaseState {
             return false;
         }
         if (context.isMomentumProne()) {
-            return player.onGround() && checkKey(player, context);
+            return !canPlayerFitAtPose(player, Pose.CROUCHING) || player.onGround() && checkKey(player, context);
         } else {
             return player.getPose() == Pose.SWIMMING && !context.isMomentumProne();
         }
@@ -58,14 +58,15 @@ public class ProneState extends BaseState {
     // 状态转换检查
     public BaseState evaluate(Player player, PlayerMovementContext context) {
         HintManager.clear();
+        HintManager.add(WallHangHints.ORIGINAL_STATE);
+        HintManager.add(WallHangHints.TOGGLE_HINT);
         if (OriginalState.canOriginal(player, context)) {
             return StateType.ORIGINAL.getState();
         }
-        HintManager.add(WallHangHints.ORIGINAL_STATE);
-        HintManager.add(WallHangHints.TOGGLE_HINT);
         if (DodgeState.canDodge(player, context)) {
             return StateType.DODGE.getState();
         }
+        // 匍匐无法进入滑铲
         if (BreakFallState.canBreakFall(player, context)) {
             return StateType.BREAK_FALL.getState();
         }
@@ -75,18 +76,17 @@ public class ProneState extends BaseState {
         if (SwimState.canSwim(player, context)) {
             return StateType.SWIM.getState();
         }
-        // 匍匐无法进入滑铲
         if (ProneState.canProneHold(player, context)) {
             return StateType.PRONE.getState();
+        }
+        if (WallKickState.canWallKick(player, context)) {
+            return StateType.WALL_KICK.getState();
         }
         if (WallRunState.canWallRun(player, context)) {
             return StateType.WALL_RUN.getState();
         }
         if (VaultUpState.canVaultUp(player, context)) {
             return StateType.VAULT_UP.getState();
-        }
-        if (WallKickState.canWallKick(player, context)) {
-            return StateType.WALL_KICK.getState();
         }
         if (WallHangState.canWallHang(player, context)) {
             return StateType.WALL_HANG.getState();
