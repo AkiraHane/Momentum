@@ -25,9 +25,6 @@ import net.minecraft.world.phys.Vec3;
 import static com.akirahane.momentum.core.context.PlayerMovementContext.*;
 
 public class WallKickState extends BaseState {
-    // 跳跃
-    public static String WALL_JUMP_LEFT = "wall_jump_left";
-    public static String WALL_JUMP_RIGHT = "wall_jump_right";
 
     public static boolean canWallKick(Player player, PlayerMovementContext context) {
         return ServerConfig.ENABLE_WALL_KICK.getAsBoolean() && ClientConfig.ENABLE_WALL_KICK.getAsBoolean() &&
@@ -108,9 +105,9 @@ public class WallKickState extends BaseState {
     @Override
     public void onEnter(Player player, PlayerMovementContext context) {
         if (context.isLeftFootJump()) {
-            playStateAnimation(player, WALL_JUMP_LEFT, context);
+            playStateAnimation(player, JUMP_LEFT, context);
         } else {
-            playStateAnimation(player, WALL_JUMP_RIGHT, context);
+            playStateAnimation(player, JUMP_RIGHT, context);
         }
         context.setLeftFootJump(!context.isLeftFootJump());
         float jumpPower = ((LivingEntityAccessor) player).invokeGetJumpPower();

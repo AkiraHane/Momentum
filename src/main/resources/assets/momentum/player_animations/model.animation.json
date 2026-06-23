@@ -4,7 +4,7 @@
 		"idle": {
 			"loop": true
 		},
-		"wall_jump_right": {
+		"jump_right": {
 			"loop": "hold_on_last_frame",
 			"animation_length": 1,
 			"bones": {
@@ -126,7 +126,7 @@
 				}
 			}
 		},
-		"wall_jump_left": {
+		"jump_left": {
 			"loop": "hold_on_last_frame",
 			"animation_length": 1,
 			"bones": {
@@ -297,10 +297,7 @@
 							"lerp_mode": "catmullrom"
 						},
 						"0.9583": [383.75, 15.42, 20],
-						"1.0": {
-							"pre": [383.75, 15.42, 20],
-							"post": [23.75, 15.42, 20]
-						}
+						"1.0": {"pre": [383.75, 15.42, 20], "post": [23.75, 15.42, 20]}
 					},
 					"position": {
 						"0.0": {

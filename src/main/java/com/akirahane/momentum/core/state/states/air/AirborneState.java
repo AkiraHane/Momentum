@@ -5,11 +5,9 @@ import com.akirahane.momentum.core.effect.MomentumEffectType;
 import com.akirahane.momentum.core.state.StateType;
 import com.akirahane.momentum.core.state.BaseState;
 import com.akirahane.momentum.core.state.states.ground.SlideState;
-import com.akirahane.momentum.core.state.states.wall.*;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
 
-import static com.akirahane.momentum.core.MomentumUtils.isDivingEdge;
 import static com.akirahane.momentum.core.context.PlayerMovementContext.AIR_LIMIT_ACCELERATION;
 
 public class AirborneState extends BaseState {
@@ -23,17 +21,28 @@ public class AirborneState extends BaseState {
     @Override
     public void onEnter(Player player, PlayerMovementContext context) {
         context.setLuckyNumber(player);
-        if (!WallKickState.WALL_JUMP_RIGHT.equals(context.getCurrentAnimationName()) &&
-                !WallKickState.WALL_JUMP_LEFT.equals(context.getCurrentAnimationName()) &&
-                !SlideState.SLIDE.equals(context.getCurrentAnimationName()) &&
-                player.fallDistance < player.getAttributeValue(Attributes.SAFE_FALL_DISTANCE) * 2
-        ) {
-            super.onEnter(player, context);
-        }
         context.addPermanentEffect(MomentumEffectType.LIMIT_ACCELERATION_SPEED, AIR_LIMIT_ACCELERATION);
         context.setJumpCooldown(15);
         context.setJumpAnimationSpeed(1F);
         context.setMomentumRollIntensity(8F);
+        if (BaseState.JUMP_RIGHT.equals(context.getCurrentAnimationName()) ||
+                BaseState.JUMP_LEFT.equals(context.getCurrentAnimationName())){
+            return;
+        }
+        if (player.getDeltaMovement().y > 0 && player.getDeltaMovement().horizontalDistance() > 0.1F){
+            if (context.isLeftFootJump()) {
+                playStateAnimation(player, BaseState.JUMP_LEFT, context);
+            } else {
+                playStateAnimation(player, BaseState.JUMP_RIGHT, context);
+            }
+            context.setLeftFootJump(!context.isLeftFootJump());
+            return;
+        }
+        // player.fallDistance < player.getAttributeValue(Attributes.SAFE_FALL_DISTANCE) * 2
+        if (SlideState.SLIDE.equals(context.getCurrentAnimationName())) {
+            return;
+        }
+        super.onEnter(player, context);
 
     }
 
@@ -46,8 +55,8 @@ public class AirborneState extends BaseState {
         } else if (FALL.equals(context.getCurrentAnimationName())) {
             playStateAnimation(player, IDLE, context);
         }
-        if (WallKickState.WALL_JUMP_RIGHT.equals(context.getCurrentAnimationName()) &&
-                WallKickState.WALL_JUMP_LEFT.equals(context.getCurrentAnimationName())) {
+        if (BaseState.JUMP_RIGHT.equals(context.getCurrentAnimationName()) &&
+                BaseState.JUMP_LEFT.equals(context.getCurrentAnimationName())) {
             if (context.getSpeed().y > 0) {
                 context.setJumpAnimationSpeed(context.getJumpAnimationSpeed() * 0.9F);
             } else {

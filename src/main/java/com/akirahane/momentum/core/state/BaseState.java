@@ -34,6 +34,9 @@ public abstract class BaseState {
     // 上坡高度ID
     protected static final Identifier UP_SLOPE_ID =
             Identifier.fromNamespaceAndPath(Momentum.MODID, "up_slope");
+    // 跳跃
+    public static String JUMP_LEFT = "jump_left";
+    public static String JUMP_RIGHT = "jump_right";
 
     // 动画名称
     protected String IDLE = "idle";
