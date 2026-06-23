@@ -2,6 +2,7 @@ package com.akirahane.momentum.core;
 
 import com.akirahane.momentum.Momentum;
 import com.akirahane.momentum.core.context.PlayerMovementContext;
+import com.akirahane.momentum.core.effect.MomentumEffectType;
 import com.akirahane.momentum.core.state.MovementStateMachine;
 import com.akirahane.momentum.core.state.StateType;
 import com.mojang.logging.LogUtils;
@@ -70,6 +71,7 @@ public class MomentumUtils {
             float acceleration = (float) (DOWNHILL_ACCEL_FACTOR * Math.tanh(dropHeight * 2.0) * headroom);
             stateMachine.getContext().SLIDE_ACCELERATION.setValue(new Vec3(slopeDir.x * acceleration, 0, slopeDir.z * acceleration));
             stateMachine.getContext().addEffect(ACCELERATION, stateMachine.getContext().SLIDE_ACCELERATION, duration);
+            stateMachine.getContext().addEffect(MomentumEffectType.BLOCK_FRICTION, stateMachine.getContext().SLIDE_BLOCK_FRICTION, duration * 2);
 
             // === 上坡（movementStepY > 0）===
         } else if (movementStepY > 0) {
