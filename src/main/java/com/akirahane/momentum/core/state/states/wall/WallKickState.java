@@ -112,12 +112,17 @@ public class WallKickState extends BaseState {
         context.setLeftFootJump(!context.isLeftFootJump());
         float jumpPower = ((LivingEntityAccessor) player).invokeGetJumpPower();
         if (Mth.abs(context.getInputWallAngle()) >= 100) {
-            player.addDeltaMovement(
-                    new Vec3(
-                            context.getInputVec().x * jumpPower * 0.5,
-                            jumpPower,
-                            context.getInputVec().z * jumpPower * 0.5
-                    )
+            player.setDeltaMovement(
+                    Mth.abs((float) (player.getDeltaMovement().x + context.getInputVec().x * jumpPower * 0.5)) <
+                            Mth.absMax(player.getDeltaMovement().x, context.getInputVec().x *jumpPower * 0.5) ?
+                            context.getInputVec().x *jumpPower * 0.5 :
+                            player.getDeltaMovement().x + context.getInputVec().x * jumpPower * 0.5
+                    ,
+                    jumpPower * 1.5,
+                    Mth.abs((float) (player.getDeltaMovement().z + context.getInputVec().z * jumpPower * 0.5)) <
+                            Mth.absMax(player.getDeltaMovement().z, context.getInputVec().z *jumpPower * 0.5) ?
+                            context.getInputVec().z *jumpPower * 0.5 :
+                            player.getDeltaMovement().z + context.getInputVec().z * jumpPower * 0.5
             );
             player.fallDistance = 0;
         } else {
