@@ -81,9 +81,6 @@ public class PlayerMovementContext {
     private boolean toBreakFallState = false;
     // 当前是否轮到左脚跳
     private boolean leftFootJump = true;
-    // 兼容
-    // 是否此模组造成的趴下
-    private boolean momentumProne = false;
 
 
     // 移动速度

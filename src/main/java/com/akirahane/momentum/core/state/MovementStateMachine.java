@@ -40,9 +40,6 @@ public class MovementStateMachine {
         context.clientTick(player);
         currentState.clientTick(player, context);
         BaseState next = currentState.evaluate(player, context);
-        if (!currentState.equals(next) && !StateType.PRONE.equals(next.getStateType())){
-            context.setMomentumProne(false);
-        }
         transition(next, player);
         if (!org.equals(next)) {
             return next;
@@ -65,7 +62,7 @@ public class MovementStateMachine {
     // 状态转换
     private void transition(BaseState next, Player player) {
         if (next.equals(currentState)) return;
-        LOGGER.trace("[MovementStateMachine] {} to {}", currentState.getStateType(), next.getStateType());
+        LOGGER.debug("[MovementStateMachine] {} to {}", currentState.getStateType(), next.getStateType());
         currentState.onExit(player, context);
         currentState = next;
         currentState.onEnter(player, context);
@@ -73,9 +70,6 @@ public class MovementStateMachine {
 
     // 客户端向服务端同步状态
     public void setStateFromClient(StateType newStateType, Player player) {
-        if (StateType.PRONE.equals(newStateType.getState().getStateType())){
-            context.setMomentumProne(true);
-        }
         transition(newStateType.getState(), player);
         dirty = true;
     }

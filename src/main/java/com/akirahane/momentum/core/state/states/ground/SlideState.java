@@ -74,7 +74,6 @@ public class SlideState extends BaseState {
         playStateAnimation(player, SLIDE, context, 6, 1.0f);
         context.setMomentumRollIntensity(15F);
         context.setTargetArmTransform(0.15F, -15F);
-        context.setMomentumProne(true);
     }
 
     @Override

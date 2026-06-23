@@ -1,9 +1,7 @@
 package com.akirahane.momentum.core.state.states.ground;
 
-import com.akirahane.momentum.client.config.ClientConfig;
 import com.akirahane.momentum.client.hud.HintManager;
 import com.akirahane.momentum.client.hud.WallHangHints;
-import com.akirahane.momentum.config.ServerConfig;
 import com.akirahane.momentum.core.state.StateType;
 import com.akirahane.momentum.core.state.BaseState;
 import com.akirahane.momentum.core.context.PlayerMovementContext;
@@ -19,33 +17,16 @@ import net.minecraft.world.entity.player.Player;
 
 import static com.akirahane.momentum.client.input.LowerCenterKey.LOWER_CENTER;
 import static com.akirahane.momentum.core.MomentumUtils.canPlayerFitAtPose;
-import static com.akirahane.momentum.core.state.states.ground.SlideState.canSlideSpeedCheck;
 
 
 public class ProneState extends BaseState {
     public static boolean canProne(Player player, PlayerMovementContext context) {
-        if (!ServerConfig.ENABLE_PRONE.getAsBoolean() || !ClientConfig.ENABLE_PRONE.getAsBoolean()) {
-            return false;
-        }
-        if (!canPlayerFitAtPose(player, Pose.CROUCHING) || player.onGround() && !canSlideSpeedCheck(player, context) && checkKey(player, context)) {
-            context.setMomentumProne(true);
-            return true;
-        } else if (player.getPose() == Pose.SWIMMING && !context.isMomentumProne()) {
-            context.setMomentumProne(false);
-            return true;
-        }
-        return false;
+        return (player.getPose() == Pose.SWIMMING && !canPlayerFitAtPose(player, Pose.CROUCHING)) ||
+                player.onGround() && checkKey(player, context);
     }
-
     public static boolean canProneHold(Player player, PlayerMovementContext context) {
-        if (!ServerConfig.ENABLE_PRONE.getAsBoolean() || !ClientConfig.ENABLE_PRONE.getAsBoolean()) {
-            return false;
-        }
-        if (context.isMomentumProne()) {
-            return !canPlayerFitAtPose(player, Pose.CROUCHING) || player.onGround() && checkKey(player, context);
-        } else {
-            return player.getPose() == Pose.SWIMMING && !context.isMomentumProne();
-        }
+        return (player.getPose() == Pose.SWIMMING && !canPlayerFitAtPose(player, Pose.CROUCHING)) ||
+                player.onGround() && checkKey(player, context);
     }
 
     public static boolean checkKey(Player player, PlayerMovementContext context) {
@@ -119,7 +100,6 @@ public class ProneState extends BaseState {
     @Override
     public void onExit(Player player, PlayerMovementContext context) {
         super.onExit(player, context);
-        context.setMomentumProne(false);
         player.setForcedPose(null);
     }
 

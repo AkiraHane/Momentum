@@ -73,7 +73,6 @@ public class VaultInState extends BaseState {
             );
         }
         playStateAnimation(player, VAULT_IN, context, 2, 1.5F);
-        context.setMomentumProne(true);
     }
 
     @Override
