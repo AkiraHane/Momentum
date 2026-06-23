@@ -76,7 +76,7 @@ public class MomentumUtils {
 
             // 上坡减速：与坡度成正比，但用 sqrt 软化手感
             // 不会一步减到 0，保留滑行惯性感
-            float deceleration = (float) (-UPHILL_DECEL_FACTOR * Math.min(riseHeight * riseHeight, 1.0));
+            float deceleration = (float) (UPHILL_DECEL_FACTOR * Math.min(riseHeight * riseHeight, 1.0));
 
             stateMachine.getContext().SLIDE_ACCELERATION.setValue(new Vec3(slopeDir.x * deceleration, 0, slopeDir.z * deceleration));
             stateMachine.getContext().addEffect(ACCELERATION, stateMachine.getContext().SLIDE_ACCELERATION, duration);

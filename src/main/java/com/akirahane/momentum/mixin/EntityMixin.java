@@ -84,7 +84,9 @@ public abstract class EntityMixin {
 
         // 修改入参
         float customMaxStep = (float) (maxStepHeight + Math.ceil(Math.max(Math.abs(movement.x), Math.abs(movement.z))));
-
+        if (!colliders.isEmpty()) {
+            stateMachine.getContext().setSlopeUnitVector(momentum$getSlopeDirection(player, colliders.getFirst()));
+        }
 
 //        float[] result = original.call(boundingBox, colliders, customMaxStep, stepHeightToSkip);
         AABB movementRange = boundingBox.expandTowards(movement.x, 0, movement.z);
@@ -214,8 +216,9 @@ public abstract class EntityMixin {
                     cir.setReturnValue(stepFromGround);
                     if (!stateMachine.getCurrentState().getStateType().equals(StateType.SLIDE)) {
                         return;
+                    }if (!colliders.isEmpty()) {
+                        stateMachine.getContext().setSlopeUnitVector(momentum$getSlopeDirection(player, colliders.getFirst()));
                     }
-                    stateMachine.getContext().setSlopeUnitVector(momentum$getSlopeDirection(player, colliders.getFirst()));
                     setSlideAcceleration(movement, stepFromGround.y, stateMachine);
                     return;
                 }
@@ -267,6 +270,7 @@ public abstract class EntityMixin {
     // 计算坡面单位
     @Unique
     public Vec3 momentum$getSlopeDirection(Player player, VoxelShape collider) {
+        if (collider.isEmpty()) return Vec3.ZERO;
         AABB bounds = collider.bounds();
         BlockPos feet = BlockPos.containing(
                 (bounds.minX + bounds.maxX) / 2,

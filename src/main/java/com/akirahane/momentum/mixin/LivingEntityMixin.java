@@ -53,7 +53,7 @@ public abstract class LivingEntityMixin extends Entity implements Attackable, Wa
             return original;
         }
         // =================== 内容 ===================
-        original = Math.clamp(0F, 1F - (float) stateMachine.applyEffect(1F - Math.max(0, original), FRICTION), 1F);
+        original = Math.clamp(1F - (float) stateMachine.applyEffect(1F - Math.max(0, original), FRICTION), 0F, 1F);
         return original;
     }
 
@@ -108,7 +108,7 @@ public abstract class LivingEntityMixin extends Entity implements Attackable, Wa
             return original;
         }
         // =================== 内容 ===================
-        original = Math.clamp(0F, 1F - (float) stateMachine.applyEffect(1F - Math.max(0, original), BLOCK_FRICTION), 1F);
+        original = Math.clamp(1F - (float) stateMachine.applyEffect(1F - Math.max(0, original), BLOCK_FRICTION), 0F, 1F);
         return original;
     }
 
@@ -123,7 +123,7 @@ public abstract class LivingEntityMixin extends Entity implements Attackable, Wa
             return original;
         }
         // =================== 内容 ===================
-        original = Math.clamp(0F, 1F - (float) stateMachine.applyEffect(1F - Math.max(0, original), FRICTION), 1F);
+        original = Math.clamp(1F - (float) stateMachine.applyEffect(1F - Math.max(0, original), FRICTION), 0F, 1F);
         return original;
     }
 
@@ -222,6 +222,7 @@ public abstract class LivingEntityMixin extends Entity implements Attackable, Wa
             original.call(self, acceleration);
         }
         // 已超速则不调用
+        original.call(self, Vec3.ZERO);
     }
 
     @Inject(method = "jumpFromGround", at = @At("HEAD"), cancellable = true)
@@ -302,7 +303,7 @@ public abstract class LivingEntityMixin extends Entity implements Attackable, Wa
         }
 
         if (!stateMachine.getCurrentState().getStateType().equals(StateType.WALL_CLIMB) &&
-                !stateMachine.getCurrentState().getStateType().equals(StateType.WALL_SLIDE)){
+                !stateMachine.getCurrentState().getStateType().equals(StateType.WALL_SLIDE)) {
             return original;
         }
         Double multiplier = CLIMB_BOOST_MULTIPLIER.get();

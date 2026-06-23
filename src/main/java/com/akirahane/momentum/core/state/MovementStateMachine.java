@@ -62,7 +62,7 @@ public class MovementStateMachine {
     // 状态转换
     private void transition(BaseState next, Player player) {
         if (next.equals(currentState)) return;
-        LOGGER.debug("[MovementStateMachine] {} to {}", currentState.getStateType(), next.getStateType());
+        LOGGER.trace("[MovementStateMachine] {} to {}", currentState.getStateType(), next.getStateType());
         currentState.onExit(player, context);
         currentState = next;
         currentState.onEnter(player, context);
@@ -99,7 +99,7 @@ public class MovementStateMachine {
     public double applyEffect(double number, MomentumEffectType type) {
         Set<MomentumEffect> effects = context.getPendingEffectPool().get(type);
         if (effects == null || effects.isEmpty()) return number;
-
+        double origin = number;
         // 排序：按照 EffectType 的优先级
         List<MomentumEffect> sorted = effects.stream()
                 .sorted(Comparator.comparingInt(e -> e.getType().getPriority()))
@@ -108,12 +108,13 @@ public class MovementStateMachine {
         for (MomentumEffect effect : sorted) {
             number = effect.applyTo(number);
         }
-        return number;
+        return Double.isFinite(number) ? number : origin;
     }
 
     public Vec3 applyEffect(Vec3 vec, float yRot, MomentumEffectType type) {
         Set<MomentumEffect> effects = context.getPendingEffectPool().get(type);
         if (effects == null || effects.isEmpty()) return vec;
+        Vec3 origin = vec;
 
         List<MomentumEffect> sorted = effects.stream()
                 .sorted(Comparator.comparingInt(e -> e.getType().getPriority()))
@@ -121,8 +122,11 @@ public class MovementStateMachine {
 
         for (MomentumEffect effect : sorted) {
             vec = effect.applyTo(vec, yRot);
+            if (vec == null) return origin;
         }
-        return vec;
+        return (Double.isFinite(vec.x) && Double.isFinite(vec.y) && Double.isFinite(vec.z))
+                ? vec
+                : origin;
     }
 
 }
