@@ -15,14 +15,7 @@ public class WalkState extends BaseState {
 
     @Override
     public void onEnter(Player player, PlayerMovementContext context) {
-        BlockPos posBelow = player.getBlockPosBelowThatAffectsMyMovement();
-        float blockFriction = player.onGround() ? player.level().getBlockState(posBelow).getFriction(player.level(), posBelow, player) : 1.0F;
-        if (blockFriction > 0.95F && context.getSpeed().horizontalDistance() > 0.1F) {
-            float speed = (float) Math.min(context.getSpeed().horizontalDistance() * 1.5 , 1);
-            playStateAnimation(player, ICE_SLIDE, context, 6, speed);
-        } else if ((blockFriction < 0.95F || context.getSpeed().horizontalDistance() < 0.25F) && !IDLE.equals(context.getCurrentAnimationName())){
-            playStateAnimation(player, IDLE, context);
-        }
+        this.clientTickRemote(player, context);
     }
 
     @Override
