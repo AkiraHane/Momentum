@@ -13,6 +13,7 @@ import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
 
 import static com.akirahane.momentum.client.input.LowerCenterKey.LOWER_CENTER;
+import static com.akirahane.momentum.core.MomentumUtils.isDivingEdge;
 import static com.akirahane.momentum.core.context.PlayerMovementContext.AIR_LIMIT_ACCELERATION;
 import static com.akirahane.momentum.core.state.states.air.AirborneState.FALL;
 
@@ -44,6 +45,9 @@ public class BreakFallReadyState extends BaseState {
         context.setJumpAnimationSpeed(1F);
         context.setMomentumRollIntensity(8F);
         context.setBreakFallReadyCount(6);
+        if (context.isHasJetBooster() && isDivingEdge(player, context)) {
+            LOGGER.info("Diving Edge");
+        }
         if (BaseState.JUMP_RIGHT.equals(context.getCurrentAnimationName()) ||
                 BaseState.JUMP_LEFT.equals(context.getCurrentAnimationName())){
             return;
@@ -73,12 +77,15 @@ public class BreakFallReadyState extends BaseState {
         } else if (FALL.equals(context.getCurrentAnimationName())) {
             playStateAnimation(player, IDLE, context);
         }
-        if (BaseState.JUMP_RIGHT.equals(context.getCurrentAnimationName()) &&
+        if (player.isInWater()) {
+            playStateAnimation(player, IDLE, context);
+        }
+        if (BaseState.JUMP_RIGHT.equals(context.getCurrentAnimationName()) ||
                 BaseState.JUMP_LEFT.equals(context.getCurrentAnimationName())) {
             if (context.getSpeed().y > 0) {
                 context.setJumpAnimationSpeed(context.getJumpAnimationSpeed() * 0.9F);
             } else {
-                context.setJumpAnimationSpeed(context.getJumpAnimationSpeed() * 1.5F);
+                context.setJumpAnimationSpeed(context.getJumpAnimationSpeed() * 1.1F);
             }
             playStateAnimation(player, context.getCurrentAnimationName(), context, 0, context.getJumpAnimationSpeed());
         }
