@@ -63,16 +63,6 @@ public class ServerConfig {
             .comment("闪避可储存次数", "默认值: 2")
             .defineInRange("airDodgeStorage", 2, 0, 10);
 
-    // 单次水中冲刺冷却
-    public static final ModConfigSpec.IntValue WATER_SPRINT_COOLDOWN = BUILDER
-            .comment("水中冲刺冷却（tick）", "默认值: 40")
-            .defineInRange("waterSprintCooldown", 40, 0, 200);
-
-    // 水上冲刺可储存次数
-    public static final ModConfigSpec.IntValue WATER_SPRINT_STORAGE = BUILDER
-            .comment("水上冲刺可储存次数", "默认值: 2")
-            .defineInRange("waterSprintStorage", 2, 0, 10);
-
     // 空气阻力
     public static final ModConfigSpec.DoubleValue AIR_FRICTION = BUILDER
             .comment("空气阻力（0.0 - 1.0）", "默认值: 0.998, 原版: 0.91")
