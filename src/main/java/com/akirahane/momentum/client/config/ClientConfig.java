@@ -86,6 +86,18 @@ public class ClientConfig {
     public static final ModConfigSpec.BooleanValue ENABLE_VAULT_IN = BUILDER
             .comment("是否开启翻入")
             .define("enableVaultIn", true);
+    public static final ModConfigSpec.BooleanValue ENABLE_WATER_SWIM = BUILDER
+            .comment("是否开启水上漂(需要助推器)")
+            .define("enableWaterRun", true);
+    public static final ModConfigSpec.BooleanValue ENABLE_WATER_PUSH = BUILDER
+            .comment("是否开启水中推进(海豚跳)")
+            .define("enableWaterPush", true);
+    public static final ModConfigSpec.BooleanValue ENABLE_FALL_SLOW = BUILDER
+            .comment("是否开启缓降(需要助推器)")
+            .define("enableFallSlow", true);
+    public static final ModConfigSpec.BooleanValue ENABLE_AIR_JUMP = BUILDER
+            .comment("是否开启空中二段跳(需要助推器)")
+            .define("enableAirJump", true);
 
 
     public static final ModConfigSpec SPEC = BUILDER.build();

@@ -91,4 +91,24 @@ public class WallHangHints {
     // 推进
     public static final HintManager.KeyHint PUSH =
             HintManager.KeyHint.single(OPTIONS.keySprint, "hint.momentum.push");
+
+    // 缓降
+    public static final HintManager.KeyHint SLOW_FALL =
+            HintManager.KeyHint.builder("hint.momentum.slow_fall")
+                    .translatable("hint.momentum.hold")
+                    .key(OPTIONS.keyJump)
+                    .build();
+    // 二段跳
+    public static final HintManager.KeyHint AIR_JUMP =
+            HintManager.KeyHint.builder("hint.momentum.air_jump")
+                    .translatable("hint.momentum.click")
+                    .key(OPTIONS.keyJump)
+                    .build();
+
+    // 水上跑
+    public static final HintManager.KeyHint WATER_RUN =
+            HintManager.KeyHint.builder("hint.momentum.water_run")
+                    .translatable("hint.momentum.click")
+                    .key(OPTIONS.keyJump)
+                    .build();
 }

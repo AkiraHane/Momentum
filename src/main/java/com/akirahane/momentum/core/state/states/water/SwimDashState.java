@@ -1,7 +1,9 @@
 package com.akirahane.momentum.core.state.states.water;
 
+import com.akirahane.momentum.client.config.ClientConfig;
 import com.akirahane.momentum.client.hud.HintManager;
 import com.akirahane.momentum.client.hud.WallHangHints;
+import com.akirahane.momentum.config.ServerConfig;
 import com.akirahane.momentum.core.context.PlayerMovementContext;
 import com.akirahane.momentum.core.state.BaseState;
 import com.akirahane.momentum.core.state.StateType;
@@ -20,21 +22,14 @@ import static com.akirahane.momentum.client.input.LowerCenterKey.LOWER_CENTER;
 
 public class SwimDashState extends BaseState {
 
-    public static boolean canSwim(Player player, PlayerMovementContext context) {
-        if (player.isSwimming()) {
-            return true;
-        } else if (player.isUnderWater()) {
-            if (player.isSprinting()) {
-                HintManager.add(WallHangHints.SWIM_HOLD);
-                return Minecraft.getInstance().options.keyUp.isDown();
-            } else {
-                HintManager.add(WallHangHints.SWIM);
-                return false;
-            }
-        } else if (player.isInWater()) {
-            HintManager.add(WallHangHints.SWIM_ACTIVE);
-            return LOWER_CENTER.get().isDown() && Minecraft.getInstance().options.keyUp.isDown();
+    public static boolean canSwimDash(Player player, PlayerMovementContext context) {
+        if (!ServerConfig.ENABLE_DODGE.getAsBoolean() || !ClientConfig.ENABLE_DODGE.getAsBoolean()) {
+            return false;
         }
+        if (!player.isSwimming() || !player.isUnderWater()) {
+            return false;
+        }
+
         return false;
     }
 
@@ -56,7 +51,7 @@ public class SwimDashState extends BaseState {
         if (VaultInState.canVaultIn(player, context)) {
             return StateType.VAULT_IN.getState();
         }
-        if (SwimDashState.canSwim(player, context)) {
+        if (SwimState.canSwim(player, context)) {
             return StateType.SWIM.getState();
         }
         if (ProneState.canProne(player, context)) {
