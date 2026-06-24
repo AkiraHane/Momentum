@@ -8,6 +8,11 @@ public class ClientConfig {
     public static final ModConfigSpec.BooleanValue ENABLE_CAMERA_OFFSET = BUILDER
             .comment("是否开启摄像头偏移")
             .define("enableCameraOffset", true);
+
+    // 是否使用双击疾跑闪避(防止误操作)
+    public static final ModConfigSpec.BooleanValue ENABLE_DOUBLE_CLICK_DODGE = BUILDER
+            .comment("是否使用双击疾跑闪避(防止误操作)")
+            .define("enableDoubleClickDodge", false);
     // 按键提示
     static {
         BUILDER.push("key_hints");

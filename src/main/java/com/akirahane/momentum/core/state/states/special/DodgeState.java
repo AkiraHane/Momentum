@@ -26,6 +26,7 @@ import static com.akirahane.momentum.client.init.InitSounds.JET2;
 import static com.akirahane.momentum.config.ServerConfig.DODGE_COOLDOWN;
 import static com.akirahane.momentum.config.ServerConfig.DODGE_STORAGE;
 import static com.akirahane.momentum.core.MomentumUtils.canPlayerFitAtPose;
+import static com.akirahane.momentum.core.context.PlayerMovementContext.SPRINT;
 import static com.akirahane.momentum.core.state.states.OriginalState.canOriginal;
 
 public class DodgeState extends BaseState {
@@ -48,27 +49,36 @@ public class DodgeState extends BaseState {
         if (DODGE_COOLDOWN.get() * DODGE_STORAGE.get() - context.getDodgeCooldown() <= DODGE_COOLDOWN.get()) {
             return false;
         }
-        HintManager.add(WallHangHints.DODGE);
-        return context.isDoubleClickSprint() &&
-                (Minecraft.getInstance().options.keyUp.isDown() ||
-                        Minecraft.getInstance().options.keyLeft.isDown() ||
-                        Minecraft.getInstance().options.keyRight.isDown() ||
-                        Minecraft.getInstance().options.keyDown.isDown()
-                );
+        if (ClientConfig.ENABLE_DOUBLE_CLICK_DODGE.getAsBoolean()) {
+            HintManager.add(WallHangHints.DODGE_DOUBLE);
+            return context.isDoubleClickSprint() &&
+                    (Minecraft.getInstance().options.keyUp.isDown() ||
+                            Minecraft.getInstance().options.keyLeft.isDown() ||
+                            Minecraft.getInstance().options.keyRight.isDown() ||
+                            Minecraft.getInstance().options.keyDown.isDown()
+                    );
+        } else {
+            HintManager.add(WallHangHints.DODGE);
+            return context.getInputBuffer()[context.getInputBufferIndex()].contains(SPRINT) &&
+                    (Minecraft.getInstance().options.keyUp.isDown() ||
+                            Minecraft.getInstance().options.keyLeft.isDown() ||
+                            Minecraft.getInstance().options.keyRight.isDown() ||
+                            Minecraft.getInstance().options.keyDown.isDown()
+                    );
+        }
     }
 
     @Override
     public void onEnter(Player player, PlayerMovementContext context) {
         String animationName;
         float yRot = player.getYRot();
-        float xRot = player.getXRot();
-        if (context.isDoubleClickDown()) {
+        if (Minecraft.getInstance().options.keyDown.isDown()) {
             yRot += 180;
             animationName = DODGE_DOWN;
-        } else if (context.isDoubleClickLeft()) {
+        } else if (Minecraft.getInstance().options.keyLeft.isDown()) {
             yRot -= 90;
             animationName = DODGE_LEFT;
-        } else if (context.isDoubleClickRight()) {
+        } else if (Minecraft.getInstance().options.keyRight.isDown()) {
             yRot += 90;
             animationName = DODGE_RIGHT;
         } else {

@@ -26,6 +26,7 @@
   "state.momentum.vault_up": "Vault Up",
   "state.momentum.vault_in": "Vault In",
   "momentum.configuration.enableCameraOffset": "Enable Camera Offset",
+  "momentum.configuration.enableDoubleClickDodge": "Enable Double Click Jump",
   "momentum.configuration.key_hints": "Key Hints Config",
   "momentum.configuration.function_switches": "Function Switches Config",
   "momentum.configuration.minAlphaWhenMoving": "Minimum Alpha When Moving",

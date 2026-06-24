@@ -26,6 +26,7 @@
   "state.momentum.vault_up": "向上翻越",
   "state.momentum.vault_in": "钻进",
   "momentum.configuration.enableCameraOffset": "启用相机偏移(倾斜+FOV)",
+  "momentum.configuration.enableDoubleClickDodge": "是否使用双击疾跑闪避(防止误操作)",
   "momentum.configuration.key_hints": "按键提示配置",
   "momentum.configuration.function_switches": "功能开关配置",
   "momentum.configuration.minAlphaWhenMoving": "移动时最低透明度",

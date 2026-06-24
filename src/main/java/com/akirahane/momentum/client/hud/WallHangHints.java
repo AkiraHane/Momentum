@@ -22,13 +22,23 @@ public class WallHangHints {
     public static final HintManager.KeyHint SLIDE =
             HintManager.KeyHint.single(LOWER_CENTER.get(), "state.momentum.slide");
 
-    public static final HintManager.KeyHint DODGE =
+    public static final HintManager.KeyHint DODGE_DOUBLE =
             HintManager.KeyHint.builder("state.momentum.dodge")
                     .key(OPTIONS.keyUp)
                     .key(OPTIONS.keyLeft)
                     .key(OPTIONS.keyDown)
                     .key(OPTIONS.keyRight).plus()
                     .translatable("hint.momentum.double_click")
+                    .key(OPTIONS.keySprint)
+                    .build();
+
+    public static final HintManager.KeyHint DODGE =
+            HintManager.KeyHint.builder("state.momentum.dodge")
+                    .key(OPTIONS.keyUp)
+                    .key(OPTIONS.keyLeft)
+                    .key(OPTIONS.keyDown)
+                    .key(OPTIONS.keyRight).plus()
+                    .translatable("hint.momentum.click")
                     .key(OPTIONS.keySprint)
                     .build();
 
