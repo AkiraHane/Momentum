@@ -11,6 +11,7 @@ import com.akirahane.momentum.core.state.states.air.BreakFallReadyState;
 import com.akirahane.momentum.core.state.states.special.BreakFallState;
 import com.akirahane.momentum.core.state.states.special.DodgeState;
 import com.akirahane.momentum.core.state.states.wall.*;
+import com.akirahane.momentum.core.state.states.water.SwimDashState;
 import com.akirahane.momentum.core.state.states.water.SwimState;
 import net.minecraft.world.entity.Pose;
 import net.minecraft.world.entity.player.Player;
@@ -47,6 +48,9 @@ public class ProneState extends BaseState {
         }
         if (DodgeState.canDodge(player, context)) {
             return StateType.DODGE.getState();
+        }
+        if (SwimDashState.canSwimDash(player, context)){
+            return StateType.SWIM_DASH.getState();
         }
         // 匍匐无法进入滑铲
         if (BreakFallState.canBreakFall(player, context)) {

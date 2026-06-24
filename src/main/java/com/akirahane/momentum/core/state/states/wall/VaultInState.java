@@ -14,6 +14,7 @@ import com.akirahane.momentum.core.state.states.ground.SlideState;
 import com.akirahane.momentum.core.state.states.ground.WalkState;
 import com.akirahane.momentum.core.state.states.special.BreakFallState;
 import com.akirahane.momentum.core.state.states.special.DodgeState;
+import com.akirahane.momentum.core.state.states.water.SwimDashState;
 import com.akirahane.momentum.core.state.states.water.SwimState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.util.Mth;
@@ -96,6 +97,9 @@ public class VaultInState extends BaseState {
         }
         if (DodgeState.canDodge(player, context)) {
             return StateType.DODGE.getState();
+        }
+        if (SwimDashState.canSwimDash(player, context)){
+            return StateType.SWIM_DASH.getState();
         }
         if (context.getVaultTimer() > 0) {
             return StateType.VAULT_IN.getState();

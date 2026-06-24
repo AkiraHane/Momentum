@@ -14,6 +14,7 @@ import com.akirahane.momentum.core.state.states.ground.ProneState;
 import com.akirahane.momentum.core.state.states.ground.SlideState;
 import com.akirahane.momentum.core.state.states.ground.WalkState;
 import com.akirahane.momentum.core.state.states.wall.*;
+import com.akirahane.momentum.core.state.states.water.SwimDashState;
 import com.akirahane.momentum.core.state.states.water.SwimState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.sounds.SoundEvents;
@@ -166,6 +167,9 @@ public class DodgeState extends BaseState {
         }
         if (context.getDodgeTimer() > 0) {
             return StateType.DODGE.getState();
+        }
+        if (SwimDashState.canSwimDash(player, context)){
+            return StateType.SWIM_DASH.getState();
         }
         if (SlideState.canSlide(player, context)) {
             return StateType.SLIDE.getState();

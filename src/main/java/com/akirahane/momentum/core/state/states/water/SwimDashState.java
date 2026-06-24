@@ -19,18 +19,24 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.world.entity.player.Player;
 
 import static com.akirahane.momentum.client.input.LowerCenterKey.LOWER_CENTER;
+import static com.akirahane.momentum.config.ServerConfig.DODGE_COOLDOWN;
+import static com.akirahane.momentum.config.ServerConfig.DODGE_STORAGE;
+import static com.akirahane.momentum.core.context.PlayerMovementContext.SPRINT;
 
 public class SwimDashState extends BaseState {
 
     public static boolean canSwimDash(Player player, PlayerMovementContext context) {
-        if (!ServerConfig.ENABLE_DODGE.getAsBoolean() || !ClientConfig.ENABLE_DODGE.getAsBoolean()) {
+        if (!ServerConfig.ENABLE_WATER_PUSH.getAsBoolean() || !ClientConfig.ENABLE_WATER_PUSH.getAsBoolean()) {
             return false;
         }
-        if (!player.isSwimming() || !player.isUnderWater()) {
+        if (!player.isUnderWater()) {
             return false;
         }
-
-        return false;
+        if (DODGE_COOLDOWN.get() * DODGE_STORAGE.get() - context.getDodgeCooldown() <= DODGE_COOLDOWN.get()) {
+            return false;
+        }
+        HintManager.add(WallHangHints.PUSH);
+        return context.getInputBuffer()[context.getInputBufferIndex()].contains(SPRINT);
     }
 
     @Override

@@ -50,6 +50,9 @@ public class SwimState extends BaseState {
         if (DodgeState.canDodge(player, context)) {
             return StateType.DODGE.getState();
         }
+        if (SwimDashState.canSwimDash(player, context)){
+            return StateType.SWIM_DASH.getState();
+        }
         if (BreakFallState.canBreakFall(player, context)) {
             return StateType.BREAK_FALL.getState();
         }
