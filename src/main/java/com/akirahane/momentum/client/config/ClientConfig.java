@@ -1,6 +1,5 @@
 package com.akirahane.momentum.client.config;
 
-import com.akirahane.momentum.core.state.states.wall.*;
 import net.neoforged.neoforge.common.ModConfigSpec;
 
 public class ClientConfig {
@@ -86,7 +85,7 @@ public class ClientConfig {
     public static final ModConfigSpec.BooleanValue ENABLE_VAULT_IN = BUILDER
             .comment("是否开启翻入")
             .define("enableVaultIn", true);
-    public static final ModConfigSpec.BooleanValue ENABLE_WATER_SWIM = BUILDER
+    public static final ModConfigSpec.BooleanValue ENABLE_WATER_RUN = BUILDER
             .comment("是否开启水上漂(需要助推器)")
             .define("enableWaterRun", true);
     public static final ModConfigSpec.BooleanValue ENABLE_WATER_PUSH = BUILDER
