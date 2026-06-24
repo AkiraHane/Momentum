@@ -42,7 +42,7 @@ public class SwimDashState extends BaseState {
         if (DODGE_COOLDOWN.get() * DODGE_STORAGE.get() - context.getDodgeCooldown() <= DODGE_COOLDOWN.get()) {
             return false;
         }
-        if (player.isSwimming()){
+        if (player.isSwimming()) {
             HintManager.add(WallHangHints.PUSH);
             return context.getInputBuffer()[context.getInputBufferIndex()].contains(SPRINT);
         } else {
@@ -64,7 +64,7 @@ public class SwimDashState extends BaseState {
         if (DodgeState.canDodge(player, context)) {
             return StateType.DODGE.getState();
         }
-        if (context.getSwimPushTimer() > 0 && (player.isUnderWater() || !player.onGround())){
+        if (context.getSwimPushTimer() > 0 && (player.isUnderWater() || !player.onGround())) {
             return StateType.SWIM_DASH.getState();
         }
         if (SlideState.canSlide(player, context)) {
@@ -165,13 +165,17 @@ public class SwimDashState extends BaseState {
 
     @Override
     public void clientTick(Player player, PlayerMovementContext context) {
-        super.clientTick(player, context);
         if (!player.isInWater()) {
             context.setSwimPushTimer(10);
-            if (!DOLPHIN_JUMP.equals(context.getCurrentAnimationName())){
-                playStateAnimation(player, DOLPHIN_JUMP, context, 0, 1);
-            }
-        } else if (!IDLE.equals(context.getCurrentAnimationName())){
+        }
+        super.clientTick(player, context);
+    }
+
+    @Override
+    public void clientTickRemote(Player player, PlayerMovementContext context) {
+        if (!player.isInWater() && !DOLPHIN_JUMP.equals(context.getCurrentAnimationName())) {
+            playStateAnimation(player, DOLPHIN_JUMP, context, 0, 1);
+        } else if (!IDLE.equals(context.getCurrentAnimationName())) {
             playStateAnimation(player, IDLE, context);
         }
     }

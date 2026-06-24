@@ -11,9 +11,9 @@ import com.akirahane.momentum.core.state.StateType;
 import com.akirahane.momentum.core.state.states.ground.SlideState;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.phys.Vec3;
 
 import static com.akirahane.momentum.client.input.LowerCenterKey.LOWER_CENTER;
-import static com.akirahane.momentum.core.MomentumUtils.isDivingEdge;
 import static com.akirahane.momentum.core.context.PlayerMovementContext.AIR_LIMIT_ACCELERATION;
 import static com.akirahane.momentum.core.state.states.air.AirborneState.FALL;
 
@@ -45,18 +45,30 @@ public class BreakFallReadyState extends BaseState {
         context.setJumpAnimationSpeed(1F);
         context.setMomentumRollIntensity(8F);
         context.setBreakFallReadyCount(6);
-        if (context.isHasJetBooster() && isDivingEdge(player, context)) {
-            LOGGER.info("Diving Edge");
-        }
         if (BaseState.JUMP_RIGHT.equals(context.getCurrentAnimationName()) ||
-                BaseState.JUMP_LEFT.equals(context.getCurrentAnimationName())){
+                BaseState.JUMP_LEFT.equals(context.getCurrentAnimationName()) ||
+                BaseState.BACK_JUMP_RIGHT.equals(context.getCurrentAnimationName()) ||
+                BaseState.BACK_JUMP_LEFT.equals(context.getCurrentAnimationName())
+        ) {
             return;
         }
-        if (player.getDeltaMovement().y > 0 && player.getDeltaMovement().horizontalDistance() > 0.1F){
+        if (context.getSpeed().y > 0 && context.getSpeed().horizontalDistance() > 0.1F) {
+            float yaw = player.getYRot();
+            Vec3 lookVec = new Vec3(
+                    -Math.sin(Math.toRadians(yaw)),
+                    0,
+                    Math.cos(Math.toRadians(yaw))
+            ).normalize();
+            Vec3 motionDirection = context.getSpeed().normalize();
+            boolean isBackwardJump = (lookVec.x * motionDirection.x + lookVec.z * motionDirection.z) < 0;
             if (context.isLeftFootJump()) {
-                playStateAnimation(player, BaseState.JUMP_LEFT, context);
+                playStateAnimation(player,
+                        isBackwardJump ? BaseState.BACK_JUMP_LEFT : BaseState.JUMP_LEFT,
+                        context);
             } else {
-                playStateAnimation(player, BaseState.JUMP_RIGHT, context);
+                playStateAnimation(player,
+                        isBackwardJump ? BaseState.BACK_JUMP_RIGHT : BaseState.JUMP_RIGHT,
+                        context);
             }
             context.setLeftFootJump(!context.isLeftFootJump());
             return;
@@ -70,9 +82,8 @@ public class BreakFallReadyState extends BaseState {
 
     @Override
     public void clientTickRemote(Player player, PlayerMovementContext context) {
-        if (player.fallDistance > player.getAttributeValue(Attributes.SAFE_FALL_DISTANCE) * 2) {
-            float t = (float) ((player.fallDistance - 3.0f) / (70.0f - 3.0f));
-            float speed = Math.clamp(t, 0.0f, 1.0f) * 1.5F + 0.5F;
+        if (context.getSpeed().y < -1.0F) {
+            float speed = (float) (Math.clamp(-context.getSpeed().y / 2.5, 0.0f, 1.5f) + 0.5F);
             playStateAnimation(player, FALL, context, 20, speed);
         } else if (FALL.equals(context.getCurrentAnimationName())) {
             playStateAnimation(player, IDLE, context);
@@ -81,7 +92,9 @@ public class BreakFallReadyState extends BaseState {
             playStateAnimation(player, IDLE, context);
         }
         if (BaseState.JUMP_RIGHT.equals(context.getCurrentAnimationName()) ||
-                BaseState.JUMP_LEFT.equals(context.getCurrentAnimationName())) {
+                BaseState.JUMP_LEFT.equals(context.getCurrentAnimationName()) ||
+                BaseState.BACK_JUMP_RIGHT.equals(context.getCurrentAnimationName()) ||
+                BaseState.BACK_JUMP_LEFT.equals(context.getCurrentAnimationName())) {
             if (context.getSpeed().y > 0) {
                 context.setJumpAnimationSpeed(context.getJumpAnimationSpeed() * 0.9F);
             } else {

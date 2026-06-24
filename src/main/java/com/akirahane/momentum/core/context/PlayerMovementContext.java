@@ -77,6 +77,7 @@ public class PlayerMovementContext {
     private boolean doubleClickLeft = false;
     private boolean doubleClickRight = false;
     private boolean doubleClickJump = false;
+    private boolean doubleClickSprint = false;
     // 是否进入受身
     private boolean toBreakFallState = false;
     // 当前是否轮到左脚跳
@@ -336,6 +337,7 @@ public class PlayerMovementContext {
         this.doubleClickLeft = isDoubleClick(LEFT);
         this.doubleClickRight = isDoubleClick(RIGHT);
         this.doubleClickJump = isDoubleClick(JUMP);
+        this.doubleClickSprint = isDoubleClick(SPRINT);
         double moveSpeed = player.getAttributeValue(Attributes.MOVEMENT_SPEED);
         double jumpStrength = player.getJumpBoostPower();
         this.jumpLimitSpeed = moveSpeed * (1 + jumpStrength) * 3;

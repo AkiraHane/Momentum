@@ -19,13 +19,7 @@ public abstract class AvatarRendererMixin {
 
     @Inject(method = "extractRenderState(Lnet/minecraft/world/entity/Avatar;Lnet/minecraft/client/renderer/entity/state/AvatarRenderState;F)V", at = @At("TAIL"))
     public void momentum$modifyRenderState(Avatar entity, AvatarRenderState state, float partialTicks, CallbackInfo ci) {
-        Entity e;
-        if (Minecraft.getInstance().level != null) {
-            e = Minecraft.getInstance().level.getEntity(state.id);
-        } else {
-            return;
-        }
-        if (!(e instanceof Player player)) return;
+        if (!(entity instanceof Player player)) return;
 
         MovementStateMachine stateMachine = player.getData(InitAttachments.MOVEMENT_STATE);
         if (stateMachine.getCurrentState().getStateType().equals(StateType.SWIM)) {

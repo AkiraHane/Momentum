@@ -38,6 +38,8 @@ public abstract class BaseState {
     // 跳跃
     public static String JUMP_LEFT = "jump_left";
     public static String JUMP_RIGHT = "jump_right";
+    public static String BACK_JUMP_LEFT = "back_jump_left";
+    public static String BACK_JUMP_RIGHT = "back_jump_right";
 
     // 动画名称
     protected String IDLE = "idle";

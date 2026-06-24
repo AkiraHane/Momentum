@@ -80,11 +80,6 @@ public class SlideState extends BaseState {
     }
 
     @Override
-    public void clientTick(Player player, PlayerMovementContext context) {
-        super.clientTick(player, context);
-    }
-
-    @Override
     public void clientTickRemote(Player player, PlayerMovementContext context) {
         if (player.tickCount % 2 == 0) {
             player.playSound(

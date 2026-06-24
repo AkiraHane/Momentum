@@ -26,7 +26,6 @@ import static com.akirahane.momentum.client.init.InitSounds.JET2;
 import static com.akirahane.momentum.config.ServerConfig.DODGE_COOLDOWN;
 import static com.akirahane.momentum.config.ServerConfig.DODGE_STORAGE;
 import static com.akirahane.momentum.core.MomentumUtils.canPlayerFitAtPose;
-import static com.akirahane.momentum.core.context.PlayerMovementContext.SPRINT;
 import static com.akirahane.momentum.core.state.states.OriginalState.canOriginal;
 
 public class DodgeState extends BaseState {
@@ -50,8 +49,12 @@ public class DodgeState extends BaseState {
             return false;
         }
         HintManager.add(WallHangHints.DODGE);
-        return Minecraft.getInstance().options.keySprint.isDown() &&
-                (context.isDoubleClickUp() || context.isDoubleClickDown() || context.isDoubleClickLeft() || context.isDoubleClickRight());
+        return context.isDoubleClickSprint() &&
+                (Minecraft.getInstance().options.keyUp.isDown() ||
+                        Minecraft.getInstance().options.keyLeft.isDown() ||
+                        Minecraft.getInstance().options.keyRight.isDown() ||
+                        Minecraft.getInstance().options.keyDown.isDown()
+                );
     }
 
     @Override
@@ -127,9 +130,15 @@ public class DodgeState extends BaseState {
     public void clientTick(Player player, PlayerMovementContext context) {
         if (context.getDodgeTimer() > 6) {
             context.setMomentumRollIntensity(0F);
-            if (!player.onGround() && !player.isSwimming()) {
-                playStateAnimation(player, IDLE, context);
-            }
+        }
+        super.clientTick(player, context);
+    }
+
+    @Override
+    public void clientTickRemote(Player player, PlayerMovementContext context) {
+        super.clientTickRemote(player, context);
+        if (context.getDodgeTimer() > 6 && !player.onGround() && !player.isSwimming()) {
+            playStateAnimation(player, IDLE, context);
         }
     }
 
@@ -152,7 +161,7 @@ public class DodgeState extends BaseState {
         if (context.getDodgeTimer() > 0) {
             return StateType.DODGE.getState();
         }
-        if (SwimDashState.canSwimDash(player, context)){
+        if (SwimDashState.canSwimDash(player, context)) {
             return StateType.SWIM_DASH.getState();
         }
         if (SlideState.canSlide(player, context)) {
