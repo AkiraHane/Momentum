@@ -29,6 +29,9 @@ import static com.akirahane.momentum.core.context.PlayerMovementContext.SPRINT;
 
 public class SwimDashState extends BaseState {
 
+    // 海豚跳动画
+    public static String DOLPHIN_JUMP = "dolphin_jump";
+
     public static boolean canSwimDash(Player player, PlayerMovementContext context) {
         if (!ServerConfig.ENABLE_WATER_PUSH.getAsBoolean() || !ClientConfig.ENABLE_WATER_PUSH.getAsBoolean()) {
             return false;
@@ -165,6 +168,11 @@ public class SwimDashState extends BaseState {
         super.clientTick(player, context);
         if (!player.isInWater()) {
             context.setSwimPushTimer(10);
+            if (!DOLPHIN_JUMP.equals(context.getCurrentAnimationName())){
+                playStateAnimation(player, DOLPHIN_JUMP, context, 0, 1);
+            }
+        } else if (!IDLE.equals(context.getCurrentAnimationName())){
+            playStateAnimation(player, IDLE, context);
         }
     }
 

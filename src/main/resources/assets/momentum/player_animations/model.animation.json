@@ -2988,6 +2988,14 @@
 					}
 				}
 			}
+		},
+		"dolphin_jump": {
+			"loop": true,
+			"bones": {
+				"body": {
+					"rotation": ["-0 - math.atan2(query.vertical_speed, query.ground_speed)", 0, 0]
+				}
+			}
 		}
 	}
 }

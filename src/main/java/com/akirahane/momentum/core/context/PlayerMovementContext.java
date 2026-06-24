@@ -283,6 +283,7 @@ public class PlayerMovementContext {
             math.setFunction("clamp", Mth::clamp);
             // min
             math.setFunction("min", Math::min);
+            math.setFunction("atan2", (y, x) -> (float) Math.toDegrees(Mth.atan2(y, x)));
         } else {
             LOGGER.warn("Failed to bind math.min_angle_180 to Mocha");
         }

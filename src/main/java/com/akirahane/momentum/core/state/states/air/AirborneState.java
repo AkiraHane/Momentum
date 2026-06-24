@@ -77,6 +77,7 @@ public class AirborneState extends BaseState {
     public void onExit(Player player, PlayerMovementContext context) {
         super.onExit(player, context);
         context.setMomentumRollIntensity(0);
+        context.setJumpAnimationSpeed(1F);
         context.removeEffect(MomentumEffectType.LIMIT_ACCELERATION_SPEED, AIR_LIMIT_ACCELERATION);
     }
 
