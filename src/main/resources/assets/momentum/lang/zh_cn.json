@@ -75,6 +75,7 @@
   "momentum.configuration.airDodgeStorage": "闪避可储存次数",
   "momentum.configuration.airFriction": "空气阻力",
   "momentum.configuration.climbBoostMultiplier": "爬梯加速倍率",
+  "momentum.configuration.wallKickAccelerationCooldown": "蹬墙跳加速冷却",
   "hint.momentum.click": "单击",
   "hint.momentum.hold": "按住",
   "hint.momentum.double_click": "双击",

@@ -183,6 +183,8 @@ public class PlayerMovementContext {
     private int wallJumpTimer = 0;
     // 游泳推进计时器
     private int swimPushTimer = 0;
+    // 墙跳加速冷却
+    private int wallKickCooldown = 0;
 
     // 状态中进行变动的数值
     // 滞空计时器
@@ -314,6 +316,7 @@ public class PlayerMovementContext {
         if (this.breakFallReadyCount > 0) this.breakFallReadyCount--;
         if (this.wallJumpTimer > 0) this.wallJumpTimer--;
         if (this.swimPushTimer > 0) this.swimPushTimer--;
+        if (this.wallKickCooldown > 0) this.wallKickCooldown--;
         boolean newHasJetBooster = checkBoosterEquipped(player);
         if (newHasJetBooster != this.hasJetBooster) {
             this.hasJetBooster = newHasJetBooster;

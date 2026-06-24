@@ -75,6 +75,7 @@
   "momentum.configuration.airDodgeStorage": "Dodge Storage Count",
   "momentum.configuration.airFriction": "Air Friction",
   "momentum.configuration.climbBoostMultiplier": "Climb Boost Multiplier",
+  "momentum.configuration.wallKickAccelerationCooldown": "Wall Kick Acceleration Cooldown",
   "hint.momentum.click": "Click",
   "hint.momentum.hold": "Hold",
   "hint.momentum.double_click": "Double Click",

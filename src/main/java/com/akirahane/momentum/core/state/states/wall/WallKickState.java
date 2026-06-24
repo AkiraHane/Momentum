@@ -116,17 +116,26 @@ public class WallKickState extends BaseState {
         context.setLeftFootJump(!context.isLeftFootJump());
         float jumpPower = ((LivingEntityAccessor) player).invokeGetJumpPower();
         if (Mth.abs(context.getInputWallAngle()) >= 100) {
+            // 加速倍率
+            float limitJumpPower = jumpPower;
+            if (context.getWallKickCooldown() != 0) {
+                limitJumpPower /= 2;
+                limitJumpPower *= ((float) (
+                        ServerConfig.WALL_KICK_ACCELERATION_COOLDOWN.getAsInt() - context.getWallKickCooldown()) /
+                        ServerConfig.WALL_KICK_ACCELERATION_COOLDOWN.getAsInt()
+                );
+            }
             player.setDeltaMovement(
-                    Mth.abs((float) (player.getDeltaMovement().x + context.getInputVec().x * jumpPower * 0.5)) <
-                            Mth.absMax(player.getDeltaMovement().x, context.getInputVec().x *jumpPower * 0.5) ?
-                            context.getInputVec().x *jumpPower * 0.5 :
-                            player.getDeltaMovement().x + context.getInputVec().x * jumpPower * 0.5
+                    Mth.abs((float) (player.getDeltaMovement().x + context.getInputVec().x * limitJumpPower * 0.5)) <
+                            Mth.absMax(player.getDeltaMovement().x, context.getInputVec().x * jumpPower * 0.5) ?
+                            context.getInputVec().x * jumpPower * 0.5 :
+                            player.getDeltaMovement().x + context.getInputVec().x * limitJumpPower * 0.5
                     ,
                     jumpPower * 1.5,
-                    Mth.abs((float) (player.getDeltaMovement().z + context.getInputVec().z * jumpPower * 0.5)) <
-                            Mth.absMax(player.getDeltaMovement().z, context.getInputVec().z *jumpPower * 0.5) ?
-                            context.getInputVec().z *jumpPower * 0.5 :
-                            player.getDeltaMovement().z + context.getInputVec().z * jumpPower * 0.5
+                    Mth.abs((float) (player.getDeltaMovement().z + context.getInputVec().z * limitJumpPower * 0.5)) <
+                            Mth.absMax(player.getDeltaMovement().z, context.getInputVec().z * jumpPower * 0.5) ?
+                            context.getInputVec().z * jumpPower * 0.5 :
+                            player.getDeltaMovement().z + context.getInputVec().z * limitJumpPower * 0.5
             );
             player.fallDistance = 0;
         } else {
@@ -145,6 +154,12 @@ public class WallKickState extends BaseState {
                 1.0F + player.getRandom().nextFloat() * 0.4F - 0.2F  // 0.8 ~ 1.2 随机音高
         );
         context.setWallJumpTimer(5);
+    }
+
+    @Override
+    public void onExit(Player player, PlayerMovementContext context) {
+        super.onExit(player, context);
+        context.setWallKickCooldown(ServerConfig.WALL_KICK_ACCELERATION_COOLDOWN.getAsInt());
     }
 
     @Override

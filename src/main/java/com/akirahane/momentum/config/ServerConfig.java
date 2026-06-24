@@ -73,6 +73,11 @@ public class ServerConfig {
             .comment("爬梯加速倍率", "默认值: 3.0")
             .defineInRange("climbBoostMultiplier", 3.0, 0.0, 10.0);
 
+    // 蹬墙跳加速冷却
+    public static final ModConfigSpec.IntValue WALL_KICK_ACCELERATION_COOLDOWN = BUILDER
+            .comment("蹬墙跳加速冷却（tick）", "默认值: 20")
+            .defineInRange("wallKickAccelerationCooldown", 20, 0, 200);
+
     // 功能开关
     static {
         BUILDER.pop();
