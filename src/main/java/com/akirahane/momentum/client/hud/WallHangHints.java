@@ -91,6 +91,12 @@ public class WallHangHints {
     // 推进
     public static final HintManager.KeyHint PUSH =
             HintManager.KeyHint.single(OPTIONS.keySprint, "hint.momentum.push");
+    public static final HintManager.KeyHint PUSH_UP =
+            HintManager.KeyHint.and(
+                    "hint.momentum.push",
+                    OPTIONS.keyUp,
+                    OPTIONS.keySprint
+            );
 
     // 缓降
     public static final HintManager.KeyHint SLOW_FALL =

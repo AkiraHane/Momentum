@@ -11,14 +11,18 @@ import com.akirahane.momentum.core.state.states.OriginalState;
 import com.akirahane.momentum.core.state.states.air.AirborneState;
 import com.akirahane.momentum.core.state.states.air.BreakFallReadyState;
 import com.akirahane.momentum.core.state.states.ground.ProneState;
+import com.akirahane.momentum.core.state.states.ground.SlideState;
 import com.akirahane.momentum.core.state.states.ground.WalkState;
 import com.akirahane.momentum.core.state.states.special.BreakFallState;
 import com.akirahane.momentum.core.state.states.special.DodgeState;
 import com.akirahane.momentum.core.state.states.wall.*;
 import net.minecraft.client.Minecraft;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.world.entity.Pose;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.phys.Vec3;
 
-import static com.akirahane.momentum.client.input.LowerCenterKey.LOWER_CENTER;
+import static com.akirahane.momentum.client.init.InitSounds.JET2;
 import static com.akirahane.momentum.config.ServerConfig.DODGE_COOLDOWN;
 import static com.akirahane.momentum.config.ServerConfig.DODGE_STORAGE;
 import static com.akirahane.momentum.core.context.PlayerMovementContext.SPRINT;
@@ -35,8 +39,14 @@ public class SwimDashState extends BaseState {
         if (DODGE_COOLDOWN.get() * DODGE_STORAGE.get() - context.getDodgeCooldown() <= DODGE_COOLDOWN.get()) {
             return false;
         }
-        HintManager.add(WallHangHints.PUSH);
-        return context.getInputBuffer()[context.getInputBufferIndex()].contains(SPRINT);
+        if (player.isSwimming()){
+            HintManager.add(WallHangHints.PUSH);
+            return context.getInputBuffer()[context.getInputBufferIndex()].contains(SPRINT);
+        } else {
+            HintManager.add(WallHangHints.PUSH_UP);
+            return Minecraft.getInstance().options.keyUp.isDown() &&
+                    context.getInputBuffer()[context.getInputBufferIndex()].contains(SPRINT);
+        }
     }
 
     @Override
@@ -50,6 +60,12 @@ public class SwimDashState extends BaseState {
         }
         if (DodgeState.canDodge(player, context)) {
             return StateType.DODGE.getState();
+        }
+        if (context.getSwimPushTimer() > 0 && (player.isUnderWater() || !player.onGround())){
+            return StateType.SWIM_DASH.getState();
+        }
+        if (SlideState.canSlide(player, context)) {
+            return StateType.SLIDE.getState();
         }
         if (BreakFallState.canBreakFall(player, context)) {
             return StateType.BREAK_FALL.getState();
@@ -95,20 +111,74 @@ public class SwimDashState extends BaseState {
     }
 
     public void onEnter(Player player, PlayerMovementContext context) {
-        super.onEnter(player, context);
         player.setSwimming(true);
         player.setSprinting(true);
-        LOGGER.trace("player.isSwimming(): {}", player.isSwimming());
+        float yRot = player.getYRot();
+        float xRot = player.getXRot();
+        Vec3 direction = Vec3.directionFromRotation(xRot, yRot);
+        double currentSpeed = player.getDeltaMovement().horizontalDistance();
+        double targetSpeed = direction.horizontalDistance() * 0.8;
+        if (currentSpeed > targetSpeed) {
+            // 根据转向角度衰减速度
+            Vec3 currentHorizontal = player.getDeltaMovement().multiply(1, 0, 1).normalize();
+            Vec3 targetHorizontal = new Vec3(direction.x, 0, direction.z).normalize();
+            double dot = currentHorizontal.dot(targetHorizontal); // 1=同向, 0=90度, -1=反向
+            double factor = Math.max(0, dot); // 90度以上直接归零
+
+            double finalSpeed = currentSpeed * factor;
+
+            if (finalSpeed < targetSpeed) {
+                finalSpeed = targetSpeed;
+            }
+
+            Vec3 normalized = new Vec3(
+                    direction.x,
+                    !player.isSwimming() ? 0.3F : direction.y,
+                    direction.z
+            ).normalize();
+            player.setDeltaMovement(normalized.x * finalSpeed, normalized.y, normalized.z * finalSpeed);
+        } else {
+            player.setDeltaMovement(
+                    direction.x * 0.8,
+                    !player.isSwimming() ? 0.3F : direction.y,
+                    direction.z * 0.8);
+        }
+        if (context.isHasJetBooster()) {
+            player.playSound(JET2.value(), 1F, 1.0F + player.getRandom().nextFloat() * 0.4F - 0.2F);
+        }
+        context.setSwimPushTimer(10);
+        // 水中推进和闪避共用冷却
+        context.setDodgeCooldown(context.getDodgeCooldown() + DODGE_COOLDOWN.get());
+        context.setNoJump(true);
+        context.setNoMoveInput(true);
+        player.playSound(
+                SoundEvents.PLAYER_SWIM,
+                0.5F,
+                1.0F + player.getRandom().nextFloat() * 0.4F - 0.2F
+        );
+        context.setMomentumRollIntensity(15F);
+        player.setForcedPose(Pose.SWIMMING);
+    }
+
+    @Override
+    public void clientTick(Player player, PlayerMovementContext context) {
+        super.clientTick(player, context);
+        if (!player.isInWater()) {
+            context.setSwimPushTimer(10);
+        }
     }
 
     public void onExit(Player player, PlayerMovementContext context) {
         super.onExit(player, context);
+        context.setNoJump(false);
+        context.setNoMoveInput(false);
+        player.setForcedPose(null);
 //        player.setSwimming(false);
 //        player.setSprinting(false);
     }
 
     @Override
     public StateType getStateType() {
-        return StateType.SWIM;
+        return StateType.SWIM_DASH;
     }
 }

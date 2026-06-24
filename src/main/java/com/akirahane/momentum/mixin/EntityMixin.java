@@ -66,6 +66,9 @@ public abstract class EntityMixin {
         if (!(self instanceof Player player)) {
             return original;
         }
+        if (!player.level().isClientSide()) {
+            return original;
+        }
         MovementStateMachine stateMachine = player.getData(InitAttachments.MOVEMENT_STATE);
         if (stateMachine.getCurrentState().getStateType().equals(StateType.ORIGINAL)) {
             return original;
@@ -81,6 +84,9 @@ public abstract class EntityMixin {
     ) {
         Entity self = (Entity) (Object) this;
         if (!(self instanceof Player player)) {
+            return original.call(boundingBox, colliders, maxStepHeight, stepHeightToSkip);
+        }
+        if (!player.level().isClientSide()) {
             return original.call(boundingBox, colliders, maxStepHeight, stepHeightToSkip);
         }
         MovementStateMachine stateMachine = player.getData(InitAttachments.MOVEMENT_STATE);

@@ -30,10 +30,10 @@ public class AirborneState extends BaseState {
             LOGGER.info("Diving Edge");
         }
         if (BaseState.JUMP_RIGHT.equals(context.getCurrentAnimationName()) ||
-                BaseState.JUMP_LEFT.equals(context.getCurrentAnimationName())){
+                BaseState.JUMP_LEFT.equals(context.getCurrentAnimationName())) {
             return;
         }
-        if (player.getDeltaMovement().y > 0 && player.getDeltaMovement().horizontalDistance() > 0.1F){
+        if (player.getDeltaMovement().y > 0 && player.getDeltaMovement().horizontalDistance() > 0.1F) {
             if (context.isLeftFootJump()) {
                 playStateAnimation(player, BaseState.JUMP_LEFT, context);
             } else {
@@ -59,12 +59,15 @@ public class AirborneState extends BaseState {
         } else if (FALL.equals(context.getCurrentAnimationName())) {
             playStateAnimation(player, IDLE, context);
         }
-        if (BaseState.JUMP_RIGHT.equals(context.getCurrentAnimationName()) &&
+        if (player.isInWater()) {
+            playStateAnimation(player, IDLE, context);
+        }
+        if (BaseState.JUMP_RIGHT.equals(context.getCurrentAnimationName()) ||
                 BaseState.JUMP_LEFT.equals(context.getCurrentAnimationName())) {
             if (context.getSpeed().y > 0) {
                 context.setJumpAnimationSpeed(context.getJumpAnimationSpeed() * 0.9F);
             } else {
-                context.setJumpAnimationSpeed(context.getJumpAnimationSpeed() * 1.5F);
+                context.setJumpAnimationSpeed(context.getJumpAnimationSpeed() * 1.1F);
             }
             playStateAnimation(player, context.getCurrentAnimationName(), context, 0, context.getJumpAnimationSpeed());
         }

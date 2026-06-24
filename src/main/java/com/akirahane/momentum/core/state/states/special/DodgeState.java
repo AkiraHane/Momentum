@@ -43,15 +43,11 @@ public class DodgeState extends BaseState {
         if (!player.onGround() && !context.isHasJetBooster() && !player.isSwimming()) {
             return false;
         }
-        if (!player.isSwimming() && (player.getPose() == Pose.SWIMMING) && !canPlayerFitAtPose(player, Pose.CROUCHING)) {
+        if (player.isSwimming() || (player.getPose() == Pose.SWIMMING) && !canPlayerFitAtPose(player, Pose.CROUCHING)) {
             return false;
         }
         if (DODGE_COOLDOWN.get() * DODGE_STORAGE.get() - context.getDodgeCooldown() <= DODGE_COOLDOWN.get()) {
             return false;
-        }
-        if (player.isSwimming()) {
-            HintManager.add(WallHangHints.PUSH);
-            return context.getInputBuffer()[context.getInputBufferIndex()].contains(SPRINT);
         }
         HintManager.add(WallHangHints.DODGE);
         return Minecraft.getInstance().options.keySprint.isDown() &&
@@ -76,13 +72,9 @@ public class DodgeState extends BaseState {
             animationName = DODGE_UP;
         }
         Vec3 direction;
-        if (!player.isSwimming()){
-            direction = Vec3.directionFromRotation(4, yRot);
-            playStateAnimation(player, animationName, context, 4, 2f);
-        } else {
-            direction = Vec3.directionFromRotation(xRot, yRot);
-        }
-        if (!context.isHasJetBooster() && !player.isSwimming()) {
+        direction = Vec3.directionFromRotation(4, yRot);
+        playStateAnimation(player, animationName, context, 4, 2f);
+        if (!context.isHasJetBooster()) {
             player.setDeltaMovement(direction.x * 0.8, player.getDeltaMovement().y, direction.z * 0.8);
         } else {
             double currentSpeed = player.getDeltaMovement().horizontalDistance();
@@ -102,14 +94,14 @@ public class DodgeState extends BaseState {
 
                 Vec3 normalized = new Vec3(
                         direction.x,
-                        !player.isSwimming() ? 0.3F : direction.y,
+                        0.3F,
                         direction.z
                 ).normalize();
                 player.setDeltaMovement(normalized.x * finalSpeed, normalized.y, normalized.z * finalSpeed);
             } else {
                 player.setDeltaMovement(
                         direction.x * 0.8,
-                        !player.isSwimming() ? 0.3F : direction.y,
+                        0.3F,
                         direction.z * 0.8);
             }
             player.fallDistance = 0;
@@ -121,19 +113,11 @@ public class DodgeState extends BaseState {
         context.addEffect(MomentumEffectType.BLOCK_FRICTION, context.DODGE_BLOCK_FRICTION, 3);
         if (context.isHasJetBooster()) {
             player.playSound(JET2.value(), 1F, 1.0F + player.getRandom().nextFloat() * 0.4F - 0.2F);
-        } else if (!player.isSwimming()){
+        } else {
             player.playSound(
                     SoundEvents.ARROW_SHOOT,
                     0.5F,
                     1.0F + player.getRandom().nextFloat() * 0.4F - 0.2F  // 0.8 ~ 1.2 随机音高
-            );
-        }
-        if (player.isSwimming()){
-            // 入水的声音
-            player.playSound(
-                    SoundEvents.PLAYER_SWIM,
-                    0.5F,
-                    1.0F + player.getRandom().nextFloat() * 0.4F - 0.2F
             );
         }
         context.setMomentumRollIntensity(20F);

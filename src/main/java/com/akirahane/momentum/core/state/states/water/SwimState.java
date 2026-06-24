@@ -105,8 +105,6 @@ public class SwimState extends BaseState {
 
     public void onExit(Player player, PlayerMovementContext context) {
         super.onExit(player, context);
-//        player.setSwimming(false);
-//        player.setSprinting(false);
     }
 
     @Override

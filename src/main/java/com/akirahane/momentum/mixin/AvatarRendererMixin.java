@@ -37,7 +37,7 @@ public abstract class AvatarRendererMixin {
         if (stateMachine.getCurrentState().getStateType().equals(StateType.VAULT_IN)) {
             return;
         }
-        if (stateMachine.getCurrentState().getStateType().equals(StateType.DODGE)) {
+        if (stateMachine.getCurrentState().getStateType().equals(StateType.SWIM_DASH)) {
             return;
         }
         if (!stateMachine.getCurrentState().getStateType().equals(StateType.ORIGINAL)) {
