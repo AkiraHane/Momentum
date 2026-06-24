@@ -41,6 +41,9 @@ public class MovementStateMachine {
         currentState.clientTick(player, context);
         BaseState next = currentState.evaluate(player, context);
         transition(next, player);
+        if (!StateType.SLIDE.equals(currentState.getStateType())){
+            context.setSlopeUnitVector(Vec3.ZERO);
+        }
         if (!org.equals(next)) {
             return next;
         }

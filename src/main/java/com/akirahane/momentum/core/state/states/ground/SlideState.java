@@ -82,18 +82,6 @@ public class SlideState extends BaseState {
     @Override
     public void clientTick(Player player, PlayerMovementContext context) {
         super.clientTick(player, context);
-        Vec3 slopeDir = context.getSlopeUnitVector();
-        if (Vec3.ZERO.equals(slopeDir) && context.getBlockStep() > 0){
-            double riseHeight = context.getBlockStep();
-            float deceleration = (float) (UPHILL_DECEL_FACTOR * Math.min(riseHeight * riseHeight, 1.0));
-            context.SLIDE_ACCELERATION.setValue(new Vec3(
-                    slopeDir.x * deceleration,
-                    context.getBlockStep() * player.getDeltaMovement().horizontalDistance() * 1.5,
-                    slopeDir.z * deceleration)
-            );
-            context.addEffect(ACCELERATION, context.SLIDE_ACCELERATION, 1);
-            context.setBlockStep(0);
-        }
     }
 
     @Override
