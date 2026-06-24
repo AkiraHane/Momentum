@@ -11,6 +11,8 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import static com.akirahane.momentum.core.state.states.ground.WalkState.ICE_SLIDE;
+
 @Mixin(GameRenderer.class)
 public class GameRendererMixin {
 
@@ -22,6 +24,9 @@ public class GameRendererMixin {
 
         var machine = mc.player.getData(InitAttachments.MOVEMENT_STATE);
         if (StateType.SLIDE.equals(machine.getCurrentState().getStateType())) {
+            ci.cancel();
+        }
+        if (ICE_SLIDE.equals(machine.getContext().getCurrentAnimationName())) {
             ci.cancel();
         }
     }

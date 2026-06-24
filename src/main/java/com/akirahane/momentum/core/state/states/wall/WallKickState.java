@@ -119,11 +119,7 @@ public class WallKickState extends BaseState {
             // 加速倍率
             float limitJumpPower = jumpPower;
             if (context.getWallKickCooldown() != 0) {
-                limitJumpPower /= 2;
-                limitJumpPower *= ((float) (
-                        ServerConfig.WALL_KICK_ACCELERATION_COOLDOWN.getAsInt() - context.getWallKickCooldown()) /
-                        ServerConfig.WALL_KICK_ACCELERATION_COOLDOWN.getAsInt()
-                );
+                limitJumpPower = 0;
             }
             player.setDeltaMovement(
                     Mth.abs((float) (player.getDeltaMovement().x + context.getInputVec().x * limitJumpPower * 0.5)) <

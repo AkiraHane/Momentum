@@ -175,7 +175,7 @@ public class WallRunState extends BaseState {
         }
         playStateAnimation(player, inputWallAngle > 0 ? WALL_RUN_LEFT : WALL_RUN_RIGHT, context);
         var instance = player.getAttribute(Attributes.GRAVITY);
-        double ySpeed = player.getDeltaMovement().y;
+        double ySpeed = player.getDeltaMovement().y > 0 ? player.getDeltaMovement().y : 0;
         if (context.isHasJetBooster()) {
             ySpeed = Math.max(0.62, ySpeed);
             player.playSound(JET2.value(), 1F, 1.0F + player.getRandom().nextFloat() * 0.4F - 0.2F);
