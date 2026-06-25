@@ -12,7 +12,7 @@ public class ClientConfig {
     // 是否使用双击疾跑闪避(防止误操作)
     public static final ModConfigSpec.BooleanValue ENABLE_DOUBLE_CLICK_DODGE = BUILDER
             .comment("是否使用双击疾跑闪避(防止误操作)")
-            .define("enableDoubleClickDodge", false);
+            .define("enableDoubleClickDodge", true);
     // 按键提示
     static {
         BUILDER.push("key_hints");

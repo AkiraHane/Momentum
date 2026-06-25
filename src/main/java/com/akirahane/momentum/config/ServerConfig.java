@@ -40,8 +40,8 @@ public class ServerConfig {
 
     // 墙跑最低速度
     public static final ModConfigSpec.DoubleValue MIN_WALL_RUN_SPEED = BUILDER
-            .comment("墙跑最低速度（米/秒）", "默认值: 4.0")
-            .defineInRange("minWallRunSpeed", 4.0, 1.0, 100.0);
+            .comment("墙跑最低速度（米/秒）", "默认值: 6.0")
+            .defineInRange("minWallRunSpeed", 6.0, 1.0, 100.0);
 
     // 水上漂最低速度
     public static final ModConfigSpec.DoubleValue MIN_WATER_SWIM_SPEED = BUILDER
