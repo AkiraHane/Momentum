@@ -15,7 +15,6 @@ import net.minecraft.world.phys.Vec3;
 
 import static com.akirahane.momentum.client.input.LowerCenterKey.LOWER_CENTER;
 import static com.akirahane.momentum.core.context.PlayerMovementContext.AIR_LIMIT_ACCELERATION;
-import static com.akirahane.momentum.core.state.states.air.AirborneState.FALL;
 
 public class BreakFallReadyState extends BaseState {
     // 动画名称
@@ -48,7 +47,8 @@ public class BreakFallReadyState extends BaseState {
         if (BaseState.JUMP_RIGHT.equals(context.getCurrentAnimationName()) ||
                 BaseState.JUMP_LEFT.equals(context.getCurrentAnimationName()) ||
                 BaseState.BACK_JUMP_RIGHT.equals(context.getCurrentAnimationName()) ||
-                BaseState.BACK_JUMP_LEFT.equals(context.getCurrentAnimationName())
+                BaseState.BACK_JUMP_LEFT.equals(context.getCurrentAnimationName()) ||
+                BaseState.FALL.equals(context.getCurrentAnimationName())
         ) {
             return;
         }

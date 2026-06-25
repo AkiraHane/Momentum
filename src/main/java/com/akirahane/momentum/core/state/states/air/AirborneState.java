@@ -11,8 +11,6 @@ import net.minecraft.world.phys.Vec3;
 import static com.akirahane.momentum.core.context.PlayerMovementContext.AIR_LIMIT_ACCELERATION;
 
 public class AirborneState extends BaseState {
-    // 动画名称
-    public static String FALL = "fall";
 
     public static boolean canAirborne(Player player, PlayerMovementContext context) {
         return !player.onGround();
@@ -28,7 +26,8 @@ public class AirborneState extends BaseState {
         if (BaseState.JUMP_RIGHT.equals(context.getCurrentAnimationName()) ||
                 BaseState.JUMP_LEFT.equals(context.getCurrentAnimationName()) ||
                 BaseState.BACK_JUMP_RIGHT.equals(context.getCurrentAnimationName()) ||
-                BaseState.BACK_JUMP_LEFT.equals(context.getCurrentAnimationName())
+                BaseState.BACK_JUMP_LEFT.equals(context.getCurrentAnimationName()) ||
+                BaseState.FALL.equals(context.getCurrentAnimationName())
         ) {
             return;
         }

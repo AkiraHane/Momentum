@@ -156,7 +156,7 @@ public class WallKickState extends BaseState {
                     )
             );
         }
-        context.playWallSound(player, FALL, 0.15F, 1);
+        context.playWallSound(player, PlayerMovementContext.FALL, 0.15F, 1);
         player.playSound(
                 SoundEvents.ARROW_SHOOT,
                 0.5F,
