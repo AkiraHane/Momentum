@@ -1,8 +1,14 @@
 package com.akirahane.momentum.init;
 
+import net.minecraft.resources.Identifier;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.EquipmentSlotGroup;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.item.CreativeModeTabs;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Rarity;
+import net.minecraft.world.item.component.ItemAttributeModifiers;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.event.BuildCreativeModeTabContentsEvent;
 import net.neoforged.neoforge.registries.DeferredItem;
@@ -18,8 +24,20 @@ public class InitItems {
     // 注册物品
     public static final DeferredItem<@NotNull Item> JET_BOOSTER_ITEM = ITEMS.registerSimpleItem(
             "jet_booster",
-            p -> p.stacksTo(1) // 设置物品可堆叠1
+            p -> p.stacksTo(1)
                     .rarity(Rarity.RARE)
+                    .enchantable(22)
+                    .equippable(EquipmentSlot.LEGS)
+                    .attributes(ItemAttributeModifiers.builder()
+                            .add(Attributes.ARMOR,
+                                    new AttributeModifier(Identifier.fromNamespaceAndPath(MODID, "jet_booster_armor"),
+                                            5.0, AttributeModifier.Operation.ADD_VALUE),
+                                    EquipmentSlotGroup.LEGS)
+                            .add(Attributes.ARMOR_TOUGHNESS,
+                                    new AttributeModifier(Identifier.fromNamespaceAndPath(MODID, "jet_booster_toughness"),
+                                            2.0, AttributeModifier.Operation.ADD_VALUE),
+                                    EquipmentSlotGroup.LEGS)
+                            .build())
     );
 
     public static void register(IEventBus modEventBus) {

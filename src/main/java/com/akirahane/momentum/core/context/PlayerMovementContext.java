@@ -7,6 +7,7 @@ import com.akirahane.momentum.core.effect.MomentumEffectType;
 import com.akirahane.momentum.compat.curios.CuriosCompat;
 import com.akirahane.momentum.config.ServerConfig;
 import com.akirahane.momentum.compat.curios.handler.CuriosHandler;
+import com.akirahane.momentum.init.InitItems;
 import com.mojang.logging.LogUtils;
 import com.zigythebird.playeranim.api.PlayerAnimationAccess;
 import com.zigythebird.playeranimcore.animation.AnimationController;
@@ -17,6 +18,7 @@ import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.util.Mth;
+import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
@@ -608,11 +610,15 @@ public class PlayerMovementContext {
 
     // 喷气助推器判断
     private boolean checkBoosterEquipped(Player player) {
-        // 检查Curios腰饰槽（如果Curios存在）
-        if (!CuriosCompat.isLoaded()) {
-            return false;
+        // 检查护腿槽
+        if (player.getItemBySlot(EquipmentSlot.LEGS).is(InitItems.JET_BOOSTER_ITEM.get())) {
+            return true;
         }
-        return CuriosHandler.hasJetBooster(player);
+        // 检查Curios腰饰槽（如果Curios存在）
+        if (CuriosCompat.isLoaded() && CuriosHandler.hasJetBooster(player)) {
+            return true;
+        }
+        return false;
     }
 
     private boolean checkMomentum(boolean hasJetBooster) {
