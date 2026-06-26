@@ -92,10 +92,10 @@ The mod evaluates **17 movement states** each tick, entering the highest-priorit
 ### Equipment
 
 **Jet Booster** — equippable in the Curios belt slot. When equipped:
-- Movement speed and jump boost are increased via attribute modifiers.
+- Movement speed, jump height, and step height are increased via attribute modifiers.
 - Wall run does not lose altitude.
 - Mid-air dodge is enabled.
-- Break Fall damage is reduced further.
+- All fall damage is reduced by 50% and effective fall distance is reduced by 12 blocks.
 
 ### Key Bindings
 

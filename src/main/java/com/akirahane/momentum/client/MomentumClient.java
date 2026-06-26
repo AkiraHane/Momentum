@@ -6,6 +6,7 @@ import com.akirahane.momentum.client.config.ClientConfig;
 import com.akirahane.momentum.client.debug.MovementDebugEntry;
 import com.akirahane.momentum.client.hud.HintManager;
 import com.akirahane.momentum.client.init.InitSounds;
+import com.akirahane.momentum.init.InitItems;
 import com.akirahane.momentum.core.state.MovementStateMachine;
 import com.akirahane.momentum.core.state.BaseState;
 import com.akirahane.momentum.init.InitAttachments;
@@ -17,6 +18,7 @@ import com.zigythebird.playeranim.api.PlayerAnimationFactory;
 import com.zigythebird.playeranimcore.enums.PlayState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.debug.DebugScreenEntryStatus;
+import net.minecraft.network.chat.Component;
 import net.minecraft.client.gui.components.debug.DebugScreenProfile;
 import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.client.player.LocalPlayer;
@@ -35,6 +37,7 @@ import net.neoforged.fml.event.config.ModConfigEvent;
 import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
 import net.neoforged.neoforge.client.event.*;
 import net.neoforged.neoforge.client.gui.ConfigurationScreen;
+import net.neoforged.neoforge.event.entity.player.ItemTooltipEvent;
 import net.neoforged.neoforge.client.gui.IConfigScreenFactory;
 import net.neoforged.neoforge.client.network.ClientPacketDistributor;
 import net.neoforged.neoforge.event.tick.PlayerTickEvent;
@@ -180,5 +183,12 @@ public class MomentumClient {
         PoseStack pose = event.getPoseStack();
         pose.translate(0, context.getRenderArmOffsetY(pt), 0);
         pose.mulPose(Axis.XP.rotationDegrees(context.getRenderArmRotX(pt)));
+    }
+
+    @SubscribeEvent
+    public static void onItemTooltip(ItemTooltipEvent event) {
+        if (event.getItemStack().is(InitItems.JET_BOOSTER_ITEM)) {
+            event.getToolTip().add(Component.translatable("item.momentum.jet_booster.tooltip"));
+        }
     }
 }
