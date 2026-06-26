@@ -103,11 +103,9 @@ public class MovementStateMachine {
         Set<MomentumEffect> effects = context.getPendingEffectPool().get(type);
         if (effects == null || effects.isEmpty()) return number;
         double origin = number;
-        // 排序：按照 EffectType 的优先级
-        List<MomentumEffect> sorted = effects.stream()
-                .sorted(Comparator.comparingInt(e -> e.getType().getPriority()))
-                .toList();
-
+        // 按优先级排序 (effect 数量通常 ≤ 3, 直接排比维护额外缓存更轻量)
+        MomentumEffect[] sorted = effects.toArray(MomentumEffect[]::new);
+        java.util.Arrays.sort(sorted, (a, b) -> Integer.compare(a.getType().getPriority(), b.getType().getPriority()));
         for (MomentumEffect effect : sorted) {
             number = effect.applyTo(number);
         }
@@ -119,10 +117,8 @@ public class MovementStateMachine {
         if (effects == null || effects.isEmpty()) return vec;
         Vec3 origin = vec;
 
-        List<MomentumEffect> sorted = effects.stream()
-                .sorted(Comparator.comparingInt(e -> e.getType().getPriority()))
-                .toList();
-
+        MomentumEffect[] sorted = effects.toArray(MomentumEffect[]::new);
+        java.util.Arrays.sort(sorted, (a, b) -> Integer.compare(a.getType().getPriority(), b.getType().getPriority()));
         for (MomentumEffect effect : sorted) {
             vec = effect.applyTo(vec, yRot);
             if (vec == null) return origin;

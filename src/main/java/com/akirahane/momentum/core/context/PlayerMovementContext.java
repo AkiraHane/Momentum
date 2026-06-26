@@ -623,6 +623,20 @@ public class PlayerMovementContext {
         }
     }
 
+    // 预计算墙面检测方向, 避免每 tick 重建
+    private static final Vec3[] WALL_CARDINALS = {
+            new Vec3(0, 0, -1),  // NORTH
+            new Vec3(0, 0, 1),   // SOUTH
+            new Vec3(1, 0, 0),   // EAST
+            new Vec3(-1, 0, 0),  // WEST
+    };
+    private static final Vec3[] WALL_DIAGONALS = {
+            new Vec3(1, 0, 1).normalize(),
+            new Vec3(1, 0, -1).normalize(),
+            new Vec3(-1, 0, 1).normalize(),
+            new Vec3(-1, 0, -1).normalize(),
+    };
+
     private static class WallCandidate {
         Vec3 normal;
         AABB expanded;
@@ -640,39 +654,23 @@ public class PlayerMovementContext {
         Level level = player.level();
         double reach = 0.5;
 
-        float yaw = player.getYRot();
-        Vec3 lookVec = new Vec3(
-                -Math.sin(Math.toRadians(yaw)),
-                0,
-                Math.cos(Math.toRadians(yaw))
-        ).normalize();
+        float yawRad = (float) Math.toRadians(player.getYRot());
+        // sin/cos 已经归一化, 不需要再 normalize()
+        Vec3 lookVec = new Vec3(-Math.sin(yawRad), 0, Math.cos(yawRad));
 
         Vec3 inputVec = this.inputVec;
         boolean hasInput = inputVec.lengthSqr() > 0.001;
         Vec3 inputNorm = hasInput ? inputVec.normalize() : lookVec;
 
-        Vec3[] cardinals = {
-                new Vec3(0, 0, -1),  // NORTH
-                new Vec3(0, 0, 1),   // SOUTH
-                new Vec3(1, 0, 0),   // EAST
-                new Vec3(-1, 0, 0),  // WEST
-        };
-        Vec3[] diagonals = {
-                new Vec3(1, 0, 1).normalize(),
-                new Vec3(1, 0, -1).normalize(),
-                new Vec3(-1, 0, 1).normalize(),
-                new Vec3(-1, 0, -1).normalize(),
-        };
-
         // 先在 4 个垂直方向找候选，按优先级挑
         List<WallCandidate> cardCands = collectWallCandidates(
-                player, level, box, cardinals, lookVec, inputVec, inputNorm, hasInput, reach);
+                player, level, box, WALL_CARDINALS, lookVec, inputVec, inputNorm, hasInput, reach);
         WallCandidate best = pickByPriority(cardCands, hasInput);
 
         // 垂直方向都没合适的，再看 4 个斜向
         if (best == null) {
             List<WallCandidate> diagCands = collectWallCandidates(
-                    player, level, box, diagonals, lookVec, inputVec, inputNorm, hasInput, reach);
+                    player, level, box, WALL_DIAGONALS, lookVec, inputVec, inputNorm, hasInput, reach);
             best = pickByPriority(diagCands, hasInput);
         }
 
@@ -802,35 +800,18 @@ public class PlayerMovementContext {
         Level level = player.level();
         double reach = 0.2;
 
-        float yaw = player.getYRot();
-        Vec3 lookVec = new Vec3(
-                -Math.sin(Math.toRadians(yaw)),
-                0,
-                Math.cos(Math.toRadians(yaw))
-        ).normalize();
-
-        Vec3[] cardinals = {
-                new Vec3(0, 0, -1),
-                new Vec3(0, 0, 1),
-                new Vec3(1, 0, 0),
-                new Vec3(-1, 0, 0),
-        };
-        Vec3[] diagonals = {
-                new Vec3(1, 0, 1).normalize(),
-                new Vec3(1, 0, -1).normalize(),
-                new Vec3(-1, 0, 1).normalize(),
-                new Vec3(-1, 0, -1).normalize(),
-        };
+        float yawRad = (float) Math.toRadians(player.getYRot());
+        Vec3 lookVec = new Vec3(-Math.sin(yawRad), 0, Math.cos(yawRad));
 
         // 垂直方向：先 ledged 后普通
         List<WallCandidate> cardCands = collectWallCandidates(
-                player, level, box, cardinals, lookVec, Vec3.ZERO, lookVec, false, reach);
+                player, level, box, WALL_CARDINALS, lookVec, Vec3.ZERO, lookVec, false, reach);
         WallCandidate best = pickByPriority(cardCands, false);
 
         // 斜向兜底
         if (best == null) {
             List<WallCandidate> diagCands = collectWallCandidates(
-                    player, level, box, diagonals, lookVec, Vec3.ZERO, lookVec, false, reach);
+                    player, level, box, WALL_DIAGONALS, lookVec, Vec3.ZERO, lookVec, false, reach);
             best = pickByPriority(diagCands, false);
         }
 
