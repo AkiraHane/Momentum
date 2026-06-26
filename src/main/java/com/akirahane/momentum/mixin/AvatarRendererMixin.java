@@ -1,13 +1,12 @@
 package com.akirahane.momentum.mixin;
 
+import com.akirahane.momentum.core.context.PlayerMovementContext;
 import com.akirahane.momentum.core.state.MovementStateMachine;
 import com.akirahane.momentum.core.state.StateType;
 import com.akirahane.momentum.init.InitAttachments;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.entity.player.AvatarRenderer;
 import net.minecraft.client.renderer.entity.state.AvatarRenderState;
 import net.minecraft.world.entity.Avatar;
-import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -22,19 +21,24 @@ public abstract class AvatarRendererMixin {
         if (!(entity instanceof Player player)) return;
 
         MovementStateMachine stateMachine = player.getData(InitAttachments.MOVEMENT_STATE);
-        if (stateMachine.getCurrentState().getStateType().equals(StateType.SWIM)) {
+        PlayerMovementContext context = stateMachine.getContext();
+        StateType currentState = stateMachine.getCurrentState().getStateType();
+
+        if (StateType.SWIM.equals(currentState)) {
             return;
         }
-        if (stateMachine.getCurrentState().getStateType().equals(StateType.PRONE)) {
+        if (StateType.PRONE.equals(currentState)) {
             return;
         }
-        if (stateMachine.getCurrentState().getStateType().equals(StateType.VAULT_IN)) {
+        if (StateType.VAULT_IN.equals(currentState)) {
             return;
         }
-        if (stateMachine.getCurrentState().getStateType().equals(StateType.SWIM_DASH)) {
+        if (StateType.SWIM_DASH.equals(currentState)) {
+            // 水中冲刺/海豚跳: 让身体俯仰跟随镜头
+            state.isInWater = true;
             return;
         }
-        if (!stateMachine.getCurrentState().getStateType().equals(StateType.ORIGINAL)) {
+        if (!StateType.ORIGINAL.equals(currentState)) {
             state.swimAmount = 0.0F;
         }
     }

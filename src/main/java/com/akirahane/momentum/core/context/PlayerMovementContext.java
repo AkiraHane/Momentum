@@ -436,35 +436,55 @@ public class PlayerMovementContext {
     }
 
     /**
-     * 伺服控制器: 让动画位置追踪速度仰角 (自增益 P, 无阻尼).
+     * 前馈+P 控制器: 让动画位置追踪速度仰角.
      * <p>
-     * 动态 kP: kP_eff = kP × (1 + |error| × errorGain) — error 大时猛追, error 小时轻靠.
-     * error=0.5s, kP=2, gain=3 → kP_eff=5 → speed=3.5×(cap).
-     * error=0.05s, kP=2, gain=3 → kP_eff=2.3 → speed=1.1×.
+     * 核心思路: 动画速度 = 前馈(角度变化率) + P修正(位置误差)
+     * 角度不变 → 前馈=0 → 动画暂停等待, 不会像旧版那样以基线1.0盲目前进然后来回振荡.
+     * <p>
+     * 例: velocity仰角 0°→ -45°(1 tick), range=90°, animLength=1s, kF=1.0
+     * 前馈 = (45/90)×1×20×1 = 10 倍速追(1 tick就追上), P项再微调残差.
      *
      * @param velocity      当前速度向量
+     * @param prevVelocity  上一 tick 速度向量 (用于计算角度变化率)
      * @param animTickSec   当前动画已播放时间 (秒), controller.tick / 20
      * @param animLengthSec 动画总时长 (秒)
      * @param angleTop      动画 t=0 对应的速度仰角 (°), 如 +60
      * @param angleBottom   动画 t=L 对应的速度仰角 (°), 如 -40
-     * @param kP            基础比例增益, 2~4 推荐
-     * @param errorGain     误差自增益系数, 3~6 推荐
-     * @return 动画速度倍率, [0.3, 3.5]
+     * @param kP            比例增益, 2~4 推荐 (修正累积位置误差)
+     * @param kF            前馈增益, 0.5~1.5 推荐 (1.0=角度变化全量映射到动画速度)
+     * @return 动画速度倍率, [0.0, 5.0]
      */
     public static float computeAnimSpeedByAngleTracking(
-            Vec3 velocity, float animTickSec, float animLengthSec,
-            float angleTop, float angleBottom, float kP, float errorGain) {
+            Vec3 velocity, Vec3 prevVelocity, float animTickSec, float animLengthSec,
+            float angleTop, float angleBottom, float kP, float kF) {
+
         float h = (float) velocity.horizontalDistance();
         float thetaDeg = (float) Math.toDegrees(Math.atan2(velocity.y, Math.max(h, 0.001)));
         float thetaClamped = Mth.clamp(thetaDeg, angleBottom, angleTop);
 
+        float hPrev = (float) prevVelocity.horizontalDistance();
+        float thetaPrevDeg = (float) Math.toDegrees(Math.atan2(prevVelocity.y, Math.max(hPrev, 0.001)));
+        float thetaPrevClamped = Mth.clamp(thetaPrevDeg, angleBottom, angleTop);
+
         float range = angleTop - angleBottom;
-        float fraction = range > 1e-6f ? (angleTop - thetaClamped) / range : 0f;
+        if (range <= 1e-6f) return 1.0f;
+
+        // 角度 → 目标动画位置
+        float fraction = (angleTop - thetaClamped) / range;
         float targetPos = fraction * animLengthSec;
 
+        // === 前馈: 角度变化率 → 期望动画速度 ===
+        // 本 tick 角度变化量 (°), 正=向angleBottom移动
+        float angleDelta = thetaPrevClamped - thetaClamped;
+        // 映射为动画位置变化 / 秒
+        float feedForward = (angleDelta / range) * animLengthSec * 20.0f * kF;
+
+        // === P 修正: 消除累积位置误差 ===
         float error = targetPos - animTickSec;
-        float dynamicKP = kP * (1.0f + Math.abs(error) * errorGain);
-        return Mth.clamp(1.0f + dynamicKP * error, 0.3f, 3.5f);
+        float pCorrection = kP * error;
+
+        float speed = feedForward + pCorrection;
+        return Mth.clamp(speed, 0.0f, 5.0f);
     }
 
     public void tickCameraRoll() {

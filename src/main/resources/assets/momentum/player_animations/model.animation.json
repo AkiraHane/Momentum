@@ -3199,11 +3199,8 @@
 			"bones": {
 				"body": {
 					"rotation": {
-						"0.0": {
-							"post": [-90, 0, 0],
-							"lerp_mode": "catmullrom"
-						},
 						"1.0": {
+							"pre": [90, 0, 0],
 							"post": [90, 0, 0],
 							"lerp_mode": "catmullrom"
 						}
