@@ -35,7 +35,9 @@ public abstract class AvatarRendererMixin {
         }
         if (StateType.SWIM_DASH.equals(currentState)) {
             // 水中冲刺/海豚跳: 让身体俯仰跟随镜头
-            state.isInWater = true;
+            if (context.getSpeed().y > 0.05){
+                state.isInWater = true;
+            }
             return;
         }
         if (!StateType.ORIGINAL.equals(currentState)) {
