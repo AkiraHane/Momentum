@@ -22,4 +22,9 @@ public class MomentumAnimationController extends PlayerAnimationController {
     public void setAnimationSpeed(float speed) {
         this.speedModifier.speed = speed;
     }
+
+    /** @return 当前动画 tick 计数 (PAL 内部, 用于伺服控制器计算动画位置) */
+    public int getAnimationTick() {
+        return this.tick;
+    }
 }

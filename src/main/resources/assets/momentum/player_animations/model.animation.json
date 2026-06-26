@@ -461,7 +461,7 @@
 				},
 				"head": {
 					"rotation": [
-						"-0 + query.head_x_rotation + 50",
+						"-0 + variable.smooth_head_x_rotation() + 50",
 						"-0 + 10 + variable.stable_body_head_angle() / 1.4",
 						"-6.4664 + variable.stable_body_head_angle() / 1.4"
 					]
@@ -1862,7 +1862,7 @@
 					"rotation": [0, 0, -17.5]
 				},
 				"head": {
-					"rotation": ["query.head_x_rotation", "-0 + variable.stable_body_head_angle() - 90", -10]
+					"rotation": ["variable.smooth_head_x_rotation()", "-0 + variable.stable_body_head_angle() - 90", -10]
 				},
 				"right_arm": {
 					"rotation": [7.5, 0, 20],
@@ -1903,7 +1903,7 @@
 					"rotation": [0, 0, 17.5]
 				},
 				"head": {
-					"rotation": ["query.head_x_rotation", "-0 + variable.stable_body_head_angle() + 90", 10]
+					"rotation": ["variable.smooth_head_x_rotation()", "-0 + variable.stable_body_head_angle() + 90", 10]
 				},
 				"right_arm": {
 					"rotation": [-120, 90, 0],
@@ -2534,7 +2534,7 @@
 					}
 				},
 				"head": {
-					"rotation": ["query.head_x_rotation", "-0 + variable.stable_body_head_angle() - 90", 0]
+					"rotation": ["variable.smooth_head_x_rotation()", "-0 + variable.stable_body_head_angle() - 90", 0]
 				},
 				"right_arm": {
 					"rotation": {
@@ -2757,7 +2757,7 @@
 					}
 				},
 				"head": {
-					"rotation": ["query.head_x_rotation", "-0 + variable.stable_body_head_angle() + 90", 0]
+					"rotation": ["variable.smooth_head_x_rotation()", "-0 + variable.stable_body_head_angle() + 90", 0]
 				},
 				"right_arm": {
 					"rotation": {
@@ -3194,10 +3194,20 @@
 			}
 		},
 		"dolphin_jump": {
-			"loop": true,
+			"loop": "hold_on_last_frame",
+			"animation_length": 1,
 			"bones": {
 				"body": {
-					"rotation": ["-0 - math.atan2(query.vertical_speed, query.ground_speed)", 0, 0]
+					"rotation": {
+						"0.0": {
+							"post": [-90, 0, 0],
+							"lerp_mode": "catmullrom"
+						},
+						"1.0": {
+							"post": [90, 0, 0],
+							"lerp_mode": "catmullrom"
+						}
+					}
 				}
 			}
 		}

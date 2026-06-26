@@ -12,6 +12,7 @@ import com.zigythebird.playeranim.api.PlayerAnimationAccess;
 import com.zigythebird.playeranimcore.animation.AnimationController;
 import lombok.Getter;
 import lombok.Setter;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.sounds.SoundEvent;
@@ -124,6 +125,12 @@ public class PlayerMovementContext {
     private float jumpAnimationSpeed = 1;
     // 头身角度差
     private float bodyHeadAngleDiff = 0F;
+    private float prevBodyHeadAngleDiff = 0F;
+    private float prevHeadXRot = 0F;
+
+    private int debugFrameCalls = 0;
+    private int debugTickCounter = 0;
+
     // 摄像头旋转角度
     private float targetCameraRoll = 0F;
     private float currentCameraRoll = 0F;
@@ -290,11 +297,28 @@ public class PlayerMovementContext {
         }
         value = this.mocha.scope().get("variable");
         if (value instanceof ObjectValue variable) {
-            variable.setFunction("get_movement_speed", () -> (float) this.getSpeed().horizontalDistance());
-            // y speed
-            variable.setFunction("get_movement_y_speed", () -> (float) this.getSpeed().y());
-            // y speed
-            variable.setFunction("stable_body_head_angle", this::getBodyHeadAngleDiff);
+            final Minecraft mc = Minecraft.getInstance();
+
+            variable.setFunction("get_movement_speed", () -> {
+                float pt = mc.getDeltaTracker().getGameTimeDeltaPartialTick(true);
+                return Mth.lerp(pt, (float) oldSpeed.horizontalDistance(),
+                        (float) getSpeed().horizontalDistance());
+            });
+            variable.setFunction("get_movement_y_speed", () -> {
+                float pt = mc.getDeltaTracker().getGameTimeDeltaPartialTick(true);
+                return Mth.lerp(pt, (float) oldSpeed.y, (float) getSpeed().y());
+            });
+            variable.setFunction("stable_body_head_angle", () -> {
+                float pt = mc.getDeltaTracker().getGameTimeDeltaPartialTick(true);
+                return Mth.lerp(pt, prevBodyHeadAngleDiff, bodyHeadAngleDiff);
+            });
+            variable.setFunction("smooth_head_x_rotation", () -> {
+                if (controller != null && controller.getAvatar() instanceof Player player) {
+                    float pt = mc.getDeltaTracker().getGameTimeDeltaPartialTick(true);
+                    return Mth.lerp(pt, prevHeadXRot, player.getXRot());
+                }
+                return 0F;
+            });
         } else {
             LOGGER.warn("Failed to bind variable.get_movement_speed to Mocha");
         }
@@ -332,6 +356,9 @@ public class PlayerMovementContext {
 
     public void clientTick(Player player) {
         this.serverTick(player);
+        // 保存上 tick 的值, 用于渲染帧 partialTick lerp (GeckoLib 风格)
+        this.prevBodyHeadAngleDiff = this.bodyHeadAngleDiff;
+        this.prevHeadXRot = player.getXRot();
         this.doubleClickUp = isDoubleClick(UP);
         this.doubleClickDown = isDoubleClick(DOWN);
         this.doubleClickLeft = isDoubleClick(LEFT);
@@ -352,6 +379,8 @@ public class PlayerMovementContext {
     }
 
     public void clientTickRemote(Player player) {
+        this.prevBodyHeadAngleDiff = this.bodyHeadAngleDiff;
+        this.prevHeadXRot = player.getXRot();
         this.bodyHeadAngleDiff = Mth.wrapDegrees(player.getYHeadRot() - player.yBodyRot);
         remoteDetectWall(player);
     }
@@ -380,6 +409,62 @@ public class PlayerMovementContext {
     // 设置一次随机数
     public void setLuckyNumber(Player player) {
         this.luckyNumber = player.getRandom().nextInt(100);
+    }
+
+    /**
+     * 从速度方向变化率计算动画播放速度 (帧率无关, 纯标量, 无符号震荡).
+     * <p>
+     * 公式: Δθ = |atan2(Vy₂, H₂) - atan2(Vy₁, H₁)|  (每 tick 速度仰角变化)
+     *       speed = 0.4 + clamp(Δθ° × 0.14, 0, 2.5)
+     * <p>
+     * 物理直觉: 跳跃顶点 Vy 过零时 Δθ 最大 → 动画最快通过水平位;
+     *           匀速时 Δθ ≈ 0 → 动画慢放, 身体缓慢起伏.
+     * <p>
+     * 参数表: 5°/tick→1.1× | 10°/tick→1.8× | 15°/tick→2.9×(cap)
+     *
+     * @param curSpeed  当前 tick 速度向量
+     * @param prevSpeed 上一 tick 速度向量
+     * @return 动画播放速度倍率, 范围约 [0.4, 2.9]
+     */
+    public static float computeAnimSpeedFromVelocityAngle(Vec3 curSpeed, Vec3 prevSpeed) {
+        float hCur = (float) curSpeed.horizontalDistance();
+        float hPrev = (float) prevSpeed.horizontalDistance();
+        double thetaCur = Math.atan2(curSpeed.y, Math.max(hCur, 0.001));
+        double thetaPrev = Math.atan2(prevSpeed.y, Math.max(hPrev, 0.001));
+        double deltaDeg = Math.toDegrees(Math.abs(thetaCur - thetaPrev));
+        return (float) (0.4 + Math.clamp(deltaDeg * 0.14, 0.0, 2.5));
+    }
+
+    /**
+     * 伺服控制器: 让动画位置追踪速度仰角 (自增益 P, 无阻尼).
+     * <p>
+     * 动态 kP: kP_eff = kP × (1 + |error| × errorGain) — error 大时猛追, error 小时轻靠.
+     * error=0.5s, kP=2, gain=3 → kP_eff=5 → speed=3.5×(cap).
+     * error=0.05s, kP=2, gain=3 → kP_eff=2.3 → speed=1.1×.
+     *
+     * @param velocity      当前速度向量
+     * @param animTickSec   当前动画已播放时间 (秒), controller.tick / 20
+     * @param animLengthSec 动画总时长 (秒)
+     * @param angleTop      动画 t=0 对应的速度仰角 (°), 如 +60
+     * @param angleBottom   动画 t=L 对应的速度仰角 (°), 如 -40
+     * @param kP            基础比例增益, 2~4 推荐
+     * @param errorGain     误差自增益系数, 3~6 推荐
+     * @return 动画速度倍率, [0.3, 3.5]
+     */
+    public static float computeAnimSpeedByAngleTracking(
+            Vec3 velocity, float animTickSec, float animLengthSec,
+            float angleTop, float angleBottom, float kP, float errorGain) {
+        float h = (float) velocity.horizontalDistance();
+        float thetaDeg = (float) Math.toDegrees(Math.atan2(velocity.y, Math.max(h, 0.001)));
+        float thetaClamped = Mth.clamp(thetaDeg, angleBottom, angleTop);
+
+        float range = angleTop - angleBottom;
+        float fraction = range > 1e-6f ? (angleTop - thetaClamped) / range : 0f;
+        float targetPos = fraction * animLengthSec;
+
+        float error = targetPos - animTickSec;
+        float dynamicKP = kP * (1.0f + Math.abs(error) * errorGain);
+        return Mth.clamp(1.0f + dynamicKP * error, 0.3f, 3.5f);
     }
 
     public void tickCameraRoll() {

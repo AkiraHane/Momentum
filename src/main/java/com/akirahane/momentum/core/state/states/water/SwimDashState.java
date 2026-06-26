@@ -173,8 +173,10 @@ public class SwimDashState extends BaseState {
 
     @Override
     public void clientTickRemote(Player player, PlayerMovementContext context) {
-        if (!player.isInWater() && !DOLPHIN_JUMP.equals(context.getCurrentAnimationName())) {
-            playStateAnimation(player, DOLPHIN_JUMP, context, 0, 1);
+        if (!player.isInWater()) {
+            float speed = PlayerMovementContext.computeAnimSpeedFromVelocityAngle(
+                    context.getSpeed(), context.getOldSpeed());
+            playStateAnimation(player, DOLPHIN_JUMP, context, 0, speed);
         } else if (!IDLE.equals(context.getCurrentAnimationName())) {
             playStateAnimation(player, IDLE, context);
         }
