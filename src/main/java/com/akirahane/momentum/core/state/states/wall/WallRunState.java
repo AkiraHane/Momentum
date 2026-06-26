@@ -164,6 +164,7 @@ public class WallRunState extends BaseState {
     @Override
     public void onEnter(Player player, PlayerMovementContext context) {
         Vec3 wallNormal = context.getWallNormal();
+        double pushStrength = 0.05;
         context.setRunWallNormal(wallNormal);
         float inputWallAngle = context.getInputWallAngle();
         Vec3 currentMovement = player.getDeltaMovement();
@@ -190,9 +191,13 @@ public class WallRunState extends BaseState {
                 ));
                 context.setGravityModify(-1F);
                 player.setDeltaMovement(
-                        tangent.x * Math.max(player.getDeltaMovement().horizontalDistance(), context.getJumpLimitSpeed()),
+                        tangent.x *
+                                Math.max(player.getDeltaMovement().horizontalDistance(), context.getJumpLimitSpeed()) +
+                                wallNormal.x * pushStrength,
                         0,
-                        tangent.z * Math.max(player.getDeltaMovement().horizontalDistance(), context.getJumpLimitSpeed())
+                        tangent.z *
+                                Math.max(player.getDeltaMovement().horizontalDistance(), context.getJumpLimitSpeed()) +
+                                wallNormal.z * pushStrength
                 );
                 player.fallDistance = 0;
             } else {
@@ -203,9 +208,13 @@ public class WallRunState extends BaseState {
                 ));
                 context.setGravityModify(-0.6F);
                 player.setDeltaMovement(
-                        tangent.x * Math.max(player.getDeltaMovement().horizontalDistance(), context.getJumpLimitSpeed()),
+                        tangent.x *
+                                Math.max(player.getDeltaMovement().horizontalDistance(), context.getJumpLimitSpeed()) +
+                                wallNormal.x * pushStrength,
                         ySpeed,
-                        tangent.z * Math.max(player.getDeltaMovement().horizontalDistance(), context.getJumpLimitSpeed())
+                        tangent.z *
+                                Math.max(player.getDeltaMovement().horizontalDistance(), context.getJumpLimitSpeed()) +
+                                wallNormal.z * pushStrength
                 );
             }
         }

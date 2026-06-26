@@ -4,6 +4,7 @@ import com.zigythebird.playeranim.animation.PlayerAnimationController;
 import com.zigythebird.playeranimcore.animation.AnimationController;
 import com.zigythebird.playeranimcore.animation.layered.modifier.SpeedModifier;
 import net.minecraft.world.entity.Avatar;
+import net.minecraft.world.entity.player.Player;
 import team.unnamed.mocha.MochaEngine;
 
 public class MomentumAnimationController extends PlayerAnimationController {
@@ -12,6 +13,8 @@ public class MomentumAnimationController extends PlayerAnimationController {
     public MomentumAnimationController(Avatar avatar, AnimationStateHandler animationHandler) {
         super(avatar, animationHandler);
         speedModifier = new SpeedModifier(1.0f);
+        // ArmConditionModifier 放链首: 瞄准/攻击/使用物品时跳过手臂, 保留原版姿势
+        addModifierBefore(new ArmConditionModifier((Player) avatar));
         addModifierLast(speedModifier);
     }
 
