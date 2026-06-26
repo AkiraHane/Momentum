@@ -25,6 +25,7 @@ import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
 
+import static com.akirahane.momentum.client.input.LowerCenterKey.LOWER_CENTER;
 import static com.akirahane.momentum.core.context.PlayerMovementContext.STEP;
 import static com.akirahane.momentum.core.context.PlayerMovementContext.WALL_FRICTION;
 
@@ -43,6 +44,7 @@ public class WallHangState extends BaseState {
                 !player.onGround() &&
                 context.isHasLedge() &&
                 !Vec3.ZERO.equals(context.getWallNormal()) &&
+                (!LOWER_CENTER.get().isDown() || Mth.abs(context.getInputWallAngle()) < 90) &&
 //                (Mth.abs(context.getLookWallAngle()) < 60 || Mth.abs(context.getInputWallAngle()) < 60) &&
                 player.fallDistance <= player.getAttributeValue(Attributes.SAFE_FALL_DISTANCE) * 2 &&
                 player.getDeltaMovement().y <= 0.1 &&
@@ -65,7 +67,7 @@ public class WallHangState extends BaseState {
         if (DodgeState.canDodge(player, context)) {
             return StateType.DODGE.getState();
         }
-        if (SwimDashState.canSwimDash(player, context)){
+        if (SwimDashState.canSwimDash(player, context)) {
             return StateType.SWIM_DASH.getState();
         }
         if (SlideState.canSlide(player, context)) {
@@ -95,7 +97,8 @@ public class WallHangState extends BaseState {
         if (VaultUpState.canVaultUp(player, context)) {
             return StateType.VAULT_UP.getState();
         }
-        if (context.isHasLedge() && !Vec3.ZERO.equals(context.getWallNormal()) && !checkKey(player, context)) {
+        if ((!LOWER_CENTER.get().isDown() || Mth.abs(context.getInputWallAngle()) < 90) &&
+                context.isHasLedge() && !Vec3.ZERO.equals(context.getWallNormal()) && !checkKey(player, context)) {
             return StateType.WALL_HANG.getState();
         }
         if (WallClimbState.canWallClimb(player, context)) {
@@ -144,7 +147,7 @@ public class WallHangState extends BaseState {
         if (Minecraft.getInstance().options.keyDown.isDown() ||
                 Mth.abs(context.getInputWallAngle()) > 150 && Mth.abs(context.getInputWallAngle()) < 360 &&
                         Mth.abs(context.getLookWallAngle()) > 150
-        ){
+        ) {
             return;
         }
         Vec3 wallNormal = context.getWallNormal();

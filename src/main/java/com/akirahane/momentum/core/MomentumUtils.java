@@ -64,9 +64,10 @@ public class MomentumUtils {
             // 剩余加速空间，越快加速越少
             double headroom = 1.0 - speedRatio * speedRatio;
 
-            // 加速值 = 落差产生的势能转化 × 剩余空间
-            // dropHeight 通过 tanh 软限制，防止大落差产生过大加速
-            float acceleration = (float) (DOWNHILL_ACCEL_FACTOR * Math.tanh(dropHeight * 2.0) * headroom);
+            // speed与dropHeight的匹配度: 当speed≈dropHeight时最优（共振效应）
+            double matchRatio = Math.min(currentSpeed, dropHeight) / Math.max(Math.max(currentSpeed, dropHeight), 0.001);
+            // 加速值 = 落差产生的势能转化 × 剩余空间 × 匹配度
+            float acceleration = (float) (DOWNHILL_ACCEL_FACTOR * dropHeight * 3 * headroom * matchRatio);
             stateMachine.getContext().SLIDE_ACCELERATION.setValue(new Vec3(slopeDir.x * acceleration, 0, slopeDir.z * acceleration));
             stateMachine.getContext().addEffect(ACCELERATION, stateMachine.getContext().SLIDE_ACCELERATION, duration);
 //            stateMachine.getContext().addEffect(MomentumEffectType.BLOCK_FRICTION, stateMachine.getContext().SLIDE_BLOCK_FRICTION, duration * 2);
