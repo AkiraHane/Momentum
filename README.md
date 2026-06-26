@@ -1,114 +1,137 @@
-# Momentum 机动模组
+# Momentum
 
-> 模组的基础功能已开发完成，正在进行细节优化
+[中文版本](README_CN.md)
 
-一个为 Minecraft 增加跑酷与机动动作的模组。
+A Minecraft NeoForge mod that adds parkour movement and combat maneuver actions.
 
----
+| | |
+|---|---|
+| **Mod ID** | `momentum` |
+| **Version** | `1.1.2-beta` |
+| **Minecraft** | `26.1.2` |
+| **Loader** | NeoForge `26.1.2.64-beta` |
+| **Author** | AkiraHane |
+| **License** | All Rights Reserved |
 
-## 已实现功能
+## Dependencies
 
-### 基础功能
+| Dependency | Version | Required |
+|---|---|---|
+| PlayerAnimationLib | `1.2.3+mc.26.1` | Yes. Because the PlayerAnimationLib repository is occasionally unreachable, the required Core and Neo jars are included directly in `libs/`. |
+| MochaFloats | `5.0.0` | Yes. Bundled in `libs/` for the same reason as above — it is a dependency of PlayerAnimationLib. |
+| Curios | `15.0.0-beta.2+26.1.2` | Optional (Jet Booster equipment slot) |
 
-- 减小空气阻力
-- 跳跃时的横向速度会随跳跃提升效果一同增强
-- 水中根据碰撞箱与水体占比动态调整速度
-- 支持直接趴下
-- 自动下坡：根据原版自动上台阶的高度（一般为 0.6）下坡，速度过快时不会飞出去；水中失效
-- 装备**喷气助推器**时：基础速度与跳跃提升提高，部分动作得到强化
-- 梯子上按疾跑键快速上梯 / 下滑
-- 几乎所有主动动作都有按键提示
-    - 默认 `Shift + N` 关闭按键提示
-    - 默认 `Shift + M` 关闭机动模式，进入原版状态，避免与其他模组冲突
-    - 按键提示和摄像头视觉效果可在客户端模组配置中调整
-- 以及非常多非常多的细节调整，包括各种状态下的方块、空气阻力、行动机制等等，但这些并不影响正常原版的游玩体验
+## Build
 
----
+Requires **JDK 25** (Mojang ships Java 25 with Minecraft 26.1).
 
-### 动作系统
+```bash
+./gradlew build        # Build the mod
+./gradlew runClient    # Launch client for testing
+./gradlew runData      # Generate data/resources
+```
 
-#### 滑铲
+## Features
 
-- 移动速度超过一定值时，趴下进入滑铲状态
-- 下坡时会沿坡向加速
+### Core Mechanics
 
-#### 受身
+The mod overrides the player's ground and air friction, acceleration, and speed limits when the mod mode is active. All modifications use a composable effect system that processes modifiers in priority order. Each movement action has independent enable/disable toggles in both the server and client configs — both must be `true` for the action to activate.
 
-- 受到摔落伤害时，若处于降低重心的状态，进入受身状态并减免摔落伤害
-- 时机恰当可进一步减免伤害
-- 向前速度大于下落速度时，会衔接进入滑铲状态
-- 装备**喷气助推器**时大幅减少摔落伤害
+- **Reduced air drag**: the vanilla hard-coded `0.91` air friction multiplier is replaced with a configurable value.
+- **Jump boost scaling**: horizontal sprint-jump speed scales with the Jump Boost effect level, capped by a configurable speed limit.
+- **Dynamic water friction**: movement speed in water is adjusted based on the player's submergence ratio — the more of the body is out of water, the closer the friction is to air values.
+- **Auto step-down**: when the player is on the ground and the horizontal movement would carry them downhill, the mod detects the slope and automatically steps down. The effective step-down height equals the vanilla auto-step-up height plus the horizontal speed component. Disabled in liquids and when already stepping up.
+- **Ladder speed boost**: holding the sprint key on ladders multiplies vertical climb speed.
 
-#### 闪避
+### Movement Actions
 
-- 地面上可向四个方向快速位移闪避，期间拥有无敌帧
-- 装备**喷气助推器**时可在空中闪避
+The mod evaluates **17 movement states** each tick, entering the highest-priority matching state. Each state defines its own entry condition, per-tick behavior, and exit cleanup.
 
-#### 爬墙
+#### Ground
 
-- 可根据跳跃强度向上爬墙一段距离
-- 装备**喷气助推器**时向上速度不会低于一定值
+| State | Trigger | Behavior |
+|---|---|---|
+| **Slide** | Player is on ground, moving above a speed threshold, and presses the lower-center key (`C`) | Slides with reduced friction. When moving downhill, the detected slope direction is used as an acceleration vector. On exit: if horizontal speed exceeds vertical speed, may chain into another slide. |
+| **Prone** | On ground while holding `C`, or currently in a swimming pose in a space shorter than the crouch height | Forces the swimming pose, allowing the player to crawl through 1-block-high gaps. Body rotation follows horizontal movement direction. |
+| **Walk** | On ground, no higher-priority state matched | Applies the mod's ground physics (custom friction, acceleration, speed limits). |
 
-#### 滑墙
+#### Air
 
-- 贴墙并向靠墙方向位移时，减缓下落速度并减少摔落伤害
+| State | Trigger | Behavior |
+|---|---|---|
+| **Airborne** | Not on ground, no wall or water state matched | In-air movement with mod acceleration, friction, and horizontal speed limit. Tracks per-tick speed for animation and MoLang bindings. |
+| **Break Fall Ready** | Falling with downward speed above a threshold while holding `C` | Preparation stance tracked by fall-speed animation. Transitions into Break Fall on landing. |
+| **Break Fall** | Takes fall damage while in a lowered posture (slide, prone, or break-fall-ready) | Rolls on landing to reduce fall damage. If forward horizontal speed exceeds downward speed when exiting, chains into a slide. With Jet Booster, fall damage is further reduced. |
 
-#### 挂墙
+#### Wall
 
-- 悬挂在墙的边缘或凹槽处，可向左右位移
+| State | Trigger | Behavior |
+|---|---|---|
+| **Wall Slide** | In the air, moving toward a wall | Drops along the wall with reduced fall speed. Fall damage on landing is reduced. |
+| **Wall Hang** | Falling near a wall edge or ledge within detection range | Hangs on the wall edge. While hanging, the player can look sideways and move left/right; body rotation is clamped. |
+| **Wall Climb** | Against a wall, moving toward it, holding `Jump` | Climbs up the wall. Climb height scales with jump strength. Jet Booster caps the minimum upward speed. |
+| **Wall Kick** | Near a wall while airborne with a wall-jump cooldown available | Launches away from the wall with a fixed horizontal impulse. Has a cooldown. |
+| **Wall Run** | Moving parallel to a wall above a horizontal speed threshold, pressing `Up` | Runs along the wall. Body rotates to face the wall. Jet Booster adds an upward velocity component to counter gravity. |
+| **Vault Up** | Hanging on a wall edge, pressing `Jump` | Pulls the player up onto the ledge. |
+| **Vault In** | Standing or hanging near a 1-block-high gap; while standing press `Up` + `C`, while hanging press `C` + `Jump` | Crawls into the gap using the swimming pose. |
 
-#### 蹬墙跳
+#### Water
 
-- 靠近墙体时可向墙外进行更大程度的固定距离跳跃
+| State | Trigger | Behavior |
+|---|---|---|
+| **Swim** | Sprinting underwater while holding `Up`, or at the water surface while holding `C` + `Up` | Vanilla swimming with mod-adjusted water friction. |
+| **Swim Dash** | Underwater, holding `Sprint` (while already swimming) or `Up` + `Sprint` (from below surface) | Dashes forward in the look direction with a 10-tick push timer. If the dash exits the water surface, the swimming pose and body rotation are maintained during the airborne arc (dolphin jump). |
 
-#### 翻越
+#### Special
 
-- 悬挂在墙边缘或凹槽时，再次跳跃可尝试上墙
+| State | Trigger | Behavior |
+|---|---|---|
+| **Dodge** | Double-tap the sprint key while holding a direction key (configurable to single-tap); Jet Booster enables mid-air dodge | Quick dash in the chosen direction, with brief invincibility frames (10 ticks). Uses shared cooldown with Swim Dash; up to one charge can be stored. |
+| **Original** | Mod toggled off (`Shift + M`) | All mod behavior disabled; vanilla movement applies. This is also the fallback when no other state matches. |
 
-#### 翻入
+### Equipment
 
-- 站立或悬挂在墙边缘 / 凹槽时，可以以趴下的姿态钻入 1 格高的洞口
+**Jet Booster** — equippable in the Curios belt slot. When equipped:
+- Movement speed and jump boost are increased via attribute modifiers.
+- Wall run does not lose altitude.
+- Mid-air dodge is enabled.
+- Break Fall damage is reduced further.
 
-#### 墙跑
+### Key Bindings
 
-- 沿墙方向的移动速度超过一定值时，可沿墙面奔跑
-- 装备**喷气助推器**时墙跑不会往下掉
+| Key | Action |
+|---|---|
+| `C` | Lower center (prone, slide, break-fall-ready, vault-in) |
+| `Shift + M` | Toggle mod mode on/off |
+| `Shift + N` | Toggle on-screen key hints on/off |
 
----
+Most active actions display contextual key prompts on screen, showing the relevant vanilla key bindings (`W`, `A`, `S`, `D`, `Space`, `Shift`, `Ctrl`).
 
-## 开发计划
+### Configuration
 
-### TODO
+All feature flags live in `ServerConfig` and `ClientConfig`. Most actions require both to be enabled:
 
-- 二段跳
-- 更多装备 / 模块化装备：喷气背包、钩索、相位移动（待定）
+- `ServerConfig` controls server-side enforcement. Disabling an action here prevents ALL players from using it.
+- `ClientConfig` allows individual players to opt out of specific actions locally.
 
-### 低优先级 TODO
+Config values use NeoForge's `ModConfigSpec` system.
 
-- 滑铲上坡不流畅优化
-- 滑行时可微调方向
+## Architecture
 
-### 未来版本计划
+- **State machine**: each player has a `MovementStateMachine` that evaluates 17 state transitions per client tick in priority order. State changes are synced to the server via a lightweight packet.
+- **Effect system**: physics values (acceleration, friction, block friction, speed limit) are modified by composable effects with types `REPLACE`, `BASE_MULTIPLIER`, `LOCAL_VALUE`, `COMPOSE`, and `MULTIPLIER`, applied in priority order.
+- **Physics injection**: 4 Mixin classes modify `Entity` (step-up/step-down/slope detection), `LivingEntity` (air/water travel, jump boost, body rotation, ladder speed), `GameRenderer` (camera roll/FOV), and `AvatarRenderer` (swimming-pose rendering for non-vanilla states).
+- **Animation**: PlayerAnimationLib drives bone animations from bedrock-format animation files, with MoLang expressions bound to per-tick movement data exported from `PlayerMovementContext`.
 
-- 移植到 NeoForge 1.21.1
-- 移植到 NeoForge 1.21.11
-- 移植到 NeoForge 1.20.1
+## Feedback
 
----
+Issues and suggestions are welcome. Include mod version, Minecraft version, and reproduction steps when reporting a problem.
 
-## 反馈与建议
-
-非常期待大家的反馈和建议。
-
-**提交 Issue：** 请创建一个 issue，并附上：
-- 模组信息
-- 问题描述
-- Minecraft 版本与模组版本
-
-### 联系方式
-
-| 平台 | 信息 |
-|------|------|
+| Platform | Info |
+|----------|------|
 | QQ | `1796334524` |
-| Bilibili | [空间链接](https://space.bilibili.com/27666009)（介绍视频暂未发布） |
-| MC 百科 | 暂未建立 |
+| Bilibili | [@AkiraHane](https://space.bilibili.com/27666009) |
+
+---
+
+> This document was generated with AI assistance.
