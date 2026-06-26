@@ -19,6 +19,8 @@ import com.akirahane.momentum.core.state.states.wall.*;
 import net.minecraft.client.Minecraft;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.entity.Pose;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
 
@@ -170,6 +172,14 @@ public class SwimDashState extends BaseState {
     public void clientTick(Player player, PlayerMovementContext context) {
         if (!player.isInWater()) {
             context.setSwimPushTimer(10);
+            var instance = player.getAttribute(Attributes.GRAVITY);
+            if (instance != null && instance.getModifier(DOLPHIN_GRAVITY_ID) == null) {
+                instance.addOrReplacePermanentModifier(new AttributeModifier(
+                        DOLPHIN_GRAVITY_ID,
+                        -0.4,
+                        AttributeModifier.Operation.ADD_MULTIPLIED_BASE
+                ));
+            }
         }
         super.clientTick(player, context);
     }
@@ -195,6 +205,10 @@ public class SwimDashState extends BaseState {
         context.setNoJump(false);
         context.setNoMoveInput(false);
         player.setForcedPose(null);
+        var instance = player.getAttribute(Attributes.GRAVITY);
+        if (instance != null) {
+            instance.removeModifier(DOLPHIN_GRAVITY_ID);
+        }
 //        player.setSwimming(false);
 //        player.setSprinting(false);
     }

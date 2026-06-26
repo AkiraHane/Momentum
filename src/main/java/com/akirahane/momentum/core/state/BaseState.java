@@ -32,6 +32,9 @@ public abstract class BaseState {
 
     protected static final Identifier WALL_GRAVITY_ID =
             Identifier.fromNamespaceAndPath(Momentum.MODID, "wall_gravity");
+    // 海豚跳重力
+    protected static final Identifier DOLPHIN_GRAVITY_ID =
+            Identifier.fromNamespaceAndPath(Momentum.MODID, "dolphin_gravity");
     // 上坡高度ID
     protected static final Identifier UP_SLOPE_ID =
             Identifier.fromNamespaceAndPath(Momentum.MODID, "up_slope");
