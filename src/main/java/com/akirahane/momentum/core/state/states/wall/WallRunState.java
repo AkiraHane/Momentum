@@ -80,8 +80,10 @@ public class WallRunState extends BaseState {
         double speedDot = speed.x * tangent.x + speed.z * tangent.z;
         double lookDot = lookVec.x * tangent.x + lookVec.z * tangent.z;
 
-        // 同号即同一侧
-        return speedDot * lookDot > 0;
+        // 将速度切线分量归一化，与视角切线分量(已是单位向量)比较
+        // 允许视角稍微往后看: cos(θ) > -0.3, 即夹角不超过约 107°
+        double speedTangentNorm = speedDot / Math.max(speed.horizontalDistance(), 0.001);
+        return speedTangentNorm * lookDot > -0.4;
     }
 
 
