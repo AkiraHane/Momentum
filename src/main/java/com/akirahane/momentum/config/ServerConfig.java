@@ -41,7 +41,7 @@ public class ServerConfig {
     // 墙跑最低速度
     public static final ModConfigSpec.DoubleValue MIN_WALL_RUN_SPEED = BUILDER
             .comment("墙跑最低速度（米/秒）", "默认值: 6.0")
-            .defineInRange("minWallRunSpeed", 6.0, 1.0, 100.0);
+            .defineInRange("minWallRunSpeed", 4.0, 1.0, 100.0);
 
     // 水上漂最低速度
     public static final ModConfigSpec.DoubleValue MIN_WATER_SWIM_SPEED = BUILDER
@@ -110,6 +110,9 @@ public class ServerConfig {
     public static final ModConfigSpec.BooleanValue ENABLE_WALL_HANG = BUILDER
             .comment("是否开启挂墙")
             .define("enableWallHang", true);
+    public static final ModConfigSpec.BooleanValue ENABLE_POWER_JUMP = BUILDER
+            .comment("是否开启蓄力跳")
+            .define("enablePowerJump", true);
     public static final ModConfigSpec.BooleanValue ENABLE_WALL_KICK = BUILDER
             .comment("是否开启蹬墙跳")
             .define("enableWallKick", true);

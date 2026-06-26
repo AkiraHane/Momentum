@@ -26,24 +26,28 @@ import net.minecraft.world.phys.Vec3;
 
 import static com.akirahane.momentum.core.context.PlayerMovementContext.*;
 
-public class WallKickState extends BaseState {
+public class PowerJumpState extends BaseState {
 
-    public static boolean canWallKick(Player player, PlayerMovementContext context) {
-        return ServerConfig.ENABLE_WALL_KICK.getAsBoolean() && ClientConfig.ENABLE_WALL_KICK.getAsBoolean() &&
-                !Vec3.ZERO.equals(context.getWallNormal()) &&
-                context.getInputVec().horizontalDistance() > 0.01 && Mth.abs(context.getInputWallAngle()) >= 100 &&
-                checkKey(player, context);
-    }
-
-    // 跑墙特殊进入条件
-    public static boolean canWallKickRun(Player player, PlayerMovementContext context) {
-        return ServerConfig.ENABLE_WALL_KICK.getAsBoolean() && ClientConfig.ENABLE_WALL_KICK.getAsBoolean() &&
-                !Vec3.ZERO.equals(context.getWallNormal()) &&
-                checkKey(player, context);
+    public static boolean canPowerJump(Player player, PlayerMovementContext context) {
+        if (!ServerConfig.ENABLE_POWER_JUMP.getAsBoolean() || !ClientConfig.ENABLE_POWER_JUMP.getAsBoolean()) {
+            return false;
+        }
+        if (!player.onGround()) {
+            return false;
+        }
+        boolean checkRelease = context.wasKeyPressedRecently(SHIFT_HOLD, 5);
+        if (checkRelease && Minecraft.getInstance().options.keyShift.isDown()){
+            HintManager.add(WallHangHints.POWER_JUMP_READY);
+            return false;
+        } else if (checkRelease && !Minecraft.getInstance().options.keyShift.isDown()) {
+            HintManager.add(WallHangHints.POWER_JUMP);
+            return context.getInputBuffer()[context.getInputBufferIndex()].contains(JUMP);
+        }
+        return false;
     }
 
     public static boolean checkKey(Player player, PlayerMovementContext context) {
-        HintManager.add(WallHangHints.WALL_KICK);
+        HintManager.add(WallHangHints.POWER_JUMP_READY);
         return context.getInputBuffer()[context.getInputBufferIndex()].contains(JUMP);
     }
 
@@ -57,7 +61,7 @@ public class WallKickState extends BaseState {
         if (DodgeState.canDodge(player, context)) {
             return StateType.DODGE.getState();
         }
-        if (SwimDashState.canSwimDash(player, context)){
+        if (SwimDashState.canSwimDash(player, context)) {
             return StateType.SWIM_DASH.getState();
         }
         if (SlideState.canSlide(player, context)) {
@@ -75,10 +79,10 @@ public class WallKickState extends BaseState {
         if (ProneState.canProne(player, context)) {
             return StateType.PRONE.getState();
         }
-        if (PowerJumpState.canPowerJump(player, context)) {
+        if (context.getWallJumpTimer() > 0) {
             return StateType.POWER_JUMP.getState();
         }
-        if (context.getWallJumpTimer() > 0) {
+        if (WallKickState.canWallKick(player, context)) {
             return StateType.WALL_KICK.getState();
         }
         if (WallRunState.canWallRun(player, context)) {
@@ -130,53 +134,30 @@ public class WallKickState extends BaseState {
                     context);
         }
         context.setLeftFootJump(!context.isLeftFootJump());
-        context.setLeftFootJump(!context.isLeftFootJump());
         float jumpPower = ((LivingEntityAccessor) player).invokeGetJumpPower();
-        if (Mth.abs(context.getInputWallAngle()) >= 100) {
-            // 加速倍率
-            float limitJumpPower = jumpPower;
-            if (context.getWallKickCooldown() != 0) {
-                limitJumpPower = 0;
-            }
-            player.setDeltaMovement(
-                    Mth.abs((float) (player.getDeltaMovement().x + context.getInputVec().x * limitJumpPower * 0.5)) <
-                            Mth.absMax(player.getDeltaMovement().x, context.getInputVec().x * jumpPower * 0.5) ?
-                            context.getInputVec().x * jumpPower * 0.5 :
-                            player.getDeltaMovement().x + context.getInputVec().x * limitJumpPower * 0.5
-                    ,
-                    jumpPower * 1.5,
-                    Mth.abs((float) (player.getDeltaMovement().z + context.getInputVec().z * limitJumpPower * 0.5)) <
-                            Mth.absMax(player.getDeltaMovement().z, context.getInputVec().z * jumpPower * 0.5) ?
-                            context.getInputVec().z * jumpPower * 0.5 :
-                            player.getDeltaMovement().z + context.getInputVec().z * limitJumpPower * 0.5
-            );
-            player.fallDistance = 0;
-        } else {
-            player.addDeltaMovement(
-                    new Vec3(
-                            -context.getWallNormal().x * jumpPower,
-                            0,
-                            -context.getWallNormal().z * jumpPower
-                    )
-            );
-        }
+        player.setDeltaMovement(
+                Mth.abs((float) (player.getDeltaMovement().x + context.getInputVec().x * jumpPower * 0.5)) <
+                        Mth.absMax(player.getDeltaMovement().x, context.getInputVec().x * jumpPower * 0.5) ?
+                        context.getInputVec().x * jumpPower * 0.5 :
+                        player.getDeltaMovement().x + context.getInputVec().x * jumpPower * 0.5
+                ,
+                jumpPower * 1.5,
+                Mth.abs((float) (player.getDeltaMovement().z + context.getInputVec().z * jumpPower * 0.5)) <
+                        Mth.absMax(player.getDeltaMovement().z, context.getInputVec().z * jumpPower * 0.5) ?
+                        context.getInputVec().z * jumpPower * 0.5 :
+                        player.getDeltaMovement().z + context.getInputVec().z * jumpPower * 0.5
+        );
         context.playWallSound(player, PlayerMovementContext.FALL, 0.15F, 1);
         player.playSound(
                 SoundEvents.ARROW_SHOOT,
                 0.5F,
                 1.0F + player.getRandom().nextFloat() * 0.4F - 0.2F  // 0.8 ~ 1.2 随机音高
         );
-        context.setWallJumpTimer(5);
-    }
-
-    @Override
-    public void onExit(Player player, PlayerMovementContext context) {
-        super.onExit(player, context);
-        context.setWallKickCooldown(ServerConfig.WALL_KICK_ACCELERATION_COOLDOWN.getAsInt());
+        context.setWallJumpTimer(3);
     }
 
     @Override
     public StateType getStateType() {
-        return StateType.WALL_KICK;
+        return StateType.POWER_JUMP;
     }
 }

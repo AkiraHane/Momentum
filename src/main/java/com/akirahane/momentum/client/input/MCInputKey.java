@@ -27,6 +27,7 @@ public class MCInputKey {
     private static boolean wasRight = false;
     private static boolean wasJump = false;
     private static boolean wasSprint = false;
+    private static boolean wasShift = false;
 
     // 每tick检测
     @SubscribeEvent
@@ -64,5 +65,13 @@ public class MCInputKey {
             list[machine.getContext().getInputBufferIndex()].add(SPRINT);
         }
         wasSprint = mc.options.keySprint.isDown();
+        if (mc.options.keyShift.isDown() && !wasShift) {
+            list[machine.getContext().getInputBufferIndex()].add(SHIFT);
+        }
+        wasShift = mc.options.keyShift.isDown();
+
+        if (mc.options.keyShift.isDown()){
+            list[machine.getContext().getInputBufferIndex()].add(SHIFT_HOLD);
+        }
     }
 }

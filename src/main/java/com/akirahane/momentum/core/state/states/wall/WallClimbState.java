@@ -37,6 +37,7 @@ public class WallClimbState extends BaseState {
 
     public static boolean canWallClimb(Player player, PlayerMovementContext context) {
         return  ServerConfig.ENABLE_WALL_CLIMB.getAsBoolean() && ClientConfig.ENABLE_WALL_CLIMB.getAsBoolean() &&
+                !Minecraft.getInstance().options.keyShift.isDown() &&
                 (!Vec3.ZERO.equals(context.getWallNormal()) &&
                         context.isHasFaceWall() &&
                         !Vec3.ZERO.equals(context.getInputVec()) && Mth.abs(context.getInputWallAngle()) < 30 &&
@@ -49,6 +50,7 @@ public class WallClimbState extends BaseState {
     // 维持
     public static boolean canWallClimbHold(Player player, PlayerMovementContext context) {
         return ServerConfig.ENABLE_WALL_CLIMB.getAsBoolean() && ClientConfig.ENABLE_WALL_CLIMB.getAsBoolean() &&
+                !Minecraft.getInstance().options.keyShift.isDown() &&
                 (!Vec3.ZERO.equals(context.getWallNormal()) &&
                 context.isHasFaceWall() &&
                 !Vec3.ZERO.equals(context.getInputVec()) && Mth.abs(context.getInputWallAngle()) < 60 &&
@@ -95,6 +97,9 @@ public class WallClimbState extends BaseState {
         }
         if (ProneState.canProne(player, context)) {
             return StateType.PRONE.getState();
+        }
+        if (PowerJumpState.canPowerJump(player, context)) {
+            return StateType.POWER_JUMP.getState();
         }
         if (WallKickState.canWallKick(player, context)) {
             return StateType.WALL_KICK.getState();

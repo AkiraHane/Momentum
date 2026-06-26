@@ -59,7 +59,6 @@ public class SlideState extends BaseState {
         LOGGER.trace("player.getJumpPower() {}", jumpPower);
         int slideAccelerationCooldown = ServerConfig.SLIDE_ACCELERATION_COOLDOWN.get();
         if (context.getSlideCooldown() != 0) {
-            jumpPower /= 2;
             jumpPower *= ((float) (slideAccelerationCooldown - context.getSlideCooldown()) / slideAccelerationCooldown);
         }
         if (context.getSpeed().horizontalDistance() >= context.getJumpLimitSpeed()){
@@ -109,7 +108,7 @@ public class SlideState extends BaseState {
             context.addEffect(
                     MomentumEffectType.FRICTION,
                     new MomentumEffect(
-                            new Vec3(0.2, 0, 0),
+                            new Vec3(0.05, 0, 0),
                             Vec3.ZERO,
                             LOCAL_VALUE,
                             5

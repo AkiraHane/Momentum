@@ -45,7 +45,7 @@ public class PlayerMovementContext {
     // 日志
     protected static final Logger LOGGER = LogUtils.getLogger();
     // 键位
-    public static final int UP = 0, DOWN = 1, LEFT = 2, RIGHT = 3, JUMP = 4, SPRINT = 5;
+    public static final int UP = 0, DOWN = 1, LEFT = 2, RIGHT = 3, JUMP = 4, SPRINT = 5, SHIFT = 6, SHIFT_HOLD = 7;
     // 音效
 //    HIT(SoundType::getHitSound),
 //    BREAK(SoundType::getBreakSound),
@@ -370,7 +370,7 @@ public class PlayerMovementContext {
         double moveSpeed = player.getAttributeValue(Attributes.MOVEMENT_SPEED);
         double jumpStrength = player.getJumpBoostPower();
         this.jumpLimitSpeed = moveSpeed * (1 + jumpStrength) * 3;
-        this.jumpAcceleration = jumpCooldown > 0 ? 0.2 : moveSpeed * (1 + jumpStrength) * 1.2;
+        this.jumpAcceleration = jumpCooldown > 0 ? 0 : moveSpeed * (1 + jumpStrength) * 1.2;
         this.setWorldInputVec(player);
         this.detectWall(player);
         this.bodyHeadAngleDiff = Mth.wrapDegrees(player.getYHeadRot() - player.yBodyRot);
@@ -606,6 +606,20 @@ public class PlayerMovementContext {
             }
         }
         return foundFirst;
+    }
+
+    // 判断在过去5个tick内(不包括当前)是否按下了指定按键
+    public boolean wasKeyPressedRecently(int key, int offset) {
+        int len = inputBuffer.length;
+        int current = inputBufferIndex;
+
+        for (int i = 1; i <= Math.min(offset, inputBuffer.length - 1); i++) {
+            int idx = (current - i + len) % len;
+            if (inputBuffer[idx].contains(key)) {
+                return true;
+            }
+        };
+        return false;
     }
 
     // 喷气助推器判断

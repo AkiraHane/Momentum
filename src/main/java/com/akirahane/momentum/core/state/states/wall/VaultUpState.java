@@ -81,6 +81,9 @@ public class VaultUpState extends BaseState {
         if (ProneState.canProne(player, context)) {
             return StateType.PRONE.getState();
         }
+        if (PowerJumpState.canPowerJump(player, context)) {
+            return StateType.POWER_JUMP.getState();
+        }
         if (WallKickState.canWallKick(player, context)) {
             return StateType.WALL_KICK.getState();
         }

@@ -31,6 +31,7 @@ public enum StateType {
     WALL_SLIDE(new WallSlideState(), "state.momentum.wall_slide"),
     WALL_RUN(new WallRunState(), "state.momentum.wall_run"),
     WALL_HANG(new WallHangState(), "state.momentum.wall_hang"),
+    POWER_JUMP(new PowerJumpState(), "state.momentum.power_jump"),
     WALL_KICK(new WallKickState(), "state.momentum.wall_kick"),
     VAULT_UP(new VaultUpState(), "state.momentum.vault_up"),
     VAULT_IN(new VaultInState(), "state.momentum.vault_in"),

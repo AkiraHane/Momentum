@@ -68,6 +68,18 @@ public class WallHangHints {
                     .key(OPTIONS.keyJump)
                     .build();
 
+    public static final HintManager.KeyHint POWER_JUMP_READY =
+            HintManager.KeyHint.builder("state.momentum.power_jump")
+                    .translatable("hint.momentum.release")
+                    .key(OPTIONS.keyShift).plus()
+                    .key(OPTIONS.keyJump)
+                    .build();
+
+    public static final HintManager.KeyHint POWER_JUMP =
+            HintManager.KeyHint.builder("state.momentum.power_jump")
+                    .key(OPTIONS.keyJump)
+                    .build();
+
     public static final HintManager.KeyHint WALL_RUN =
             HintManager.KeyHint.and("state.momentum.wall_run", OPTIONS.keyUp, OPTIONS.keyJump);
 

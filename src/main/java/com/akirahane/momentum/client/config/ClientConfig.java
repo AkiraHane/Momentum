@@ -81,6 +81,9 @@ public class ClientConfig {
     public static final ModConfigSpec.BooleanValue ENABLE_WALL_HANG = BUILDER
             .comment("是否开启挂墙")
             .define("enableWallHang", true);
+    public static final ModConfigSpec.BooleanValue ENABLE_POWER_JUMP = BUILDER
+            .comment("是否开启蓄力跳")
+            .define("enablePowerJump", true);
     public static final ModConfigSpec.BooleanValue ENABLE_WALL_KICK = BUILDER
             .comment("是否开启蹬墙跳")
             .define("enableWallKick", true);
