@@ -20,7 +20,6 @@ public class AirborneState extends BaseState {
     public void onEnter(Player player, PlayerMovementContext context) {
         context.setLuckyNumber(player);
         context.addPermanentEffect(MomentumEffectType.LIMIT_ACCELERATION_SPEED, AIR_LIMIT_ACCELERATION);
-        context.setJumpCooldown(15);
         context.setJumpAnimationSpeed(1F);
         context.setMomentumRollIntensity(8F);
         if (BaseState.JUMP_RIGHT.equals(context.getCurrentAnimationName()) ||
