@@ -7,6 +7,7 @@ import com.akirahane.momentum.core.effect.MomentumEffectType;
 import com.akirahane.momentum.compat.curios.CuriosCompat;
 import com.akirahane.momentum.config.ServerConfig;
 import com.akirahane.momentum.compat.curios.handler.CuriosHandler;
+import com.akirahane.momentum.core.state.states.ground.SlideState;
 import com.akirahane.momentum.init.InitItems;
 import com.mojang.logging.LogUtils;
 import com.zigythebird.playeranim.api.PlayerAnimationAccess;
@@ -17,6 +18,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.sounds.SoundEvent;
+import net.minecraft.sounds.SoundEvents;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.ai.attributes.Attributes;
@@ -181,6 +183,8 @@ public class PlayerMovementContext {
     private int jumpTimer = 0;
     // 滑铲冷却
     private int slideCooldown = 0;
+    // 滑铲冷却刚完成（用于触发提示）
+    private boolean slideJumpCooldownJustFinished = false;
     // 受身计时器
     private int breakFallTimer = 0;
     // 闪避计时器
@@ -359,6 +363,9 @@ public class PlayerMovementContext {
     }
 
     public void clientTick(Player player) {
+        if (this.slideCooldown == 1 && !SlideState.SLIDE.equals(this.currentAnimationName)){
+            player.playSound(SoundEvents.ARMOR_EQUIP_LEATHER.value(), 0.3F, 1.5F);     // 穿皮革装备声
+        }
         this.serverTick(player);
         // 保存上 tick 的值, 用于渲染帧 partialTick lerp (GeckoLib 风格)
         this.prevBodyHeadAngleDiff = this.bodyHeadAngleDiff;

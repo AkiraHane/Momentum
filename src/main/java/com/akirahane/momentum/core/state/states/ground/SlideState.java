@@ -10,6 +10,7 @@ import com.akirahane.momentum.core.state.BaseState;
 import com.akirahane.momentum.core.context.PlayerMovementContext;
 import com.akirahane.momentum.mixin.LivingEntityAccessor;
 import com.akirahane.momentum.config.ServerConfig;
+import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.entity.Pose;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
@@ -61,7 +62,7 @@ public class SlideState extends BaseState {
         if (context.getSlideCooldown() != 0) {
             jumpPower *= ((float) (slideAccelerationCooldown - context.getSlideCooldown()) / slideAccelerationCooldown);
         }
-        if (context.getSpeed().horizontalDistance() >= context.getJumpLimitSpeed()){
+        if (context.getSpeed().horizontalDistance() >= context.getJumpLimitSpeed()) {
             jumpPower = 0;
         }
 
@@ -76,6 +77,18 @@ public class SlideState extends BaseState {
         context.setMomentumRollIntensity(15F);
         context.setTargetArmTransform(0.15F, -15F);
         context.setSlideCooldown(slideAccelerationCooldown);
+        player.playSound(SoundEvents.ARMOR_EQUIP_LEATHER.value(), 0.3F, 0.5F);     // 穿皮革装备声
+    }
+
+    @Override
+    public void clientTick(Player player, PlayerMovementContext context) {
+        super.clientTick(player, context);
+
+        // 滑铲冷却完成提示
+        if (!context.isSlideJumpCooldownJustFinished() && JUMP_DECELERATION_WINDOW < (ServerConfig.SLIDE_ACCELERATION_COOLDOWN.get() - context.getSlideCooldown())) {
+            context.setTargetArmTransform(0.35F, -30F);
+            context.setSlideJumpCooldownJustFinished(true);
+        }
     }
 
     @Override
@@ -92,7 +105,7 @@ public class SlideState extends BaseState {
     public void onExit(Player player, PlayerMovementContext context) {
         super.onExit(player, context);
         Vec3 slopeDir = context.getSlopeUnitVector();
-        if (Vec3.ZERO.equals(slopeDir) && context.getBlockStep() > 0){
+        if (Vec3.ZERO.equals(slopeDir) && context.getBlockStep() > 0) {
             double riseHeight = context.getBlockStep();
             float deceleration = (float) (UPHILL_DECEL_FACTOR * Math.min(riseHeight * riseHeight, 1.0));
             context.SLIDE_ACCELERATION.setValue(new Vec3(
@@ -124,6 +137,7 @@ public class SlideState extends BaseState {
         context.setSlopeUnitVector(Vec3.ZERO);
         context.setSlideCooldown(ServerConfig.SLIDE_ACCELERATION_COOLDOWN.get());
         context.setMomentumRollIntensity(0F);  // 退出时关闭
+        context.setSlideJumpCooldownJustFinished(false);
     }
 
     @Override
