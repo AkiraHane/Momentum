@@ -72,6 +72,8 @@ public class PlayerMovementContext {
     private boolean noJump = false;
     // 是否有边缘
     private boolean hasLedge = false;
+    // 速降补偿找到ledge时的Y偏移量（用于进入WallHang时修正位置）
+    private double ledgeOffsetY = 0;
     // 眼睛到下巴的前方是否有可抓取墙壁
     private boolean hasFaceWall = false;
     // 是否双击UP DOWN LEFT RIGHT JUMP
@@ -662,6 +664,7 @@ public class PlayerMovementContext {
         AABB expanded;
         boolean hasFaceWall;
         boolean hasLedge;
+        double ledgeOffsetY = 0; // 速降补偿找到ledge时的Y偏移量
         float lookAngle;        // 有符号，用于输出
         float inputAngle;       // 有符号，用于输出
         float lookAngleDiff;    // 无符号，用于排序
@@ -697,6 +700,7 @@ public class PlayerMovementContext {
         if (best == null) {
             this.hasFaceWall = false;
             this.hasLedge = false;
+            this.ledgeOffsetY = 0;
             this.wallNormal = Vec3.ZERO;
             this.lookWallAngle = 360F;
             this.inputWallAngle = 360F;
@@ -714,6 +718,7 @@ public class PlayerMovementContext {
         });
         this.hasFaceWall = best.hasFaceWall;
         this.hasLedge = best.hasLedge;
+        this.ledgeOffsetY = best.ledgeOffsetY;
         this.wallNormal = best.normal;
         this.lookWallAngle = best.lookAngle;
         this.inputWallAngle = hasInput ? best.inputAngle : 360F;
@@ -768,6 +773,26 @@ public class PlayerMovementContext {
             );
             c.hasFaceWall = !level.noCollision(player, chinBox);
             c.hasLedge = level.noCollision(player, ledgeBox) && c.hasFaceWall;
+
+            // 速降补偿: 如果当前位置没有ledge但下落速度快, 沿下落路径向上回溯
+            if (!c.hasLedge && c.hasFaceWall && player.getDeltaMovement().y < -0.4) {
+                double fallDist = Math.abs(player.getDeltaMovement().y);
+                for (double yOff = 0.2; yOff <= fallDist + 0.5; yOff += 0.2) {
+                    AABB sweepLedgeBox = new AABB(
+                            box.minX + normal.x * reach, eyeY + yOff, box.minZ + normal.z * reach,
+                            box.maxX + normal.x * reach, topY + yOff, box.maxZ + normal.z * reach
+                    );
+                    AABB sweepChinBox = new AABB(
+                            box.minX + normal.x * reach, chinY + yOff, box.minZ + normal.z * reach,
+                            box.maxX + normal.x * reach, eyeY + yOff, box.maxZ + normal.z * reach
+                    );
+                    if (level.noCollision(player, sweepLedgeBox) && !level.noCollision(player, sweepChinBox)) {
+                        c.hasLedge = true;
+                        c.ledgeOffsetY = yOff;
+                        break;
+                    }
+                }
+            }
 
             result.add(c);
         }

@@ -132,6 +132,11 @@ public class WallHangState extends BaseState {
                     AttributeModifier.Operation.ADD_MULTIPLIED_BASE
             ));
         }
+        // 速降补偿: 如果在更上方找到了ledge, 把玩家拉回正确位置
+        if (context.getLedgeOffsetY() > 0) {
+            player.setPos(player.getX(), player.getY() + context.getLedgeOffsetY(), player.getZ());
+            context.setLedgeOffsetY(0);
+        }
         player.setDeltaMovement(player.getDeltaMovement().x, 0, player.getDeltaMovement().z);
         player.fallDistance = 0;
         context.addPermanentEffect(MomentumEffectType.FRICTION, WALL_FRICTION);
