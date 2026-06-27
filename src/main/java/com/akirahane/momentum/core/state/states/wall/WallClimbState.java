@@ -11,6 +11,7 @@ import com.akirahane.momentum.core.state.BaseState;
 import com.akirahane.momentum.core.state.states.OriginalState;
 import com.akirahane.momentum.core.state.states.air.AirborneState;
 import com.akirahane.momentum.core.state.states.air.BreakFallReadyState;
+import com.akirahane.momentum.core.state.states.ground.PowerJumpState;
 import com.akirahane.momentum.core.state.states.ground.ProneState;
 import com.akirahane.momentum.core.state.states.ground.SlideState;
 import com.akirahane.momentum.core.state.states.ground.WalkState;
@@ -25,7 +26,6 @@ import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
 
-import static com.akirahane.momentum.client.init.InitSounds.JET2;
 import static com.akirahane.momentum.client.init.InitSounds.JET3;
 import static com.akirahane.momentum.core.context.PlayerMovementContext.*;
 

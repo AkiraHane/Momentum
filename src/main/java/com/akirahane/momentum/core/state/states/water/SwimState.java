@@ -8,6 +8,7 @@ import com.akirahane.momentum.core.state.BaseState;
 import com.akirahane.momentum.core.state.states.OriginalState;
 import com.akirahane.momentum.core.state.states.air.AirborneState;
 import com.akirahane.momentum.core.state.states.air.BreakFallReadyState;
+import com.akirahane.momentum.core.state.states.ground.PowerJumpState;
 import com.akirahane.momentum.core.state.states.ground.ProneState;
 import com.akirahane.momentum.core.state.states.ground.WalkState;
 import com.akirahane.momentum.core.state.states.special.BreakFallState;

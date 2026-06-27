@@ -1,4 +1,4 @@
-package com.akirahane.momentum.core.state.states.wall;
+package com.akirahane.momentum.core.state.states.ground;
 
 import com.akirahane.momentum.client.config.ClientConfig;
 import com.akirahane.momentum.client.hud.HintManager;
@@ -10,11 +10,9 @@ import com.akirahane.momentum.core.state.StateType;
 import com.akirahane.momentum.core.state.states.OriginalState;
 import com.akirahane.momentum.core.state.states.air.AirborneState;
 import com.akirahane.momentum.core.state.states.air.BreakFallReadyState;
-import com.akirahane.momentum.core.state.states.ground.ProneState;
-import com.akirahane.momentum.core.state.states.ground.SlideState;
-import com.akirahane.momentum.core.state.states.ground.WalkState;
 import com.akirahane.momentum.core.state.states.special.BreakFallState;
 import com.akirahane.momentum.core.state.states.special.DodgeState;
+import com.akirahane.momentum.core.state.states.wall.*;
 import com.akirahane.momentum.core.state.states.water.SwimDashState;
 import com.akirahane.momentum.core.state.states.water.SwimState;
 import com.akirahane.momentum.mixin.LivingEntityAccessor;
