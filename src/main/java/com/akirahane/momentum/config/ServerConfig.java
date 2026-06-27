@@ -50,8 +50,8 @@ public class ServerConfig {
 
     // 滑铲加速冷却
     public static final ModConfigSpec.IntValue SLIDE_ACCELERATION_COOLDOWN = BUILDER
-            .comment("滑铲加速冷却（tick）", "默认值: 40")
-            .defineInRange("slideAccelerationCooldown", 40, 0, 200);
+            .comment("滑铲加速冷却（tick）", "默认值: 20")
+            .defineInRange("slideAccelerationCooldown", 20, 0, 200);
 
     // 单次闪避冷却
     public static final ModConfigSpec.IntValue DODGE_COOLDOWN = BUILDER
