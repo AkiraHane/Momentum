@@ -73,17 +73,33 @@ public class DodgeState extends BaseState {
     public void onEnter(Player player, PlayerMovementContext context) {
         String animationName;
         float yRot = player.getYRot();
-        if (Minecraft.getInstance().options.keyDown.isDown()) {
-            yRot += 180;
-            animationName = DODGE_DOWN;
-        } else if (Minecraft.getInstance().options.keyLeft.isDown()) {
-            yRot -= 90;
-            animationName = DODGE_LEFT;
-        } else if (Minecraft.getInstance().options.keyRight.isDown()) {
-            yRot += 90;
-            animationName = DODGE_RIGHT;
+        if (player.level().isClientSide() && Minecraft.getInstance().player == player) {
+            // 本地玩家客户端: 从键盘状态计算方向, 并存入 context 以便发往服务端
+            if (Minecraft.getInstance().options.keyDown.isDown()) {
+                yRot += 180;
+                animationName = DODGE_DOWN;
+                context.setTransitionExtraData(1); // DOWN
+            } else if (Minecraft.getInstance().options.keyLeft.isDown()) {
+                yRot -= 90;
+                animationName = DODGE_LEFT;
+                context.setTransitionExtraData(2); // LEFT
+            } else if (Minecraft.getInstance().options.keyRight.isDown()) {
+                yRot += 90;
+                animationName = DODGE_RIGHT;
+                context.setTransitionExtraData(3); // RIGHT
+            } else {
+                animationName = DODGE_UP;
+                context.setTransitionExtraData(0); // UP
+            }
         } else {
-            animationName = DODGE_UP;
+            // 服务端或远程客户端: 从同步数据恢复方向
+            int dir = context.getTransitionExtraData();
+            switch (dir) {
+                case 1: yRot += 180; animationName = DODGE_DOWN; break;
+                case 2: yRot -= 90; animationName = DODGE_LEFT; break;
+                case 3: yRot += 90; animationName = DODGE_RIGHT; break;
+                default: animationName = DODGE_UP; break;
+            }
         }
         Vec3 direction;
         direction = Vec3.directionFromRotation(4, yRot);

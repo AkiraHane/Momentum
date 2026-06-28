@@ -77,7 +77,10 @@ public class MomentumClient {
             MovementStateMachine sm = player.getData(InitAttachments.MOVEMENT_STATE);
             BaseState state = sm.clientTick(player);
             if (state != null) {
-                ClientPacketDistributor.sendToServer(new StateTransitionPacket(state.getStateType()));
+                ClientPacketDistributor.sendToServer(
+                    new StateTransitionPacket(state.getStateType(), sm.getContext().getTransitionExtraData())
+                );
+                sm.getContext().setTransitionExtraData(-1); // 重置
             }
         } else if (event.getEntity() instanceof AbstractClientPlayer otherPlayer) {
             // 其他联机玩家

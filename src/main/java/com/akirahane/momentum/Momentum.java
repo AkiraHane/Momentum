@@ -68,7 +68,7 @@ public class Momentum {
         for (ServerPlayer player : server.getPlayerList().getPlayers()) {
             MovementStateMachine stateMachine = player.getData(InitAttachments.MOVEMENT_STATE);
             if (stateMachine.isDirty()) {
-                StateBroadcastPacket packet = new StateBroadcastPacket(player.getId(), stateMachine.getCurrentState().getStateType());
+                StateBroadcastPacket packet = new StateBroadcastPacket(player.getId(), stateMachine.getCurrentState().getStateType(), stateMachine.getContext().getTransitionExtraData());
                 for (ServerPlayer observer : player.level().players()) {
                     if (observer != player) {
                         PacketDistributor.sendToPlayer(observer, packet);

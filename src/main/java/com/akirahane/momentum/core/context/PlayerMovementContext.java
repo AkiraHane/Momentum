@@ -191,6 +191,9 @@ public class PlayerMovementContext {
     private int dodgeTimer = 0;
     // 闪避冷却计时器
     private int dodgeCooldown = 0;
+    // 状态转换附加数据 (用于客户端→服务端传递客户端独有的信息, 如 Dodge 方向)
+    // 0=UP, 1=DOWN, 2=LEFT, 3=RIGHT, -1=无数据
+    private int transitionExtraData = -1;
     // 翻越计时器
     private int vaultTimer = 0;
     // 受身计数器
