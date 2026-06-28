@@ -194,6 +194,8 @@ public class PlayerMovementContext {
     // 状态转换附加数据 (用于客户端→服务端传递客户端独有的信息, 如 Dodge 方向)
     // 0=UP, 1=DOWN, 2=LEFT, 3=RIGHT, -1=无数据
     private int transitionExtraData = -1;
+    // 墙面同步数据 (bit 0-2: wallNormal索引, bit 3: inputWallAngle左右标志; -1=无墙面数据)
+    private byte transitionWallData = -1;
     // 翻越计时器
     private int vaultTimer = 0;
     // 受身计数器
@@ -680,6 +682,25 @@ public class PlayerMovementContext {
             new Vec3(-1, 0, -1).normalize(),
     };
 
+    // 所有墙面法线方向 (cardinal 4 + diagonal 4), 用于网络同步编解码
+    private static final Vec3[] ALL_WALL_NORMALS = {
+            WALL_CARDINALS[0], WALL_CARDINALS[1], WALL_CARDINALS[2], WALL_CARDINALS[3],
+            WALL_DIAGONALS[0], WALL_DIAGONALS[1], WALL_DIAGONALS[2], WALL_DIAGONALS[3],
+    };
+
+    public static int encodeWallNormal(Vec3 normal) {
+        if (normal == null || normal.lengthSqr() < 0.001) return -1;
+        for (int i = 0; i < ALL_WALL_NORMALS.length; i++) {
+            if (ALL_WALL_NORMALS[i].distanceToSqr(normal) < 0.001) return i;
+        }
+        return -1;
+    }
+
+    public static Vec3 decodeWallNormal(int index) {
+        if (index < 0 || index >= ALL_WALL_NORMALS.length) return Vec3.ZERO;
+        return ALL_WALL_NORMALS[index];
+    }
+
     private static class WallCandidate {
         Vec3 normal;
         AABB expanded;
@@ -862,6 +883,13 @@ public class PlayerMovementContext {
 
     // 非客户端本地玩家墙面数据判断
     public void remoteDetectWall(Player player) {
+        // 有网络同步的墙面数据 → 直接使用, 跳过 collectWallCandidates 扫描
+        if (transitionWallData >= 0) {
+            applySyncedWallData(player);
+            return;
+        }
+
+        // 没有同步数据 → 扫描墙面 (用速度方向替代键盘输入)
         AABB box = player.getBoundingBox();
         Level level = player.level();
         double reach = 0.5;
@@ -869,26 +897,110 @@ public class PlayerMovementContext {
         float yawRad = (float) Math.toRadians(player.getYRot());
         Vec3 lookVec = new Vec3(-Math.sin(yawRad), 0, Math.cos(yawRad));
 
+        // 远程玩家没有键盘输入, 用速度方向替代
+        Vec3 velocity = this.speed;
+        Vec3 inputVec = new Vec3(velocity.x, 0, velocity.z);
+        boolean hasInput = inputVec.horizontalDistanceSqr() > 1.0E-6;
+        Vec3 inputNorm = hasInput ? inputVec.normalize() : lookVec;
+
         // 垂直方向：先 ledged 后普通
         List<WallCandidate> cardCands = collectWallCandidates(
-                player, level, box, WALL_CARDINALS, lookVec, Vec3.ZERO, lookVec, false, reach);
-        WallCandidate best = pickByPriority(cardCands, false);
+                player, level, box, WALL_CARDINALS, lookVec, inputVec, inputNorm, hasInput, reach);
+        WallCandidate best = pickByPriority(cardCands, hasInput);
 
         // 斜向兜底
         if (best == null) {
             List<WallCandidate> diagCands = collectWallCandidates(
-                    player, level, box, WALL_DIAGONALS, lookVec, Vec3.ZERO, lookVec, false, reach);
-            best = pickByPriority(diagCands, false);
+                    player, level, box, WALL_DIAGONALS, lookVec, inputVec, inputNorm, hasInput, reach);
+            best = pickByPriority(diagCands, hasInput);
         }
 
         if (best == null) {
             this.setLookWallAngle(360F);
             this.setWallNormal(Vec3.ZERO);
+            this.setInputWallAngle(360F);
+            this.setHasFaceWall(false);
+            this.setHasLedge(false);
+            this.setLedgeOffsetY(0);
             return;
         }
 
         this.setWallNormal(best.normal);
         this.setLookWallAngle(best.lookAngle);
+        this.setInputWallAngle(hasInput ? best.inputAngle : 360F);
+        this.setHasFaceWall(best.hasFaceWall);
+        this.setHasLedge(best.hasLedge);
+        this.setLedgeOffsetY(best.ledgeOffsetY);
+    }
+
+    // 使用网络同步的墙面数据计算 WallCandidate 的各项内容
+    private void applySyncedWallData(Player player) {
+        int wallIndex = this.transitionWallData & 0x7;
+
+        Vec3 wallNormal = decodeWallNormal(wallIndex);
+        if (Vec3.ZERO.equals(wallNormal)) {
+            this.setWallNormal(Vec3.ZERO);
+            this.setLookWallAngle(360F);
+            this.setInputWallAngle(360F);
+            this.setHasFaceWall(false);
+            this.setHasLedge(false);
+            this.setLedgeOffsetY(0);
+            return;
+        }
+
+        AABB box = player.getBoundingBox();
+        Level level = player.level();
+        double reach = 0.5;
+
+        // 计算视线角度
+        float yawRad = (float) Math.toRadians(player.getYRot());
+        Vec3 lookVec = new Vec3(-Math.sin(yawRad), 0, Math.cos(yawRad));
+        double lookDot = lookVec.x * wallNormal.x + lookVec.z * wallNormal.z;
+        double lookCross = lookVec.x * wallNormal.z - lookVec.z * wallNormal.x;
+        float lookAngle = (float) Math.toDegrees(Math.atan2(lookCross, lookDot));
+
+        // 用速度方向替代输入方向计算 inputAngle
+        Vec3 velocity = player.getDeltaMovement();
+        Vec3 inputVec = new Vec3(velocity.x, 0, velocity.z);
+        boolean hasInput = inputVec.horizontalDistanceSqr() > 1.0E-6;
+        float inputAngle = 360F;
+        if (hasInput) {
+            double inputDot = inputVec.x * wallNormal.x + inputVec.z * wallNormal.z;
+            double inputCross = inputVec.x * wallNormal.z - inputVec.z * wallNormal.x;
+            inputAngle = (float) Math.toDegrees(Math.atan2(inputCross, inputDot));
+        }
+
+        // hasFaceWall / hasLedge 检测 (仅检测同步来的墙面方向)
+        AABB expanded = box.expandTowards(wallNormal.x * reach, 0, wallNormal.z * reach);
+        double eyeY = player.getEyeY();
+        double topY = box.maxY;
+        double headHalf = topY - eyeY;
+        double chinY = eyeY - headHalf * 2;
+        AABB chinBox = new AABB(
+                box.minX + wallNormal.x * reach, chinY, box.minZ + wallNormal.z * reach,
+                box.maxX + wallNormal.x * reach, eyeY, box.maxZ + wallNormal.z * reach
+        );
+        AABB ledgeBox = new AABB(
+                box.minX + wallNormal.x * reach, eyeY, box.minZ + wallNormal.z * reach,
+                box.maxX + wallNormal.x * reach, topY, box.maxZ + wallNormal.z * reach
+        );
+        boolean hasFaceWall = !level.noCollision(player, chinBox);
+        boolean hasLedge = level.noCollision(player, ledgeBox) && hasFaceWall;
+
+        // 写入 context
+        this.setWallNormal(wallNormal);
+        this.setLookWallAngle(lookAngle);
+        this.setInputWallAngle(hasInput ? inputAngle : 360F);
+        this.setHasFaceWall(hasFaceWall);
+        this.setHasLedge(hasLedge);
+        this.setLedgeOffsetY(0);
+
+        // 填充 wallBlocks (用于音效播放)
+        this.wallBlocks.clear();
+        BlockPos.betweenClosedStream(expanded).forEach(pos -> {
+            BlockState state = level.getBlockState(pos);
+            if (!state.isAir()) wallBlocks.add(pos.immutable());
+        });
     }
 
     public void playWallSound(Player player, Function<SoundType, SoundEvent> kind, float volumeMultiplier, float pitchMultiplier) {

@@ -134,6 +134,11 @@ public class WallClimbState extends BaseState {
 
     @Override
     public void onEnter(Player player, PlayerMovementContext context) {
+        // 同步 wallNormal 给远程玩家
+        if (player.level().isClientSide() && Minecraft.getInstance().player == player) {
+            int wallIndex = PlayerMovementContext.encodeWallNormal(context.getWallNormal());
+            context.setTransitionWallData((byte)(wallIndex >= 0 ? wallIndex : -1));
+        }
         playStateAnimation(player, WALL_CLIMB, context);
         if (!player.onClimbable()){
             context.addPermanentEffect(MomentumEffectType.LIMIT_ACCELERATION_SPEED, AIR_LIMIT_ACCELERATION);

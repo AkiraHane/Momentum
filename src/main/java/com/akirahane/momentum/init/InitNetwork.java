@@ -50,6 +50,7 @@ public class InitNetwork {
                     MovementStateMachine stateMachine = player.getData(InitAttachments.MOVEMENT_STATE);
                     // 将客户端独有数据注入 context, 供 onEnter() 服务端侧使用
                     stateMachine.getContext().setTransitionExtraData(packet.extraData());
+                    stateMachine.getContext().setTransitionWallData(packet.wallData());
                     stateMachine.setStateFromClient(packet.stateType(), player);
                 }
         );
@@ -69,6 +70,7 @@ public class InitNetwork {
                     MovementStateMachine stateMachine = player.getData(InitAttachments.MOVEMENT_STATE);
                     // 注入附加数据 (如 Dodge 方向), 供 onEnter() 在远程客户端使用
                     stateMachine.getContext().setTransitionExtraData(packet.extraData());
+                    stateMachine.getContext().setTransitionWallData(packet.wallData());
                     stateMachine.setStateFromClient(packet.stateType(), player);
                 }
         );

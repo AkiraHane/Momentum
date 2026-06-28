@@ -180,7 +180,19 @@ public class WallRunState extends BaseState {
         if (dot < 0) {
             tangent = tangent.scale(-1);
         }
-        playStateAnimation(player, inputWallAngle > 0 ? WALL_RUN_LEFT : WALL_RUN_RIGHT, context);
+        boolean useLeft;
+        if (player.level().isClientSide() && Minecraft.getInstance().player == player) {
+            // 本地玩家: 编码左右方向 + wallNormal → 通过网络同步
+            useLeft = inputWallAngle > 0;
+            context.setTransitionExtraData(useLeft ? 1 : 0);
+            int wallIndex = PlayerMovementContext.encodeWallNormal(wallNormal);
+            context.setTransitionWallData((byte)(wallIndex >= 0 ? wallIndex : -1));
+        } else {
+            // 服务端/远程玩家: 从网络包恢复
+            int extra = context.getTransitionExtraData();
+            useLeft = extra >= 0 ? (extra == 1) : (inputWallAngle > 0);
+        }
+        playStateAnimation(player, useLeft ? WALL_RUN_LEFT : WALL_RUN_RIGHT, context);
         var instance = player.getAttribute(Attributes.GRAVITY);
         double ySpeed = player.getDeltaMovement().y > 0 ? player.getDeltaMovement().y : 0;
         if (context.isHasJetBooster()) {

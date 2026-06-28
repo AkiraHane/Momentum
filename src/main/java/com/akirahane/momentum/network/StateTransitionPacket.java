@@ -12,7 +12,8 @@ import static com.akirahane.momentum.Momentum.MODID;
 
 // 客户端状态机切换状态后, 给服务器发送 (服务器只考虑属性状态 不参与计算状态转换)
 // extraData: 附加数据, 用于传递客户端才有的信息 (如 Dodge 方向: 0=UP, 1=DOWN, 2=LEFT, 3=RIGHT)
-public record StateTransitionPacket(StateType stateType, int extraData) implements CustomPacketPayload {
+// wallData: 墙面同步数据 (bit 0-2: wallNormal索引, bit 3: inputWallAngle左右标志; -1=无墙面数据)
+public record StateTransitionPacket(StateType stateType, int extraData, byte wallData) implements CustomPacketPayload {
     public static final CustomPacketPayload.Type<@NotNull StateTransitionPacket> TYPE =
             new CustomPacketPayload.Type<>(Identifier.fromNamespaceAndPath(MODID, "sync_momentum_state"));
 
@@ -20,8 +21,9 @@ public record StateTransitionPacket(StateType stateType, int extraData) implemen
             StreamCodec.composite(
                     ByteBufCodecs.VAR_INT, pkt -> pkt.stateType.getId(),
                     ByteBufCodecs.VAR_INT, StateTransitionPacket::extraData,
-                    (state, extra) -> new StateTransitionPacket(
-                            StateType.fromId(state), extra
+                    ByteBufCodecs.BYTE, StateTransitionPacket::wallData,
+                    (state, extra, wall) -> new StateTransitionPacket(
+                            StateType.fromId(state), extra, wall
                     )
             );
 

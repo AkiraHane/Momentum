@@ -10,7 +10,7 @@ import org.jetbrains.annotations.NotNull;
 
 import static com.akirahane.momentum.Momentum.MODID;
 
-public record StateBroadcastPacket(int playerId, StateType stateType, int extraData) implements CustomPacketPayload {
+public record StateBroadcastPacket(int playerId, StateType stateType, int extraData, byte wallData) implements CustomPacketPayload {
     public static final CustomPacketPayload.Type<@NotNull StateBroadcastPacket> TYPE =
             new CustomPacketPayload.Type<>(Identifier.fromNamespaceAndPath(MODID, "broadcast_state"));
 
@@ -19,7 +19,8 @@ public record StateBroadcastPacket(int playerId, StateType stateType, int extraD
                     ByteBufCodecs.VAR_INT, StateBroadcastPacket::playerId,
                     ByteBufCodecs.VAR_INT, pkt -> pkt.stateType().getId(),
                     ByteBufCodecs.VAR_INT, StateBroadcastPacket::extraData,
-                    (id, state, extra) -> new StateBroadcastPacket(id, StateType.fromId(state), extra)
+                    ByteBufCodecs.BYTE, StateBroadcastPacket::wallData,
+                    (id, state, extra, wall) -> new StateBroadcastPacket(id, StateType.fromId(state), extra, wall)
             );
 
     @Override

@@ -124,6 +124,11 @@ public class WallHangState extends BaseState {
 
     @Override
     public void onEnter(Player player, PlayerMovementContext context) {
+        // 同步 wallNormal 给远程玩家
+        if (player.level().isClientSide() && Minecraft.getInstance().player == player) {
+            int wallIndex = PlayerMovementContext.encodeWallNormal(context.getWallNormal());
+            context.setTransitionWallData((byte)(wallIndex >= 0 ? wallIndex : -1));
+        }
         playStateAnimation(player, WALL_HANG, context, 1, 1);
         var instance = player.getAttribute(Attributes.GRAVITY);
         if (instance != null && instance.getModifier(WALL_GRAVITY_ID) == null) {

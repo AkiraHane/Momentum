@@ -76,9 +76,10 @@ public class MomentumClient {
             BaseState state = sm.clientTick(player);
             if (state != null) {
                 ClientPacketDistributor.sendToServer(
-                    new StateTransitionPacket(state.getStateType(), sm.getContext().getTransitionExtraData())
+                    new StateTransitionPacket(state.getStateType(), sm.getContext().getTransitionExtraData(), sm.getContext().getTransitionWallData())
                 );
                 sm.getContext().setTransitionExtraData(-1); // 重置
+                sm.getContext().setTransitionWallData((byte)-1); // 重置
             }
         } else if (event.getEntity() instanceof AbstractClientPlayer otherPlayer) {
             // 其他联机玩家
