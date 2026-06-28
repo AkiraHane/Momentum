@@ -30,7 +30,7 @@ public class AirborneState extends BaseState {
         ) {
             return;
         }
-        if (context.getSpeed().y > 0 && context.getSpeed().horizontalDistance() > 0.1F) {
+        if (context.getSpeed().horizontalDistance() > 0.1F) {
             float yaw = player.getYRot();
             Vec3 lookVec = new Vec3(
                     -Math.sin(Math.toRadians(yaw)),
