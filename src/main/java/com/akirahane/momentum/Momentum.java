@@ -72,9 +72,9 @@ public class Momentum {
             if (stateMachine.isDirty()) {
                 StateBroadcastPacket packet = new StateBroadcastPacket(player.getId(), stateMachine.getCurrentState().getStateType(), stateMachine.getContext().getTransitionExtraData());
                 for (ServerPlayer observer : player.level().players()) {
-                    if (observer != player) {
-                        PacketDistributor.sendToPlayer(observer, packet);
-                    }
+                    // 不排除自己: Replay Mod 录制需要录制者也收到此包, 才能在回放中重放状态转换
+                    // 客户端 handler 中有 player == mc.player 的防护, 正常游戏不会重复处理
+                    PacketDistributor.sendToPlayer(observer, packet);
                 }
                 stateMachine.setDirty(false);
             }
