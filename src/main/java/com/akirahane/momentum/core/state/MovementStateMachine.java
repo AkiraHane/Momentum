@@ -65,7 +65,7 @@ public class MovementStateMachine {
     // 状态转换
     private void transition(BaseState next, Player player) {
         if (next.equals(currentState)) return;
-        LOGGER.debug("[MovementStateMachine] {} to {}", currentState.getStateType(), next.getStateType());
+        LOGGER.trace("[MovementStateMachine] {} to {}", currentState.getStateType(), next.getStateType());
         currentState.onExit(player, context);
         currentState = next;
         currentState.onEnter(player, context);
