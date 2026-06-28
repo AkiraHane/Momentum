@@ -131,7 +131,6 @@ public class WallKickState extends BaseState {
                     context);
         }
         context.setLeftFootJump(!context.isLeftFootJump());
-        context.setLeftFootJump(!context.isLeftFootJump());
         float jumpPower = ((LivingEntityAccessor) player).invokeGetJumpPower();
         if (Mth.abs(context.getInputWallAngle()) >= 100) {
             // 加速倍率
