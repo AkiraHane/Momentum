@@ -4,6 +4,7 @@ import com.akirahane.momentum.core.state.MovementStateMachine;
 import com.akirahane.momentum.core.state.StateType;
 import com.akirahane.momentum.init.InitAttachments;
 import com.akirahane.momentum.init.InitItems;
+import com.akirahane.momentum.client.init.InitSounds;
 import com.akirahane.momentum.config.ServerConfig;
 import com.akirahane.momentum.network.StateBroadcastPacket;
 import com.mojang.logging.LogUtils;
@@ -39,6 +40,7 @@ public class Momentum {
         modContainer.registerConfig(ModConfig.Type.SERVER, ServerConfig.SPEC);
         InitItems.register(modEventBus);
         InitAttachments.register(modEventBus);
+        InitSounds.SOUND_EVENTS.register(modEventBus);
     }
 
     @SubscribeEvent

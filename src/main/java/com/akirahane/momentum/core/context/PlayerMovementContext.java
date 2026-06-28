@@ -396,6 +396,17 @@ public class PlayerMovementContext {
         this.prevBodyHeadAngleDiff = this.bodyHeadAngleDiff;
         this.prevHeadXRot = player.getXRot();
         this.bodyHeadAngleDiff = Mth.wrapDegrees(player.getYHeadRot() - player.yBodyRot);
+        if (this.jumpTimer > 0) this.jumpTimer--;
+        if (this.slideCooldown > 0) this.slideCooldown--;
+        if (this.breakFallTimer > 0) this.breakFallTimer--;
+        if (this.dodgeTimer > 0) this.dodgeTimer--;
+        if (this.dodgeCooldown > 0) this.dodgeCooldown--;
+        if (this.vaultTimer > 0) this.vaultTimer--;
+        if (this.jumpCooldown > 0) this.jumpCooldown--;
+        if (this.breakFallReadyCount > 0) this.breakFallReadyCount--;
+        if (this.wallJumpTimer > 0) this.wallJumpTimer--;
+        if (this.swimPushTimer > 0) this.swimPushTimer--;
+        if (this.wallKickCooldown > 0) this.wallKickCooldown--;
         remoteDetectWall(player);
     }
 

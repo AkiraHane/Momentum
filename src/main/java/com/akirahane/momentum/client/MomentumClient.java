@@ -5,7 +5,6 @@ import com.akirahane.momentum.client.animation.MomentumAnimationController;
 import com.akirahane.momentum.client.config.ClientConfig;
 import com.akirahane.momentum.client.debug.MovementDebugEntry;
 import com.akirahane.momentum.client.hud.HintManager;
-import com.akirahane.momentum.client.init.InitSounds;
 import com.akirahane.momentum.init.InitItems;
 import com.akirahane.momentum.core.state.MovementStateMachine;
 import com.akirahane.momentum.core.state.BaseState;
@@ -62,7 +61,6 @@ public class MomentumClient {
         // 注册 mod 的 ModConfigSpec，以便 FML 可以创建和加载配置文件
         modContainer.registerConfig(ModConfig.Type.CLIENT, ClientConfig.SPEC);
         modContainer.registerExtensionPoint(IConfigScreenFactory.class, ConfigurationScreen::new);
-        InitSounds.SOUND_EVENTS.register(modEventBus);
     }
     @SubscribeEvent
     public static void onConfigLoad(ModConfigEvent.Loading event) {

@@ -155,7 +155,7 @@ public class DodgeState extends BaseState {
 
     @Override
     public void clientTick(Player player, PlayerMovementContext context) {
-        if (context.getDodgeTimer() > 6) {
+        if (context.getDodgeTimer() < 6) {
             context.setMomentumRollIntensity(0F);
         }
         super.clientTick(player, context);
@@ -164,7 +164,7 @@ public class DodgeState extends BaseState {
     @Override
     public void clientTickRemote(Player player, PlayerMovementContext context) {
         super.clientTickRemote(player, context);
-        if (context.getDodgeTimer() > 6 && !player.onGround() && !player.isSwimming()) {
+        if (context.getDodgeTimer() == 6 && !player.onGround() && !player.isSwimming()) {
             float yaw = player.getYRot();
             Vec3 lookVec = new Vec3(
                     -Math.sin(Math.toRadians(yaw)),
@@ -183,6 +183,7 @@ public class DodgeState extends BaseState {
                         context);
             }
             context.setLeftFootJump(!context.isLeftFootJump());
+            LOGGER.info("context.getCurrentAnimationName(){}", context.getCurrentAnimationName());
         }
     }
 
