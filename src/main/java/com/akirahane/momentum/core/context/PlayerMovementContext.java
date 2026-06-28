@@ -884,11 +884,6 @@ public class PlayerMovementContext {
     // 非客户端本地玩家墙面数据判断
     public void remoteDetectWall(Player player) {
         // 有网络同步的墙面数据 → 直接使用, 跳过 collectWallCandidates 扫描
-        if (transitionWallData >= 0) {
-            applySyncedWallData(player);
-            return;
-        }
-
         // 没有同步数据 → 扫描墙面 (用速度方向替代键盘输入)
         AABB box = player.getBoundingBox();
         Level level = player.level();
@@ -916,6 +911,10 @@ public class PlayerMovementContext {
         }
 
         if (best == null) {
+            if (transitionWallData >= 0) {
+                applySyncedWallData(player);
+                return;
+            }
             this.setLookWallAngle(360F);
             this.setWallNormal(Vec3.ZERO);
             this.setInputWallAngle(360F);
