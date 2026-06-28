@@ -190,7 +190,7 @@ public class SwimDashState extends BaseState {
         if (!player.isInWater()) {
             float animSec = context.getController().getAnimationTick() / 20.0f;
             float speed = PlayerMovementContext.computeAnimSpeedByAngleTracking(
-                    player.getDeltaMovement(), context.getOldDeltaMovement(),
+                    context.getSpeed(), context.getOldSpeed(),
                     animSec, 1.0f,
                     0, -90f, 2.0f, 1.0f);
 //            float speed = PlayerMovementContext.computeAnimSpeedFromVelocityAngle(

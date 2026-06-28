@@ -470,11 +470,11 @@ public class PlayerMovementContext {
             float angleTop, float angleBottom, float kP, float kF) {
 
         float h = (float) velocity.horizontalDistance();
-        float thetaDeg = (float) Math.toDegrees(Math.atan2(velocity.y, Math.max(h, 0.001)));
+        float thetaDeg = (float) Math.toDegrees(Math.atan2(velocity.y * 0.2F, Math.max(h, 0.001)));
         float thetaClamped = Mth.clamp(thetaDeg, angleBottom, angleTop);
 
         float hPrev = (float) prevVelocity.horizontalDistance();
-        float thetaPrevDeg = (float) Math.toDegrees(Math.atan2(prevVelocity.y, Math.max(hPrev, 0.001)));
+        float thetaPrevDeg = (float) Math.toDegrees(Math.atan2(prevVelocity.y * 0.2F, Math.max(hPrev, 0.001)));
         float thetaPrevClamped = Mth.clamp(thetaPrevDeg, angleBottom, angleTop);
 
         float range = angleTop - angleBottom;
