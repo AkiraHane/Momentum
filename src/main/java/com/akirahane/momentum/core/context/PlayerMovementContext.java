@@ -864,7 +864,7 @@ public class PlayerMovementContext {
     public void remoteDetectWall(Player player) {
         AABB box = player.getBoundingBox();
         Level level = player.level();
-        double reach = 0.2;
+        double reach = 0.5;
 
         float yawRad = (float) Math.toRadians(player.getYRot());
         Vec3 lookVec = new Vec3(-Math.sin(yawRad), 0, Math.cos(yawRad));
