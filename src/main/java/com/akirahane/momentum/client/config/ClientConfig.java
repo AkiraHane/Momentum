@@ -9,10 +9,18 @@ public class ClientConfig {
             .comment("是否开启摄像头偏移")
             .define("enableCameraOffset", true);
 
-    // 是否使用双击疾跑闪避(防止误操作)
-    public static final ModConfigSpec.BooleanValue ENABLE_DOUBLE_CLICK_DODGE = BUILDER
-            .comment("是否使用双击疾跑闪避(防止误操作)")
-            .define("enableDoubleClickDodge", true);
+    // 闪避触发方式0: 按住Ctrl+双击方向键 → 沿方向冲刺 (默认开启)
+    public static final ModConfigSpec.BooleanValue ENABLE_DODGE_DIR_DOUBLE = BUILDER
+            .comment("闪避: 按住Ctrl+双击方向键 → 沿方向冲刺")
+            .define("enableDodgeDirDouble", true);
+    // 闪避触发方式1: 按住方向键+按下Ctrl → 沿速度方向冲刺
+    public static final ModConfigSpec.BooleanValue ENABLE_DODGE_SPRINT_CLICK = BUILDER
+            .comment("闪避: 按住方向键+按下Ctrl → 沿速度方向冲刺")
+            .define("enableDodgeSprintClick", false);
+    // 闪避触发方式2: 按住方向键+双击Ctrl → 沿速度方向冲刺
+    public static final ModConfigSpec.BooleanValue ENABLE_DODGE_SPRINT_DOUBLE = BUILDER
+            .comment("闪避: 按住方向键+双击Ctrl → 沿速度方向冲刺")
+            .define("enableDodgeSprintDouble", false);
     // 按键提示
     static {
         BUILDER.push("key_hints");

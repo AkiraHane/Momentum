@@ -22,23 +22,26 @@ public class WallHangHints {
     public static final HintManager.KeyHint SLIDE =
             HintManager.KeyHint.single(LOWER_CENTER.get(), "state.momentum.slide");
 
-    public static final HintManager.KeyHint DODGE_DOUBLE =
+    // 闪避方案0: 按住Ctrl + 双击方向键 (沿方向)
+    public static final HintManager.KeyHint DODGE_DIR_DOUBLE =
             HintManager.KeyHint.builder("state.momentum.dodge")
+                    .translatable("hint.momentum.double_click")
                     .key(OPTIONS.keyUp)
                     .key(OPTIONS.keyLeft)
                     .key(OPTIONS.keyDown)
-                    .key(OPTIONS.keyRight).plus()
-                    .translatable("hint.momentum.double_click")
+                    .key(OPTIONS.keyRight)
+                    .build();
+
+    // 闪避方案1: 按住方向键 + 按下Ctrl (沿速度方向)
+    public static final HintManager.KeyHint DODGE_SPRINT_CLICK =
+            HintManager.KeyHint.builder("state.momentum.dodge")
                     .key(OPTIONS.keySprint)
                     .build();
 
-    public static final HintManager.KeyHint DODGE =
+    // 闪避方案2: 按住方向键 + 双击Ctrl (沿速度方向)
+    public static final HintManager.KeyHint DODGE_SPRINT_DOUBLE =
             HintManager.KeyHint.builder("state.momentum.dodge")
-                    .key(OPTIONS.keyUp)
-                    .key(OPTIONS.keyLeft)
-                    .key(OPTIONS.keyDown)
-                    .key(OPTIONS.keyRight).plus()
-                    .translatable("hint.momentum.click")
+                    .translatable("hint.momentum.double_click")
                     .key(OPTIONS.keySprint)
                     .build();
 

@@ -50,23 +50,32 @@ public class DodgeState extends BaseState {
         if (DODGE_COOLDOWN.get() * DODGE_STORAGE.get() - context.getDodgeCooldown() <= DODGE_COOLDOWN.get()) {
             return false;
         }
-        if (ClientConfig.ENABLE_DOUBLE_CLICK_DODGE.getAsBoolean()) {
-            HintManager.add(WallHangHints.DODGE_DOUBLE);
-            return context.isDoubleClickSprint() &&
-                    (Minecraft.getInstance().options.keyUp.isDown() ||
-                            Minecraft.getInstance().options.keyLeft.isDown() ||
-                            Minecraft.getInstance().options.keyRight.isDown() ||
-                            Minecraft.getInstance().options.keyDown.isDown()
-                    );
-        } else {
-            HintManager.add(WallHangHints.DODGE);
-            return context.getInputBuffer()[context.getInputBufferIndex()].contains(SPRINT) &&
-                    (Minecraft.getInstance().options.keyUp.isDown() ||
-                            Minecraft.getInstance().options.keyLeft.isDown() ||
-                            Minecraft.getInstance().options.keyRight.isDown() ||
-                            Minecraft.getInstance().options.keyDown.isDown()
-                    );
+
+        boolean sprintDown = Minecraft.getInstance().options.keySprint.isDown();
+        boolean moveDown = Minecraft.getInstance().options.keyUp.isDown() ||
+                Minecraft.getInstance().options.keyLeft.isDown() ||
+                Minecraft.getInstance().options.keyRight.isDown() ||
+                Minecraft.getInstance().options.keyDown.isDown();
+
+        // 方案0: 按住Ctrl + 双击方向键 → 沿方向冲刺 (默认开启)
+        if (ClientConfig.ENABLE_DODGE_DIR_DOUBLE.getAsBoolean() && sprintDown) {
+            HintManager.add(WallHangHints.DODGE_DIR_DOUBLE);
+            return context.isDoubleClickUp() || context.isDoubleClickDown() || context.isDoubleClickLeft() ||
+                    context.isDoubleClickRight();
         }
+
+        // 方案1&2: 按住方向键 + Ctrl操作 → 沿速度方向冲刺
+        if (moveDown) {
+            if (ClientConfig.ENABLE_DODGE_SPRINT_DOUBLE.getAsBoolean()) {
+                HintManager.add(WallHangHints.DODGE_SPRINT_DOUBLE);
+                return context.isDoubleClickSprint();
+            } else if (ClientConfig.ENABLE_DODGE_SPRINT_CLICK.getAsBoolean()) {
+                HintManager.add(WallHangHints.DODGE_SPRINT_CLICK);
+                return context.getInputBuffer()[context.getInputBufferIndex()].contains(SPRINT);
+            }
+        }
+
+        return false;
     }
 
     @Override
