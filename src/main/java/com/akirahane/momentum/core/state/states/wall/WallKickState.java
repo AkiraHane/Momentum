@@ -170,6 +170,28 @@ public class WallKickState extends BaseState {
     }
 
     @Override
+    public void clientTickRemote(Player player, PlayerMovementContext context) {
+        super.clientTickRemote(player, context);
+        float yaw = player.getYRot();
+        Vec3 lookVec = new Vec3(
+                -Math.sin(Math.toRadians(yaw)),
+                0,
+                Math.cos(Math.toRadians(yaw))
+        ).normalize();
+        Vec3 motionDirection = context.getSpeed().normalize();
+        boolean isBackwardJump = (lookVec.x * motionDirection.x + lookVec.z * motionDirection.z) < 0;
+        if (context.isLeftFootJump()) {
+            playStateAnimation(player,
+                    isBackwardJump ? BaseState.BACK_JUMP_LEFT : BaseState.JUMP_LEFT,
+                    context);
+        } else {
+            playStateAnimation(player,
+                    isBackwardJump ? BaseState.BACK_JUMP_RIGHT : BaseState.JUMP_RIGHT,
+                    context);
+        }
+    }
+
+    @Override
     public void onExit(Player player, PlayerMovementContext context) {
         super.onExit(player, context);
         context.setWallKickCooldown(ServerConfig.WALL_KICK_ACCELERATION_COOLDOWN.getAsInt());

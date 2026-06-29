@@ -56,26 +56,31 @@ public class DodgeState extends BaseState {
                 Minecraft.getInstance().options.keyLeft.isDown() ||
                 Minecraft.getInstance().options.keyRight.isDown() ||
                 Minecraft.getInstance().options.keyDown.isDown();
+        boolean isTrue = false;
 
         // 方案0: 按住Ctrl + 双击方向键 → 沿方向冲刺 (默认开启)
         if (ClientConfig.ENABLE_DODGE_DIR_DOUBLE.getAsBoolean() && sprintDown) {
             HintManager.add(WallHangHints.DODGE_DIR_DOUBLE);
-            return context.isDoubleClickUp() || context.isDoubleClickDown() || context.isDoubleClickLeft() ||
+            isTrue = context.isDoubleClickUp() || context.isDoubleClickDown() || context.isDoubleClickLeft() ||
                     context.isDoubleClickRight();
+        }
+        if (isTrue) {
+            return true;
         }
 
         // 方案1&2: 按住方向键 + Ctrl操作 → 沿速度方向冲刺
         if (moveDown) {
             if (ClientConfig.ENABLE_DODGE_SPRINT_DOUBLE.getAsBoolean()) {
                 HintManager.add(WallHangHints.DODGE_SPRINT_DOUBLE);
-                return context.isDoubleClickSprint();
-            } else if (ClientConfig.ENABLE_DODGE_SPRINT_CLICK.getAsBoolean()) {
+                isTrue = context.isDoubleClickSprint();
+            }
+            if (ClientConfig.ENABLE_DODGE_SPRINT_CLICK.getAsBoolean()) {
                 HintManager.add(WallHangHints.DODGE_SPRINT_CLICK);
-                return context.getInputBuffer()[context.getInputBufferIndex()].contains(SPRINT);
+                isTrue = context.getInputBuffer()[context.getInputBufferIndex()].contains(SPRINT);
             }
         }
 
-        return false;
+        return isTrue;
     }
 
     @Override
@@ -104,10 +109,21 @@ public class DodgeState extends BaseState {
             // 服务端或远程客户端: 从同步数据恢复方向
             int dir = context.getTransitionExtraData();
             switch (dir) {
-                case 1: yRot += 180; animationName = DODGE_DOWN; break;
-                case 2: yRot -= 90; animationName = DODGE_LEFT; break;
-                case 3: yRot += 90; animationName = DODGE_RIGHT; break;
-                default: animationName = DODGE_UP; break;
+                case 1:
+                    yRot += 180;
+                    animationName = DODGE_DOWN;
+                    break;
+                case 2:
+                    yRot -= 90;
+                    animationName = DODGE_LEFT;
+                    break;
+                case 3:
+                    yRot += 90;
+                    animationName = DODGE_RIGHT;
+                    break;
+                default:
+                    animationName = DODGE_UP;
+                    break;
             }
         }
         Vec3 direction;

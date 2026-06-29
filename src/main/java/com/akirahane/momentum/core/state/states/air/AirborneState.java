@@ -30,6 +30,9 @@ public class AirborneState extends BaseState {
         ) {
             return;
         }
+        if (SlideState.SLIDE.equals(context.getCurrentAnimationName()) && context.getSpeed().y < 0) {
+            return;
+        }
         if (context.getSpeed().horizontalDistance() > 0.1F) {
             float yaw = player.getYRot();
             Vec3 lookVec = new Vec3(
@@ -52,9 +55,6 @@ public class AirborneState extends BaseState {
             return;
         }
         // player.fallDistance < player.getAttributeValue(Attributes.SAFE_FALL_DISTANCE) * 2
-        if (SlideState.SLIDE.equals(context.getCurrentAnimationName())) {
-            return;
-        }
         super.onEnter(player, context);
 
     }
@@ -69,6 +69,27 @@ public class AirborneState extends BaseState {
         }
         if (player.isInWater()) {
             playStateAnimation(player, IDLE, context);
+        }
+        if (SlideState.SLIDE.equals(context.getCurrentAnimationName()) && context.getSpeed().y > 0) {
+            float yaw = player.getYRot();
+            Vec3 lookVec = new Vec3(
+                    -Math.sin(Math.toRadians(yaw)),
+                    0,
+                    Math.cos(Math.toRadians(yaw))
+            ).normalize();
+            Vec3 motionDirection = context.getSpeed().normalize();
+            boolean isBackwardJump = (lookVec.x * motionDirection.x + lookVec.z * motionDirection.z) < 0;
+            if (context.isLeftFootJump()) {
+                playStateAnimation(player,
+                        isBackwardJump ? BaseState.BACK_JUMP_LEFT : BaseState.JUMP_LEFT,
+                        context);
+            } else {
+                playStateAnimation(player,
+                        isBackwardJump ? BaseState.BACK_JUMP_RIGHT : BaseState.JUMP_RIGHT,
+                        context);
+            }
+            context.setLeftFootJump(!context.isLeftFootJump());
+            return;
         }
         if (BaseState.JUMP_RIGHT.equals(context.getCurrentAnimationName()) ||
                 BaseState.JUMP_LEFT.equals(context.getCurrentAnimationName()) ||
