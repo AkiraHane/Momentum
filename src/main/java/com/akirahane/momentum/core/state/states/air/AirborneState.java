@@ -5,6 +5,7 @@ import com.akirahane.momentum.core.effect.MomentumEffectType;
 import com.akirahane.momentum.core.state.StateType;
 import com.akirahane.momentum.core.state.BaseState;
 import com.akirahane.momentum.core.state.states.ground.SlideState;
+import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
 
@@ -66,7 +67,14 @@ public class AirborneState extends BaseState {
         } else if (context.getSpeed().y < -1.0F) {
             float speed = (float) (Math.clamp(-context.getSpeed().y / 2.5, 0.0f, 1.5f) + 0.5F);
             playStateAnimation(player, FALL, context, 20, speed);
-        } else if (context.getSpeed().y > 0 && context.getSpeed().horizontalDistance() > 0.1F) {
+        } else if (context.getSpeed().y > 0 && context.getSpeed().horizontalDistance() > 0.1F &&
+                !(
+                        BaseState.JUMP_RIGHT.equals(context.getCurrentAnimationName()) ||
+                        BaseState.JUMP_LEFT.equals(context.getCurrentAnimationName()) ||
+                        BaseState.BACK_JUMP_RIGHT.equals(context.getCurrentAnimationName()) ||
+                        BaseState.BACK_JUMP_LEFT.equals(context.getCurrentAnimationName())
+                )
+        ) {
             float yaw = player.getYRot();
             Vec3 lookVec = new Vec3(
                     -Math.sin(Math.toRadians(yaw)),
@@ -86,7 +94,7 @@ public class AirborneState extends BaseState {
             }
             context.setLeftFootJump(!context.isLeftFootJump());
             return;
-        } else {
+        } else if (FALL.equals(context.getCurrentAnimationName())){
             playStateAnimation(player, IDLE, context);
         }
         if (BaseState.JUMP_RIGHT.equals(context.getCurrentAnimationName()) ||
