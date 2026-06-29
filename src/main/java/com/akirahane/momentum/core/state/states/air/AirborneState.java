@@ -61,16 +61,12 @@ public class AirborneState extends BaseState {
 
     @Override
     public void clientTickRemote(Player player, PlayerMovementContext context) {
-        if (context.getSpeed().y < -1.0F) {
-            float speed = (float) (Math.clamp(-context.getSpeed().y / 2.5, 0.0f, 1.5f) + 0.5F);
-            playStateAnimation(player, FALL, context, 20, speed);
-        } else if (FALL.equals(context.getCurrentAnimationName())) {
-            playStateAnimation(player, IDLE, context);
-        }
         if (player.isInWater()) {
             playStateAnimation(player, IDLE, context);
-        }
-        if (SlideState.SLIDE.equals(context.getCurrentAnimationName()) && context.getSpeed().y > 0) {
+        } else if (context.getSpeed().y < -1.0F) {
+            float speed = (float) (Math.clamp(-context.getSpeed().y / 2.5, 0.0f, 1.5f) + 0.5F);
+            playStateAnimation(player, FALL, context, 20, speed);
+        } else if (context.getSpeed().y > 0 && context.getSpeed().horizontalDistance() > 0.1F) {
             float yaw = player.getYRot();
             Vec3 lookVec = new Vec3(
                     -Math.sin(Math.toRadians(yaw)),
@@ -90,6 +86,8 @@ public class AirborneState extends BaseState {
             }
             context.setLeftFootJump(!context.isLeftFootJump());
             return;
+        } else {
+            playStateAnimation(player, IDLE, context);
         }
         if (BaseState.JUMP_RIGHT.equals(context.getCurrentAnimationName()) ||
                 BaseState.JUMP_LEFT.equals(context.getCurrentAnimationName()) ||
