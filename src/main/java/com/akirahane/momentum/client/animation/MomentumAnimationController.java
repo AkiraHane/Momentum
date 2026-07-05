@@ -14,7 +14,10 @@ public class MomentumAnimationController extends PlayerAnimationController {
         super(avatar, animationHandler);
         speedModifier = new SpeedModifier(1.0f);
         // ArmConditionModifier 放链首: 瞄准/攻击/使用物品时跳过手臂, 保留原版姿势
-        addModifierBefore(new ArmConditionModifier((Player) avatar));
+        // 仅对 Player 生效, 防止 ClientMannequin 等非 Player Avatar 导致 ClassCastException
+        if (avatar instanceof Player player) {
+            addModifierBefore(new ArmConditionModifier(player));
+        }
         addModifierLast(speedModifier);
     }
 

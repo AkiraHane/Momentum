@@ -116,9 +116,14 @@ public class MomentumClient {
         event.enqueueWork(() -> {
             PlayerAnimationFactory.ANIMATION_DATA_FACTORY.registerFactory(
                     MOVEMENT_ANIM, 1500, // 1500 优先级，gameplay 动画
-                    player -> new MomentumAnimationController(player,
-                            (controller, state, animSetter) -> PlayState.STOP
-                    )
+                    avatar -> {
+                        if (avatar instanceof Player player) {
+                            return new MomentumAnimationController(player,
+                                    (controller, state, animSetter) -> PlayState.STOP
+                            );
+                        }
+                        return null; // 跳过非 Player 的 Avatar (如 ClientMannequin)
+                    }
             );
         });
     }
