@@ -25,6 +25,7 @@ import org.apache.commons.lang3.ObjectUtils;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 
+import static com.akirahane.momentum.client.animation.MomentumAnimationController.MAX_SAFE_SPEED;
 import static com.akirahane.momentum.config.ServerConfig.*;
 
 public abstract class BaseState {
@@ -93,7 +94,7 @@ public abstract class BaseState {
         if (DodgeState.canDodge(player, context)) {
             return StateType.DODGE.getState();
         }
-        if (SwimDashState.canSwimDash(player, context)){
+        if (SwimDashState.canSwimDash(player, context)) {
             return StateType.SWIM_DASH.getState();
         }
         if (SlideState.canSlide(player, context)) {
@@ -157,12 +158,19 @@ public abstract class BaseState {
         if (!player.level().isClientSide()) {
             return;
         }
-        context.getController().setAnimationSpeed(speed);
-        if (ObjectUtils.isEmpty(animName) || animName.equals(context.getCurrentAnimationName())) {
-            return;
-        }
         if (context.getController() == null) {
             LOGGER.warn("播放动画失败, 没有找到玩家: {} 的动画控制器或控制器死了(什?)", player.getName().getString());
+            return;
+        }
+        // 防护 PlayerAnimationLib SpeedModifier 死循环: 拒绝非法 speed 值
+        if (!Float.isFinite(speed) || speed <= 0f) {
+            speed = 1.0f;
+        }
+        if (speed > MAX_SAFE_SPEED) {
+            speed = MAX_SAFE_SPEED;
+        }
+        context.getController().setAnimationSpeed(speed);
+        if (ObjectUtils.isEmpty(animName) || animName.equals(context.getCurrentAnimationName())) {
             return;
         }
         context.getController().removeModifierIf(m -> m instanceof AbstractFadeModifier);

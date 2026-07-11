@@ -37,6 +37,7 @@ import team.unnamed.mocha.runtime.value.Value;
 import java.util.*;
 import java.util.function.Function;
 
+import static com.akirahane.momentum.client.animation.MomentumAnimationController.MAX_SAFE_SPEED;
 import static com.akirahane.momentum.core.MomentumUtils.applyBoosterAttributes;
 import static com.akirahane.momentum.core.effect.MomentumEffect.EffectType.*;
 
@@ -1038,4 +1039,10 @@ public class PlayerMovementContext {
         this.pendingEffectPool.get(type).remove(effect);
     }
 
+    public void setJumpAnimationSpeed(float jumpAnimationSpeed) {
+        if (jumpAnimationSpeed > MAX_SAFE_SPEED){
+            jumpAnimationSpeed = MAX_SAFE_SPEED;
+        }
+        this.jumpAnimationSpeed = jumpAnimationSpeed;
+    }
 }
