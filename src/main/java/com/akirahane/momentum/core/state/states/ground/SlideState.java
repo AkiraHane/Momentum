@@ -133,7 +133,6 @@ public class SlideState extends BaseState {
         context.setNoMoveInput(false);
         context.removeEffect(MomentumEffectType.FRICTION, context.SLIDE_FRICTION);
         context.removeEffect(MomentumEffectType.BLOCK_FRICTION, context.SLIDE_BLOCK_FRICTION);
-        player.setSprinting(false);
         context.setSlopeUnitVector(Vec3.ZERO);
         context.setSlideCooldown(ServerConfig.SLIDE_ACCELERATION_COOLDOWN.get());
         context.setMomentumRollIntensity(0F);  // 退出时关闭
