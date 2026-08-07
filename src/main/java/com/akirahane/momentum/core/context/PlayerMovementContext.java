@@ -333,6 +333,15 @@ public class PlayerMovementContext {
                 }
                 return 0F;
             });
+            variable.setFunction("dolphin_tilt", () -> {
+                float pt = mc.getDeltaTracker().getGameTimeDeltaPartialTick(true);
+                Vec3 speed = getSpeed();
+                Vec3 old = oldSpeed;
+                float h = Mth.lerp(pt, (float) old.horizontalDistance(), (float) speed.horizontalDistance());
+                float vy = Mth.lerp(pt, (float) old.y, (float) speed.y);
+                float thetaDeg = (float) Math.toDegrees(Math.atan2(vy, Math.max(h, 0.001)));
+                return -thetaDeg;
+            });
         } else {
             LOGGER.warn("Failed to bind variable.get_movement_speed to Mocha");
         }

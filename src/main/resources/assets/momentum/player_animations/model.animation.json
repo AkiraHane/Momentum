@@ -3194,17 +3194,10 @@
 			}
 		},
 		"dolphin_jump": {
-			"loop": "hold_on_last_frame",
-			"animation_length": 1,
+			"loop": true,
 			"bones": {
 				"body": {
-					"rotation": {
-						"1.0": {
-							"pre": [90, 0, 0],
-							"post": [90, 0, 0],
-							"lerp_mode": "catmullrom"
-						}
-					}
+					"rotation": ["variable.dolphin_tilt()", 0, 0]
 				}
 			}
 		}
