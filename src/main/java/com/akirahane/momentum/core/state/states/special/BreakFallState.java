@@ -70,66 +70,10 @@ public class BreakFallState extends BaseState {
     }
 
     @Override
-    public BaseState evaluate(Player player, PlayerMovementContext context) {
-        HintManager.clear();
-        HintManager.add(WallHangHints.ORIGINAL_STATE);
-        HintManager.add(WallHangHints.TOGGLE_HINT);
-        if (canOriginal(player, context)) {
-            return StateType.ORIGINAL.getState();
-        }
-        if (DodgeState.canDodge(player, context)) {
-            return StateType.DODGE.getState();
-        }
-        if (context.getBreakFallTimer() > 0) {
-            return StateType.BREAK_FALL.getState();
-        }
-        if (SwimDashState.canSwimDash(player, context)){
-            return StateType.SWIM_DASH.getState();
-        }
-        if (SlideState.canSlide(player, context)) {
-            return StateType.SLIDE.getState();
-        }
-        if (VaultInState.canVaultIn(player, context)) {
-            return StateType.VAULT_IN.getState();
-        }
-        if (SwimState.canSwim(player, context)) {
-            return StateType.SWIM.getState();
-        }
-        if (ProneState.canProne(player, context)) {
-            return StateType.PRONE.getState();
-        }
-        if (PowerJumpState.canPowerJump(player, context)) {
-            return StateType.POWER_JUMP.getState();
-        }
-        if (WallKickState.canWallKick(player, context)) {
-            return StateType.WALL_KICK.getState();
-        }
-        if (WallRunState.canWallRun(player, context)) {
-            return StateType.WALL_RUN.getState();
-        }
-        if (VaultUpState.canVaultUp(player, context)) {
-            return StateType.VAULT_UP.getState();
-        }
-        if (WallHangState.canWallHang(player, context)) {
-            return StateType.WALL_HANG.getState();
-        }
-        if (WallClimbState.canWallClimb(player, context)) {
-            return StateType.WALL_CLIMB.getState();
-        }
-        if (WallSlideState.canWallSlide(player, context)) {
-            return StateType.WALL_SLIDE.getState();
-        }
-        if (BreakFallReadyState.canBreakFallReady(player, context)) {
-            return StateType.BREAK_FALL_READY.getState();
-        }
-        if (AirborneState.canAirborne(player, context)) {
-            return StateType.AIRBORNE.getState();
-        }
-        if (WalkState.canWalk(player, context)) {
-            return StateType.WALK.getState();
-        }
-        LOGGER.warn("evaluate error! 有状态没有覆盖!");
-        return super.evaluate(player, context);
+    protected java.util.List<Transition> transitionChain() {
+        // 受身持续期自保持，且比默认入口更早（紧跟 Dodge），避免翻滚期间被滑铲/海豚跳打断
+        return moveAfter(DEFAULT_CHAIN, StateType.BREAK_FALL, StateType.DODGE,
+                (p, c) -> c.getBreakFallTimer() > 0);
     }
 
     @Override

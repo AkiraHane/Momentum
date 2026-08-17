@@ -2,6 +2,7 @@ package com.akirahane.momentum.core.context;
 
 import com.akirahane.momentum.client.MomentumClient;
 import com.akirahane.momentum.client.animation.MomentumAnimationController;
+import com.akirahane.momentum.client.config.ClientConfig;
 import com.akirahane.momentum.core.effect.MomentumEffect;
 import com.akirahane.momentum.core.effect.MomentumEffectType;
 import com.akirahane.momentum.compat.curios.CuriosCompat;
@@ -258,8 +259,9 @@ public class PlayerMovementContext {
             0
     );
 
-    public static MomentumEffect AIR_ACCELERATION = new MomentumEffect(
-            new Vec3(0.06, 1, 0.06),
+    // 空中操控强度：水平方向倍率（>1 更强，<1 更弱，1=原版）。进入空中状态时从 config 刷新数值
+    public MomentumEffect AIR_ACCELERATION = new MomentumEffect(
+            new Vec3(1, 1, 1),
             Vec3.ZERO,
             MULTIPLIER,
             -1
@@ -394,11 +396,15 @@ public class PlayerMovementContext {
         double moveSpeed = player.getAttributeValue(Attributes.MOVEMENT_SPEED);
         double jumpStrength = player.getJumpBoostPower();
         this.jumpLimitSpeed = moveSpeed * (1 + jumpStrength) * 3;
-        this.jumpAcceleration = jumpCooldown > 0 ? 0 : moveSpeed * (1 + jumpStrength) * 1.2;
+        // 软上限：跳跃加速随当前水平速度渐近衰减（越接近 jumpLimitSpeed 收益越小），替代硬性 cooldown 开关
+        double baseJumpAccel = moveSpeed * (1 + jumpStrength) * 1.2;
+        double jumpRatio = this.speed.horizontalDistance() / Math.max(this.jumpLimitSpeed, 0.001);
+        this.jumpAcceleration = baseJumpAccel * Math.max(0.0, 1.0 - jumpRatio * jumpRatio);
         this.setWorldInputVec(player);
         this.detectWall(player);
         this.bodyHeadAngleDiff = Mth.wrapDegrees(player.getYHeadRot() - player.yBodyRot);
         this.tickCameraRoll();
+        this.computeTargetFovBonus(player);
         this.tickFovBonus();
         this.tickMomentumRoll(player);
         this.tickArmOffset();
@@ -545,6 +551,15 @@ public class PlayerMovementContext {
         currentFovBonus += diff * 0.15F;
     }
 
+    // 视野拉宽：水平速度越快，FOV 越大（泰坦陨落/Apex 的高速冲刺视效）。仅在本地玩家 clientTick 调用
+    private void computeTargetFovBonus(Player player) {
+        double speedPerSec = getSpeed().horizontalDistance() * 20;
+        double minSpeed = 5.0;   // 低于此速度不触发
+        double maxSpeed = 21.0;  // 达到此速度拉满
+        float speedFactor = (float) Mth.clamp((speedPerSec - minSpeed) / (maxSpeed - minSpeed), 0.0, 1.0);
+        this.targetFovBonus = speedFactor * (float) ClientConfig.FOV_BONUS_MAX.get().doubleValue();
+    }
+
     public void tickMomentumRoll(Player player) {
         prevMomentumRoll = currentMomentumRoll;
 
@@ -655,6 +670,12 @@ public class PlayerMovementContext {
             }
         };
         return false;
+    }
+
+    // 预输入：当前 tick 或最近 offset tick 内是否按下了 key（用于墙踢/翻越的宽容缓冲，仍为边沿触发、不会因长按误触）
+    public boolean wasKeyPressedWithin(int key, int offset) {
+        if (inputBuffer[inputBufferIndex].contains(key)) return true;
+        return wasKeyPressedRecently(key, offset);
     }
 
     // 喷气助推器判断

@@ -38,65 +38,12 @@ public class ProneState extends BaseState {
         return LOWER_CENTER.get().isDown();
     }
 
-    // 状态转换检查
-    public BaseState evaluate(Player player, PlayerMovementContext context) {
-        HintManager.clear();
-        HintManager.add(WallHangHints.ORIGINAL_STATE);
-        HintManager.add(WallHangHints.TOGGLE_HINT);
-        if (OriginalState.canOriginal(player, context)) {
-            return StateType.ORIGINAL.getState();
-        }
-        if (DodgeState.canDodge(player, context)) {
-            return StateType.DODGE.getState();
-        }
-        if (SwimDashState.canSwimDash(player, context)){
-            return StateType.SWIM_DASH.getState();
-        }
-        // 匍匐无法进入滑铲
-        if (BreakFallState.canBreakFall(player, context)) {
-            return StateType.BREAK_FALL.getState();
-        }
-        if (VaultInState.canVaultIn(player, context)) {
-            return StateType.VAULT_IN.getState();
-        }
-        if (SwimState.canSwim(player, context)) {
-            return StateType.SWIM.getState();
-        }
-        if (ProneState.canProneHold(player, context)) {
-            return StateType.PRONE.getState();
-        }
-        if (PowerJumpState.canPowerJump(player, context)) {
-            return StateType.POWER_JUMP.getState();
-        }
-        if (WallKickState.canWallKick(player, context)) {
-            return StateType.WALL_KICK.getState();
-        }
-        if (WallRunState.canWallRun(player, context)) {
-            return StateType.WALL_RUN.getState();
-        }
-        if (VaultUpState.canVaultUp(player, context)) {
-            return StateType.VAULT_UP.getState();
-        }
-        if (WallHangState.canWallHang(player, context)) {
-            return StateType.WALL_HANG.getState();
-        }
-        if (WallClimbState.canWallClimb(player, context)) {
-            return StateType.WALL_CLIMB.getState();
-        }
-        if (WallSlideState.canWallSlide(player, context)) {
-            return StateType.WALL_SLIDE.getState();
-        }
-        if (BreakFallReadyState.canBreakFallReady(player, context)) {
-            return StateType.BREAK_FALL_READY.getState();
-        }
-        if (AirborneState.canAirborne(player, context)) {
-            return StateType.AIRBORNE.getState();
-        }
-        if (WalkState.canWalk(player, context)) {
-            return StateType.WALK.getState();
-        }
-        LOGGER.warn("ProneState evaluate error! 有状态没有覆盖!");
-        return super.evaluate(player, context);
+    @Override
+    protected java.util.List<Transition> transitionChain() {
+        // 匍匐无法进入滑铲；进入检查换成更宽松的自保持检查
+        return withPredicate(
+                without(DEFAULT_CHAIN, StateType.SLIDE),
+                StateType.PRONE, ProneState::canProneHold);
     }
 
     @Override

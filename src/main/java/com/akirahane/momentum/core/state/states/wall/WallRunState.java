@@ -4,6 +4,7 @@ import com.akirahane.momentum.client.config.ClientConfig;
 import com.akirahane.momentum.client.hud.HintManager;
 import com.akirahane.momentum.client.hud.WallHangHints;
 import com.akirahane.momentum.config.ServerConfig;
+import com.akirahane.momentum.core.MomentumUtils;
 import com.akirahane.momentum.core.context.PlayerMovementContext;
 import com.akirahane.momentum.core.state.StateType;
 import com.akirahane.momentum.core.state.BaseState;
@@ -104,67 +105,12 @@ public class WallRunState extends BaseState {
         return Minecraft.getInstance().options.keyUp.isDown();
     }
 
-    // 状态转换检查
-    public BaseState evaluate(Player player, PlayerMovementContext context) {
-        HintManager.clear();
-        HintManager.add(WallHangHints.ORIGINAL_STATE);
-        HintManager.add(WallHangHints.TOGGLE_HINT);
-        if (OriginalState.canOriginal(player, context)) {
-            return StateType.ORIGINAL.getState();
-        }
-        if (DodgeState.canDodge(player, context)) {
-            return StateType.DODGE.getState();
-        }
-        if (SwimDashState.canSwimDash(player, context)){
-            return StateType.SWIM_DASH.getState();
-        }
-        if (SlideState.canSlide(player, context)) {
-            return StateType.SLIDE.getState();
-        }
-        if (BreakFallState.canBreakFall(player, context)) {
-            return StateType.BREAK_FALL.getState();
-        }
-        if (VaultInState.canVaultIn(player, context)) {
-            return StateType.VAULT_IN.getState();
-        }
-        if (SwimState.canSwim(player, context)) {
-            return StateType.SWIM.getState();
-        }
-        if (ProneState.canProne(player, context)) {
-            return StateType.PRONE.getState();
-        }
-        if (PowerJumpState.canPowerJump(player, context)) {
-            return StateType.POWER_JUMP.getState();
-        }
-        if (WallKickState.canWallKickRun(player, context)) {
-            return StateType.WALL_KICK.getState();
-        }
-        if (WallRunState.canWallRunHold(player, context)) {
-            return StateType.WALL_RUN.getState();
-        }
-        if (VaultUpState.canVaultUp(player, context)) {
-            return StateType.VAULT_UP.getState();
-        }
-        if (WallHangState.canWallHang(player, context)) {
-            return StateType.WALL_HANG.getState();
-        }
-        if (WallClimbState.canWallClimb(player, context)) {
-            return StateType.WALL_CLIMB.getState();
-        }
-        if (WallSlideState.canWallSlide(player, context)) {
-            return StateType.WALL_SLIDE.getState();
-        }
-        if (BreakFallReadyState.canBreakFallReady(player, context)) {
-            return StateType.BREAK_FALL_READY.getState();
-        }
-        if (AirborneState.canAirborne(player, context)) {
-            return StateType.AIRBORNE.getState();
-        }
-        if (WalkState.canWalk(player, context)) {
-            return StateType.WALK.getState();
-        }
-        LOGGER.warn("WallRunState evaluate error! 有状态没有覆盖!");
-        return super.evaluate(player, context);
+    @Override
+    protected java.util.List<Transition> transitionChain() {
+        // 墙跑中蹬墙跳更宽松（canWallKickRun）；自身进入检查换成保持检查
+        return withPredicate(
+                withPredicate(DEFAULT_CHAIN, StateType.WALL_KICK, WallKickState::canWallKickRun),
+                StateType.WALL_RUN, WallRunState::canWallRunHold);
     }
 
     @Override
@@ -210,11 +156,11 @@ public class WallRunState extends BaseState {
                 context.setGravityModify(-1F);
                 player.setDeltaMovement(
                         tangent.x *
-                                Math.max(player.getDeltaMovement().horizontalDistance(), context.getJumpLimitSpeed()) +
+                                smoothWallRunSpeed(player, context) +
                                 wallNormal.x * pushStrength,
                         0,
                         tangent.z *
-                                Math.max(player.getDeltaMovement().horizontalDistance(), context.getJumpLimitSpeed()) +
+                                smoothWallRunSpeed(player, context) +
                                 wallNormal.z * pushStrength
                 );
                 player.fallDistance = 0;
@@ -227,11 +173,11 @@ public class WallRunState extends BaseState {
                 context.setGravityModify(-0.6F);
                 player.setDeltaMovement(
                         tangent.x *
-                                Math.max(player.getDeltaMovement().horizontalDistance(), context.getJumpLimitSpeed()) +
+                                smoothWallRunSpeed(player, context) +
                                 wallNormal.x * pushStrength,
                         ySpeed,
                         tangent.z *
-                                Math.max(player.getDeltaMovement().horizontalDistance(), context.getJumpLimitSpeed()) +
+                                smoothWallRunSpeed(player, context) +
                                 wallNormal.z * pushStrength
                 );
             }
@@ -265,9 +211,9 @@ public class WallRunState extends BaseState {
                 }
 
                 player.setDeltaMovement(
-                        tangent.x * Math.max(player.getDeltaMovement().horizontalDistance(), context.getJumpLimitSpeed()) + wallNormal.x * pushStrength,
+                        tangent.x * smoothWallRunSpeed(player, context) + wallNormal.x * pushStrength,
                         0,
-                        tangent.z * Math.max(player.getDeltaMovement().horizontalDistance(), context.getJumpLimitSpeed()) + wallNormal.z * pushStrength
+                        tangent.z * smoothWallRunSpeed(player, context) + wallNormal.z * pushStrength
                 );
             } else if (!context.isHasLedge() && !context.isHasJetBooster() && context.getGravityModify() != -0.6) {
                 instance.addOrReplacePermanentModifier(new AttributeModifier(
@@ -276,9 +222,9 @@ public class WallRunState extends BaseState {
                         AttributeModifier.Operation.ADD_MULTIPLIED_BASE
                 ));
                 player.setDeltaMovement(
-                        tangent.x * Math.max(player.getDeltaMovement().horizontalDistance(), context.getJumpLimitSpeed()) + wallNormal.x * pushStrength,
+                        tangent.x * smoothWallRunSpeed(player, context) + wallNormal.x * pushStrength,
                         player.getDeltaMovement().y,
-                        tangent.z * Math.max(player.getDeltaMovement().horizontalDistance(), context.getJumpLimitSpeed()) + wallNormal.z * pushStrength
+                        tangent.z * smoothWallRunSpeed(player, context) + wallNormal.z * pushStrength
                 );
             }
         }
@@ -310,5 +256,18 @@ public class WallRunState extends BaseState {
     @Override
     public StateType getStateType() {
         return StateType.WALL_RUN;
+    }
+
+    // 墙跑水平速度平滑：低于 jumpLimitSpeed 时向目标速度平滑加速，高于则保持（避免 Math.max 瞬间抬升的顿挫感）
+    private static double smoothWallRunSpeed(Player player, PlayerMovementContext context) {
+        double currentH = player.getDeltaMovement().horizontalDistance();
+        double targetH = context.getJumpLimitSpeed();
+        if (currentH >= targetH) return currentH;
+        return MomentumUtils.approach(
+                (float) currentH,
+                (float) targetH,
+                ServerConfig.WALL_RUN_ACCELERATION.get().floatValue(),
+                0.01f
+        );
     }
 }

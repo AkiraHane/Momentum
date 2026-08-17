@@ -220,9 +220,10 @@ public abstract class LivingEntityMixin extends Entity implements Attackable, Wa
             original.call(self, new Vec3(diff.x, 0, diff.z));
         } else if (currentH < stateMachine.getContext().getJumpLimitSpeed()) {
             original.call(self, acceleration);
+        } else {
+            // 已超速：加零，即不额外增加水平动量（原版疾跑跳 boost 被上方自定义加速取代）
+            original.call(self, Vec3.ZERO);
         }
-        // 已超速则不调用
-        original.call(self, Vec3.ZERO);
     }
 
     @Inject(method = "jumpFromGround", at = @At("HEAD"), cancellable = true)

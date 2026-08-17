@@ -9,6 +9,11 @@ public class ClientConfig {
             .comment("是否开启摄像头偏移")
             .define("enableCameraOffset", true);
 
+    // 机动时速度拉满的视野加宽幅度（度）。速度越高 FOV 越大，用于冲刺/滑铲/闪避等高速动作的视效
+    public static final ModConfigSpec.DoubleValue FOV_BONUS_MAX = BUILDER
+            .comment("机动时速度拉满的视野加宽幅度（度）", "默认值: 10.0")
+            .defineInRange("fovBonusMax", 10.0, 0.0, 30.0);
+
     // 闪避触发方式0: 按住Ctrl+双击方向键 → 沿方向冲刺 (默认开启)
     public static final ModConfigSpec.BooleanValue ENABLE_DODGE_DIR_DOUBLE = BUILDER
             .comment("闪避: 按住Ctrl+双击方向键 → 沿方向冲刺")

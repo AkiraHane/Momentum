@@ -1,5 +1,6 @@
 package com.akirahane.momentum.core.state.states.air;
 
+import com.akirahane.momentum.config.ServerConfig;
 import com.akirahane.momentum.core.context.PlayerMovementContext;
 import com.akirahane.momentum.core.effect.MomentumEffectType;
 import com.akirahane.momentum.core.state.StateType;
@@ -21,6 +22,10 @@ public class AirborneState extends BaseState {
     public void onEnter(Player player, PlayerMovementContext context) {
         context.setLuckyNumber(player);
         context.addPermanentEffect(MomentumEffectType.LIMIT_ACCELERATION_SPEED, AIR_LIMIT_ACCELERATION);
+        // 空中操控：从 config 刷新空中转向强度并接入（>1 更强，<1 更弱，1=原版）
+        double airXz = ServerConfig.AIR_ACCELERATION_XZ.get();
+        context.AIR_ACCELERATION.setValue(new Vec3(airXz, 1, airXz));
+        context.addPermanentEffect(MomentumEffectType.ACCELERATION, context.AIR_ACCELERATION);
         context.setJumpAnimationSpeed(1F);
         context.setMomentumRollIntensity(8F);
         if (BaseState.JUMP_RIGHT.equals(context.getCurrentAnimationName()) ||
@@ -116,6 +121,7 @@ public class AirborneState extends BaseState {
         context.setMomentumRollIntensity(0);
         context.setJumpAnimationSpeed(1F);
         context.removeEffect(MomentumEffectType.LIMIT_ACCELERATION_SPEED, AIR_LIMIT_ACCELERATION);
+        context.removeEffect(MomentumEffectType.ACCELERATION, context.AIR_ACCELERATION);
     }
 
     @Override

@@ -136,4 +136,14 @@ public class MomentumUtils {
         return player.level().noCollision(player, boundingBox);
     }
 
+    /**
+     * 指数趋近：current 以 alpha 比例向 target 收敛（等价于 Mth.lerp(alpha, current, target)）。
+     * 剩余误差 <= epsilon 时直接吸附到 target，避免浮点下永远达不到。
+     * 用于摄像机 roll / FOV / 手臂偏移 / 墙跑速度等"平滑逼近目标值"场景。
+     */
+    public static float approach(float current, float target, float alpha, float epsilon) {
+        float next = current + (target - current) * alpha;
+        return Math.abs(next - target) <= epsilon ? target : next;
+    }
+
 }
