@@ -2,12 +2,10 @@ package com.akirahane.momentum.core;
 
 import com.akirahane.momentum.Momentum;
 import com.akirahane.momentum.core.context.PlayerMovementContext;
-import com.akirahane.momentum.core.effect.MomentumEffectType;
 import com.akirahane.momentum.core.state.MovementStateMachine;
 import com.akirahane.momentum.core.state.StateType;
 import com.mojang.logging.LogUtils;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.EntityDimensions;
 import net.minecraft.world.entity.Pose;

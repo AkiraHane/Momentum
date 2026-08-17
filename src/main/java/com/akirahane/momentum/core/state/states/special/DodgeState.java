@@ -8,15 +8,7 @@ import com.akirahane.momentum.core.context.PlayerMovementContext;
 import com.akirahane.momentum.core.effect.MomentumEffectType;
 import com.akirahane.momentum.core.state.StateType;
 import com.akirahane.momentum.core.state.BaseState;
-import com.akirahane.momentum.core.state.states.air.AirborneState;
-import com.akirahane.momentum.core.state.states.air.BreakFallReadyState;
-import com.akirahane.momentum.core.state.states.ground.PowerJumpState;
-import com.akirahane.momentum.core.state.states.ground.ProneState;
-import com.akirahane.momentum.core.state.states.ground.SlideState;
-import com.akirahane.momentum.core.state.states.ground.WalkState;
 import com.akirahane.momentum.core.state.states.wall.*;
-import com.akirahane.momentum.core.state.states.water.SwimDashState;
-import com.akirahane.momentum.core.state.states.water.SwimState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.entity.Pose;
@@ -28,7 +20,6 @@ import static com.akirahane.momentum.config.ServerConfig.DODGE_COOLDOWN;
 import static com.akirahane.momentum.config.ServerConfig.DODGE_STORAGE;
 import static com.akirahane.momentum.core.MomentumUtils.canPlayerFitAtPose;
 import static com.akirahane.momentum.core.context.PlayerMovementContext.SPRINT;
-import static com.akirahane.momentum.core.state.states.OriginalState.canOriginal;
 
 public class DodgeState extends BaseState {
     // 动画名称
