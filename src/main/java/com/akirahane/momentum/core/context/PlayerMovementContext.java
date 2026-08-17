@@ -551,13 +551,20 @@ public class PlayerMovementContext {
         currentFovBonus += diff * 0.15F;
     }
 
-    // 视野拉宽：水平速度越快，FOV 越大（泰坦陨落/Apex 的高速冲刺视效）。仅在本地玩家 clientTick 调用
+    // 视野拉宽：水平速度越快，FOV 越大（泰坦陨落/Apex 的高速冲刺视效）。仅在本地玩家 clientTick 调用。
+    // 统一由 ENABLE_CAMERA_OFFSET 开关控制；并适配原版辅助功能"视场角效果(FOV Effects)"（fovEffectScale==0 时归零）。
     private void computeTargetFovBonus(Player player) {
+        if (!ClientConfig.ENABLE_CAMERA_OFFSET.get()) {
+            this.targetFovBonus = 0F;
+            return;
+        }
         double speedPerSec = getSpeed().horizontalDistance() * 20;
         double minSpeed = 5.0;   // 低于此速度不触发
         double maxSpeed = 21.0;  // 达到此速度拉满
         float speedFactor = (float) Mth.clamp((speedPerSec - minSpeed) / (maxSpeed - minSpeed), 0.0, 1.0);
-        this.targetFovBonus = speedFactor * (float) ClientConfig.FOV_BONUS_MAX.get().doubleValue();
+        // 适配原版"视场角效果"辅助功能开关（0.0 关闭 FOV 拉伸 → 机动 FOV 拉宽也归零）
+        float fovEffectScale = Minecraft.getInstance().options.fovEffectScale().get().floatValue();
+        this.targetFovBonus = speedFactor * (float) ClientConfig.FOV_BONUS_MAX.get().doubleValue() * fovEffectScale;
     }
 
     public void tickMomentumRoll(Player player) {
@@ -670,12 +677,6 @@ public class PlayerMovementContext {
             }
         };
         return false;
-    }
-
-    // 预输入：当前 tick 或最近 offset tick 内是否按下了 key（用于墙踢/翻越的宽容缓冲，仍为边沿触发、不会因长按误触）
-    public boolean wasKeyPressedWithin(int key, int offset) {
-        if (inputBuffer[inputBufferIndex].contains(key)) return true;
-        return wasKeyPressedRecently(key, offset);
     }
 
     // 喷气助推器判断

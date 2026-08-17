@@ -34,8 +34,7 @@ public class WallKickState extends BaseState {
 
     public static boolean checkKey(Player player, PlayerMovementContext context) {
         HintManager.add(WallHangHints.WALL_KICK);
-        // 预输入：跳跃按下后短暂缓冲期内贴上墙也算（仍为边沿触发，长按不误触）
-        return context.wasKeyPressedWithin(JUMP, ServerConfig.JUMP_BUFFER_TICKS.getAsInt());
+        return context.getInputBuffer()[context.getInputBufferIndex()].contains(JUMP);
     }
 
     @Override

@@ -21,8 +21,7 @@ public class VaultUpState extends BaseState {
 
     public static boolean checkKey(Player player, PlayerMovementContext context) {
         HintManager.add(WallHangHints.VAULT_UP);
-        // 预输入：跳跃按下后短暂缓冲期内出现翻越边缘也算（仍为边沿触发）
-        return context.wasKeyPressedWithin(JUMP, ServerConfig.JUMP_BUFFER_TICKS.getAsInt());
+        return context.getInputBuffer()[context.getInputBufferIndex()].contains(JUMP);
     }
 
     @Override

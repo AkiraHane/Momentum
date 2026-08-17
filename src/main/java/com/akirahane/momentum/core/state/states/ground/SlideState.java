@@ -43,6 +43,20 @@ public class SlideState extends BaseState {
                         context.getOldSpeed().horizontalDistance() >= -context.getOldSpeed().y);
     }
 
+    // 保持滑铲：不区分是否疾跑，统一用 MIN_SLIDE_SPEED 门槛
+    public static boolean canSlideHold(Player player, PlayerMovementContext context) {
+        return ServerConfig.ENABLE_SLIDE.getAsBoolean() && ClientConfig.ENABLE_SLIDE.getAsBoolean() &&
+                player.onGround() &&
+                canSlideHoldSpeedCheck(player, context) &&
+                checkKey(player, context);
+    }
+
+    public static boolean canSlideHoldSpeedCheck(Player player, PlayerMovementContext context) {
+        return context.getSpeed().horizontalDistance() * 20 > ServerConfig.MIN_SLIDE_SPEED.get() &&
+                (context.getPendingEffectPool().get(MomentumEffectType.ACCELERATION).contains(context.SLIDE_ACCELERATION) ||
+                        context.getOldSpeed().horizontalDistance() >= -context.getOldSpeed().y);
+    }
+
     public static boolean checkKey(Player player, PlayerMovementContext context) {
         HintManager.add(WallHangHints.SLIDE);
         return LOWER_CENTER.get().isDown();
@@ -137,6 +151,12 @@ public class SlideState extends BaseState {
         context.setSlideCooldown(ServerConfig.SLIDE_ACCELERATION_COOLDOWN.get());
         context.setMomentumRollIntensity(0F);  // 退出时关闭
         context.setSlideJumpCooldownJustFinished(false);
+    }
+
+    @Override
+    protected java.util.List<Transition> transitionChain() {
+        // 滑铲保持时用更宽松的速度门槛（不区分疾跑），进入仍走默认链的 canSlide（区分疾跑）
+        return withPredicate(DEFAULT_CHAIN, StateType.SLIDE, SlideState::canSlideHold);
     }
 
     @Override

@@ -162,27 +162,16 @@ public abstract class LivingEntityMixin extends Entity implements Attackable, Wa
         ).add(stateMachine.getContext().getOldDeltaMovement());
         Vec3 limitSpeed = stateMachine.applyEffect(Vec3.ZERO, player.getYRot(), LIMIT_ACCELERATION_SPEED);
         if (limitSpeed.length() != 0) {
-            original = new Vec3(
-                    // 这里存了上一tick的速度
-                    Math.abs(original.x) > Math.abs(limitSpeed.x)
-                            ? (
-                            Math.abs(original.x) < Math.abs(stateMachine.getContext().getOldDeltaMovement().x)
-                                    ? original.x
-                                    : stateMachine.getContext().getOldDeltaMovement().x)
-                            : original.x,
-                    Math.abs(original.y) > Math.abs(limitSpeed.y)
-                            ? (
-                            Math.abs(original.y) < Math.abs(stateMachine.getContext().getOldDeltaMovement().y)
-                                    ? original.y
-                                    : stateMachine.getContext().getOldDeltaMovement().y)
-                            : original.y,
-                    Math.abs(original.z) > Math.abs(limitSpeed.z)
-                            ? (
-                            Math.abs(original.z) < Math.abs(stateMachine.getContext().getOldDeltaMovement().z)
-                                    ? original.z
-                                    : stateMachine.getContext().getOldDeltaMovement().z)
-                            : original.z
-            );
+            // 限制每 tick 的水平速度变化量：超过 limitSpeed 水平时等比例缩减（保留方向），
+            // 避免旧逻辑回退到上一 tick 速度（丢方向）导致瞬间转向时速度被清零
+            Vec3 old = stateMachine.getContext().getOldDeltaMovement();
+            Vec3 delta = original.subtract(old);
+            double dh = delta.horizontalDistance();
+            double limitH = limitSpeed.horizontalDistance();
+            if (dh > limitH) {
+                double scale = limitH / dh;
+                original = new Vec3(old.x + delta.x * scale, old.y + delta.y, old.z + delta.z * scale);
+            }
         }
 
         return original;
