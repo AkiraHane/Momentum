@@ -8,6 +8,7 @@ import com.akirahane.momentum.client.hud.HintManager;
 import com.akirahane.momentum.init.InitItems;
 import com.akirahane.momentum.core.state.MovementStateMachine;
 import com.akirahane.momentum.core.state.BaseState;
+import com.akirahane.momentum.core.state.StateType;
 import com.akirahane.momentum.init.InitAttachments;
 import com.akirahane.momentum.network.StateTransitionPacket;
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -135,16 +136,24 @@ public class MomentumClient {
         HintManager.clientTick(mc.player);
     }
 
+    // 渲染层统一保险：原版模式不施加任何相机/渲染修改
+    private static boolean isOriginal(Minecraft mc) {
+        if (mc.player == null) return true;
+        if (!mc.player.hasData(InitAttachments.MOVEMENT_STATE)) return true;
+        return mc.player.getData(InitAttachments.MOVEMENT_STATE).getCurrentState().getStateType() == StateType.ORIGINAL;
+    }
+
     @SubscribeEvent
     public static void onCameraAngles(ViewportEvent.ComputeCameraAngles event) {
         if (!ENABLE_CAMERA_OFFSET.get()) {
             return;
         }
         Minecraft mc = Minecraft.getInstance();
-        if (mc.player == null) return;
-        if (!mc.player.hasData(InitAttachments.MOVEMENT_STATE)) return;
+        if (isOriginal(mc)) return;
+        LocalPlayer player = Minecraft.getInstance().player;
+        if (player == null) return;
 
-        var context = mc.player.getData(InitAttachments.MOVEMENT_STATE).getContext();
+        var context = player.getData(InitAttachments.MOVEMENT_STATE).getContext();
 
         float partialTick = (float) event.getPartialTick();
         float roll = context.getRenderCameraRoll(partialTick);
@@ -162,10 +171,11 @@ public class MomentumClient {
             return;
         }
         Minecraft mc = Minecraft.getInstance();
-        if (mc.player == null) return;
-        if (!mc.player.hasData(InitAttachments.MOVEMENT_STATE)) return;
+        if (isOriginal(mc)) return;
+        LocalPlayer player = Minecraft.getInstance().player;
+        if (player == null) return;
 
-        var context = mc.player.getData(InitAttachments.MOVEMENT_STATE).getContext();
+        var context = player.getData(InitAttachments.MOVEMENT_STATE).getContext();
         float bonus = context.getRenderFovBonus((float) event.getPartialTick());
 
         if (bonus != 0F) {
@@ -176,14 +186,11 @@ public class MomentumClient {
     @SubscribeEvent
     public static void onRenderHand(RenderHandEvent event) {
         Minecraft mc = Minecraft.getInstance();
-        if (mc.player == null) return;
-        if (!mc.player.hasData(InitAttachments.MOVEMENT_STATE)) return;
-        if (!mc.player.hasData(InitAttachments.MOVEMENT_STATE)) return;
+        if (isOriginal(mc)) return;
         LocalPlayer player = Minecraft.getInstance().player;
         if (player == null) return;
-        if (!player.hasData(InitAttachments.MOVEMENT_STATE)) return;
 
-        var machine = mc.player.getData(InitAttachments.MOVEMENT_STATE);
+        var machine = player.getData(InitAttachments.MOVEMENT_STATE);
         var context = machine.getContext();
         float pt = event.getPartialTick();
 
