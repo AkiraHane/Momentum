@@ -8,7 +8,10 @@ import com.akirahane.momentum.core.effect.MomentumEffectType;
 import com.akirahane.momentum.compat.curios.CuriosCompat;
 import com.akirahane.momentum.config.ServerConfig;
 import com.akirahane.momentum.compat.curios.handler.CuriosHandler;
+import com.akirahane.momentum.core.state.MovementStateMachine;
+import com.akirahane.momentum.core.state.StateType;
 import com.akirahane.momentum.core.state.states.ground.SlideState;
+import com.akirahane.momentum.init.InitAttachments;
 import com.akirahane.momentum.init.InitItems;
 import com.mojang.logging.LogUtils;
 import com.zigythebird.playeranim.api.PlayerAnimationAccess;
@@ -552,8 +555,14 @@ public class PlayerMovementContext {
     }
 
     // 视野拉宽：水平速度越快，FOV 越大（泰坦陨落/Apex 的高速冲刺视效）。仅在本地玩家 clientTick 调用。
-    // 统一由 ENABLE_CAMERA_OFFSET 开关控制；并适配原版辅助功能"视场角效果(FOV Effects)"（fovEffectScale==0 时归零）。
+    // 只在实际机动状态（非原版）下生效；统一由 ENABLE_CAMERA_OFFSET 开关控制；并适配原版"视场角效果(FOV Effects)"辅助功能。
     private void computeTargetFovBonus(Player player) {
+        // 原版模式（flying/鞘翅/机动未启用等 ORIGINAL 状态）不拉视野
+        MovementStateMachine sm = player.getData(InitAttachments.MOVEMENT_STATE);
+        if (sm.getCurrentState().getStateType() == StateType.ORIGINAL) {
+            this.targetFovBonus = 0F;
+            return;
+        }
         if (!ClientConfig.ENABLE_CAMERA_OFFSET.get()) {
             this.targetFovBonus = 0F;
             return;
