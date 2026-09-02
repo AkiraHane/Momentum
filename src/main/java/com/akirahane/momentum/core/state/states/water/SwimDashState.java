@@ -49,8 +49,16 @@ public class SwimDashState extends BaseState {
     @Override
     protected java.util.List<Transition> transitionChain() {
         // 海豚跳推进持续期自保持
-        return withPredicate(DEFAULT_CHAIN, StateType.SWIM_DASH,
+        java.util.List<Transition> chain = withPredicate(DEFAULT_CHAIN, StateType.SWIM_DASH,
                 (p, c) -> c.getSwimPushTimer() > 0 && (p.isUnderWater() || !p.onGround()));
+
+        // 碰到梯子时，攀爬/滑墙必须先于海豚跳的空中自保持。只让原版可攀爬方块抢占，
+        // 避免普通墙面意外打断海豚跳。先移动 WALL_SLIDE，再移动 WALL_CLIMB，保证最终顺序为
+        // DODGE -> WALL_CLIMB -> WALL_SLIDE -> SWIM_DASH。
+        chain = moveAfter(chain, StateType.WALL_SLIDE, StateType.DODGE,
+                WallSlideState::canWallSlide);
+        return moveAfter(chain, StateType.WALL_CLIMB, StateType.DODGE,
+                WallClimbState::canWallClimb);
     }
 
     public void onEnter(Player player, PlayerMovementContext context) {
@@ -133,11 +141,11 @@ public class SwimDashState extends BaseState {
         context.setNoJump(false);
         context.setNoMoveInput(false);
         player.setForcedPose(null);
+        player.setSwimming(false);
         var instance = player.getAttribute(Attributes.GRAVITY);
         if (instance != null) {
             instance.removeModifier(DOLPHIN_GRAVITY_ID);
         }
-//        player.setSwimming(false);
 //        player.setSprinting(false);
     }
 
