@@ -308,9 +308,22 @@ public abstract class LivingEntityMixin extends Entity implements Attackable, Wa
             return original;
         }
         Double multiplier = CLIMB_BOOST_MULTIPLIER.get();
+
+        // handleOnClimbable 只限制向下速度，不限制正向 Y 速度。直接把正速度逐 tick 相乘会形成
+        // 正反馈，尤其是在松开前进键或离开梯子顶部、horizontalCollision 消失之后。
+        // 上爬加速必须有持续的前进输入和梯面碰撞，并限制在原版 0.2 上爬速度乘配置倍率以内。
+        // 到达梯顶后 horizontalCollision 会消失，因此不会继续放大离梯速度。
+        if (original.y > 0.0D &&
+                (!Minecraft.getInstance().options.keyUp.isDown() || !this.horizontalCollision)) {
+            return original;
+        }
+        double boostedY = original.y * multiplier;
+        if (boostedY > 0.0D) {
+            boostedY = Math.min(boostedY, 0.2D * multiplier);
+        }
         return new Vec3(
                 original.x,
-                original.y * multiplier,
+                boostedY,
                 original.z
         );
     }
