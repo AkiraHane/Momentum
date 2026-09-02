@@ -243,17 +243,21 @@ public abstract class EntityMixin {
                     continue;
                 }
 
-                // 位移后脚底没有踩到碰撞面，就尝试更高的那个候选高度
-                if (!momentum$hasGroundUnder(aabb.move(stepFromGround), colliders)) {
+                // 位移后脚底没有踩到碰撞面，就尝试更高的那个候选高度。记录实际承重的碰撞体，
+                // 后续坡向检测不能依赖 colliders 的遍历顺序。
+                VoxelShape supportingCollider = momentum$findSupportingCollider(aabb.move(stepFromGround), colliders);
+                if (supportingCollider == null) {
                     continue;
                 }
                 if (stepFromGround.horizontalDistanceSqr() > 0) {
                     cir.setReturnValue(stepFromGround);
                     if (!stateMachine.getCurrentState().getStateType().equals(StateType.SLIDE)) {
                         return;
-                    }if (!colliders.isEmpty()) {
-                        stateMachine.getContext().setSlopeUnitVector(momentum$getSlopeDirection(player, colliders.getFirst()));
                     }
+                    // 保留原本由地形决定的坡向，让速度逐渐向坡面方向偏转；这里只修正参考碰撞体。
+                    stateMachine.getContext().setSlopeUnitVector(
+                            momentum$getSlopeDirection(player, supportingCollider)
+                    );
                     setSlideAcceleration(movement, stepFromGround.y, stateMachine, player);
                     return;
                 }
@@ -263,35 +267,41 @@ public abstract class EntityMixin {
 
     @Unique
     private static boolean momentum$hasGroundUnder(AABB movedAABB, List<VoxelShape> colliders) {
+        return momentum$findSupportingCollider(movedAABB, colliders) != null;
+    }
+
+    /**
+     * 找到实际承受玩家脚底的碰撞体。碰撞列表顺序随包围盒向正/负坐标扩展而变化，不能使用 getFirst()。
+     * 当脚底同时接触多个形状时，选择水平接触面积最大的一个，避免在台阶边缘产生方向抖动。
+     */
+    @Unique
+    private static VoxelShape momentum$findSupportingCollider(AABB movedAABB, List<VoxelShape> colliders) {
         double epsilon = 1.0E-5D;
+        VoxelShape best = null;
+        double bestContactArea = 0.0D;
 
         for (VoxelShape collider : colliders) {
-            final boolean[] result = {false};
+            final double[] contactArea = {0.0D};
 
             collider.forAllBoxes((minX, minY, minZ, maxX, maxY, maxZ) -> {
-                if (result[0]) {
+                if (Math.abs(movedAABB.minY - maxY) > epsilon) {
                     return;
                 }
 
-                boolean xzIntersects =
-                        movedAABB.minX < maxX && movedAABB.maxX > minX &&
-                                movedAABB.minZ < maxZ && movedAABB.maxZ > minZ;
-
-                if (!xzIntersects) {
-                    return;
-                }
-
-                if (Math.abs(movedAABB.minY - maxY) <= epsilon) {
-                    result[0] = true;
+                double overlapX = Math.min(movedAABB.maxX, maxX) - Math.max(movedAABB.minX, minX);
+                double overlapZ = Math.min(movedAABB.maxZ, maxZ) - Math.max(movedAABB.minZ, minZ);
+                if (overlapX > 0.0D && overlapZ > 0.0D) {
+                    contactArea[0] += overlapX * overlapZ;
                 }
             });
 
-            if (result[0]) {
-                return true;
+            if (contactArea[0] > bestContactArea) {
+                bestContactArea = contactArea[0];
+                best = collider;
             }
         }
 
-        return false;
+        return best;
     }
 
 
