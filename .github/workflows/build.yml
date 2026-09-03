@@ -126,6 +126,9 @@ jobs:
           game-versions: ${{ steps.mod-info.outputs.minecraft_version }}
           environment: client | server
           java: 25
+          dependencies: |
+            player-animation-library(required){modrinth:ha1mEyJS}{curseforge:1283899}
+            curios(optional){modrinth:vvuO3ImH}{curseforge:309927}
 
           modrinth-id: tdSV3GtS
           modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
