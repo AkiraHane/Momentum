@@ -73,11 +73,6 @@ public class ServerConfig {
             .comment("空中操控强度（水平方向倍率）", "默认值: 1.0（原版）", ">1 = 空中转向更强，<1 = 更弱")
             .defineInRange("airAccelerationXz", 1.0, 0.0, 3.0);
 
-    // 墙跑向目标速度平滑加速速率
-    public static final ModConfigSpec.DoubleValue WALL_RUN_ACCELERATION = BUILDER
-            .comment("墙跑向目标速度平滑加速速率（0-1，越大越快）", "默认值: 0.3")
-            .defineInRange("wallRunAcceleration", 0.3, 0.0, 1.0);
-
     // 爬梯加速倍率
     public static final ModConfigSpec.DoubleValue CLIMB_BOOST_MULTIPLIER = BUILDER
             .comment("爬梯加速倍率", "默认值: 3.0")

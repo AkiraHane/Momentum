@@ -17,15 +17,16 @@ import static com.akirahane.momentum.core.context.PlayerMovementContext.*;
 
 public class WallKickState extends BaseState {
 
-    private static final int WALL_KICK_STATE_TICKS = 3;
+    private static final int WALL_KICK_STATE_TICKS = 5;
     private static final int WALL_RUN_REENTRY_GRACE_TICKS = 8;
     private static final double HORIZONTAL_EPSILON = 1.0E-6;
+    private static final double WALL_RUN_KICK_NORMAL_MULTIPLIER = 1;
 
     public static boolean canWallKick(Player player, PlayerMovementContext context) {
         return ServerConfig.ENABLE_WALL_KICK.getAsBoolean() && ClientConfig.ENABLE_WALL_KICK.getAsBoolean() &&
                 !player.onGround() &&
                 !Vec3.ZERO.equals(context.getWallNormal()) &&
-                context.getInputVec().horizontalDistance() > 0.01 && Mth.abs(context.getInputWallAngle()) >= 100 &&
+                context.getInputVec().horizontalDistance() > 0.01 && Mth.abs(context.getInputWallAngle()) >= 120 &&
                 checkKey(player, context);
     }
 
@@ -70,13 +71,20 @@ public class WallKickState extends BaseState {
         context.setLeftFootJump(!context.isLeftFootJump());
         float jumpPower = ((LivingEntityAccessor) player).invokeGetJumpPower();
         boolean fromWallRun = context.getPreviousStateType() == StateType.WALL_RUN;
+        boolean inputDirected = Mth.abs(context.getInputWallAngle()) >= 120;
         if (fromWallRun) {
-            applyWallRunKick(player, context, jumpPower);
+            // 墙跑保持条件允许玩家先转向墙外再起跳。此时沿用修改前的输入导向，
+            // 避免固定墙面法线覆盖玩家当前视角/移动输入。
+            if (inputDirected) {
+                applyInputDirectedKick(player, context, jumpPower);
+            } else {
+                applyWallRunKick(player, context, jumpPower);
+            }
             context.setWallRunReentryGraceTicks(WALL_RUN_REENTRY_GRACE_TICKS);
-            if (Mth.abs(context.getInputWallAngle()) >= 100) {
+            if (inputDirected) {
                 player.fallDistance = 0;
             }
-        } else if (Mth.abs(context.getInputWallAngle()) >= 100) {
+        } else if (inputDirected) {
             applyInputDirectedKick(player, context, jumpPower);
             player.fallDistance = 0;
         } else {
@@ -98,7 +106,7 @@ public class WallKickState extends BaseState {
     }
 
     /**
-     * 墙跑派生的蹬墙跳：保留沿墙切线动量，并把方向转向墙外。
+     * 墙跑派生的墙面导向蹬墙跳：保留完整水平动量，并把方向转向墙外。
      * 冷却只禁止增加水平总速度，不再删除已有速度分量。
      */
     private static void applyWallRunKick(Player player, PlayerMovementContext context, float jumpPower) {
@@ -110,9 +118,7 @@ public class WallKickState extends BaseState {
 
         Vec3 current = player.getDeltaMovement();
         Vec3 currentHorizontal = new Vec3(current.x, 0, current.z);
-        Vec3 tangent = new Vec3(-normal.z, 0, normal.x);
-        Vec3 tangentVelocity = tangent.scale(currentHorizontal.dot(tangent));
-        Vec3 awayFromWall = normal.scale(-jumpPower);
+        Vec3 awayFromWall = normal.scale(-jumpPower * WALL_RUN_KICK_NORMAL_MULTIPLIER);
         double ySpeed = Mth.abs(context.getInputWallAngle()) >= 100
                 ? jumpPower * 1.5
                 : current.y;
@@ -120,7 +126,7 @@ public class WallKickState extends BaseState {
         setMomentumPreservingHorizontalVelocity(
                 player,
                 context,
-                tangentVelocity.add(awayFromWall),
+                currentHorizontal.add(awayFromWall),
                 ySpeed,
                 jumpPower
         );

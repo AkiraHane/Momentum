@@ -81,8 +81,6 @@
   "momentum.configuration.airFriction": "空气阻力",
   "momentum.configuration.airAccelerationXz": "空中操控强度",
   "momentum.configuration.airAccelerationXz.tooltip": "空中操控强度（水平方向倍率）。>1 = 空中转向更强，<1 = 更弱，1 = 原版",
-  "momentum.configuration.wallRunAcceleration": "墙跑平滑加速速率",
-  "momentum.configuration.wallRunAcceleration.tooltip": "墙跑向目标速度平滑加速速率（0-1，越大越快）",
   "momentum.configuration.climbBoostMultiplier": "爬梯加速倍率",
   "momentum.configuration.wallKickAccelerationCooldown": "蹬墙跳加速冷却",
   "hint.momentum.click": "单击",

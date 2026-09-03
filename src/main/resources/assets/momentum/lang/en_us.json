@@ -81,8 +81,6 @@
   "momentum.configuration.airFriction": "Air Friction",
   "momentum.configuration.airAccelerationXz": "Air Acceleration XZ",
   "momentum.configuration.airAccelerationXz.tooltip": "Air control strength (horizontal multiplier). >1 = stronger air turning, <1 = weaker, 1 = vanilla",
-  "momentum.configuration.wallRunAcceleration": "Wall Run Acceleration",
-  "momentum.configuration.wallRunAcceleration.tooltip": "Wall run smoothing rate toward target speed (0-1, higher = faster)",
   "momentum.configuration.climbBoostMultiplier": "Climb Boost Multiplier",
   "momentum.configuration.wallKickAccelerationCooldown": "Wall Kick Acceleration Cooldown",
   "hint.momentum.click": "Click",

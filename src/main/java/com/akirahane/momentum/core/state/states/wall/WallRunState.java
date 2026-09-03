@@ -4,7 +4,6 @@ import com.akirahane.momentum.client.config.ClientConfig;
 import com.akirahane.momentum.client.hud.HintManager;
 import com.akirahane.momentum.client.hud.WallHangHints;
 import com.akirahane.momentum.config.ServerConfig;
-import com.akirahane.momentum.core.MomentumUtils;
 import com.akirahane.momentum.core.context.PlayerMovementContext;
 import com.akirahane.momentum.core.state.StateType;
 import com.akirahane.momentum.core.state.BaseState;
@@ -24,6 +23,9 @@ public class WallRunState extends BaseState {
     public static String WALL_RUN_RIGHT = "wall_run_right";
 
     private static final int SOUND_TICK = 10;
+    private static final double WALL_PUSH_STRENGTH = 0.05;
+    private static final double VERTICAL_SPEED_RETAINED_PER_TICK = 0.8;
+    private static final double VERTICAL_SPEED_EPSILON = 0.01;
 
     public static boolean canWallRun(Player player, PlayerMovementContext context) {
         return ServerConfig.ENABLE_WALL_RUN.getAsBoolean() && ClientConfig.ENABLE_WALL_RUN.getAsBoolean() &&
@@ -112,7 +114,6 @@ public class WallRunState extends BaseState {
     @Override
     public void onEnter(Player player, PlayerMovementContext context) {
         Vec3 wallNormal = context.getWallNormal();
-        double pushStrength = 0.05;
         context.setRunWallNormal(wallNormal);
         float inputWallAngle = context.getInputWallAngle();
         Vec3 currentMovement = player.getDeltaMovement();
@@ -136,12 +137,13 @@ public class WallRunState extends BaseState {
         }
         playStateAnimation(player, useLeft ? WALL_RUN_LEFT : WALL_RUN_RIGHT, context);
         var instance = player.getAttribute(Attributes.GRAVITY);
-        double ySpeed = player.getDeltaMovement().y > 0 ? player.getDeltaMovement().y : 0;
+        double ySpeed = currentMovement.y > 0 ? currentMovement.y : 0;
         if (context.isHasJetBooster()) {
-            ySpeed = Math.max(0.62, ySpeed);
+            ySpeed = dampVerticalSpeed(currentMovement.y);
             player.playSound(JET2.value(), 1F, 1.0F + player.getRandom().nextFloat() * 0.4F - 0.2F);
             player.fallDistance = 0;
         }
+        double wallRunSpeed = Math.max(currentMovement.horizontalDistance(), context.getJumpLimitSpeed());
         if (instance != null) {
             if (context.isHasLedge()) {
                 instance.addOrReplacePermanentModifier(new AttributeModifier(
@@ -151,30 +153,23 @@ public class WallRunState extends BaseState {
                 ));
                 context.setGravityModify(-1F);
                 player.setDeltaMovement(
-                        tangent.x *
-                                smoothWallRunSpeed(player, context) +
-                                wallNormal.x * pushStrength,
+                        tangent.x * wallRunSpeed + wallNormal.x * WALL_PUSH_STRENGTH,
                         0,
-                        tangent.z *
-                                smoothWallRunSpeed(player, context) +
-                                wallNormal.z * pushStrength
+                        tangent.z * wallRunSpeed + wallNormal.z * WALL_PUSH_STRENGTH
                 );
                 player.fallDistance = 0;
             } else {
+                float gravityModify = context.isHasJetBooster() ? -1F : -0.6F;
                 instance.addOrReplacePermanentModifier(new AttributeModifier(
                         WALL_GRAVITY_ID,
-                        -0.6,
+                        gravityModify,
                         AttributeModifier.Operation.ADD_MULTIPLIED_BASE
                 ));
-                context.setGravityModify(-0.6F);
+                context.setGravityModify(gravityModify);
                 player.setDeltaMovement(
-                        tangent.x *
-                                smoothWallRunSpeed(player, context) +
-                                wallNormal.x * pushStrength,
+                        tangent.x * wallRunSpeed + wallNormal.x * WALL_PUSH_STRENGTH,
                         ySpeed,
-                        tangent.z *
-                                smoothWallRunSpeed(player, context) +
-                                wallNormal.z * pushStrength
+                        tangent.z * wallRunSpeed + wallNormal.z * WALL_PUSH_STRENGTH
                 );
             }
         }
@@ -196,33 +191,29 @@ public class WallRunState extends BaseState {
         }
         var instance = player.getAttribute(Attributes.GRAVITY);
         if (instance != null) {
-            double pushStrength = 0.05;
-            if ((context.isHasLedge() || context.isHasJetBooster() && player.getDeltaMovement().y <= 0)) {
-                if (context.getGravityModify() != -1) {
-                    instance.addOrReplacePermanentModifier(new AttributeModifier(
-                            WALL_GRAVITY_ID,
-                            -1,
-                            AttributeModifier.Operation.ADD_MULTIPLIED_BASE
-                    ));
-                }
-
-                player.setDeltaMovement(
-                        tangent.x * smoothWallRunSpeed(player, context) + wallNormal.x * pushStrength,
-                        0,
-                        tangent.z * smoothWallRunSpeed(player, context) + wallNormal.z * pushStrength
-                );
-            } else if (!context.isHasLedge() && !context.isHasJetBooster() && context.getGravityModify() != -0.6) {
+            boolean stopAtLedge = context.isHasLedge();
+            boolean dampWithBooster = !stopAtLedge && context.isHasJetBooster();
+            float gravityModify = stopAtLedge || dampWithBooster ? -1F : -0.6F;
+            if (context.getGravityModify() != gravityModify) {
                 instance.addOrReplacePermanentModifier(new AttributeModifier(
                         WALL_GRAVITY_ID,
-                        -0.6,
+                        gravityModify,
                         AttributeModifier.Operation.ADD_MULTIPLIED_BASE
                 ));
-                player.setDeltaMovement(
-                        tangent.x * smoothWallRunSpeed(player, context) + wallNormal.x * pushStrength,
-                        player.getDeltaMovement().y,
-                        tangent.z * smoothWallRunSpeed(player, context) + wallNormal.z * pushStrength
-                );
+                context.setGravityModify(gravityModify);
             }
+
+            // 只按切线速度维持墙跑，避免吸墙法线分量在每 tick 被重复计入而产生异常加速。
+            double tangentSpeed = Math.abs(currentMovement.dot(tangent));
+            double wallRunSpeed = Math.max(tangentSpeed, context.getJumpLimitSpeed());
+            double ySpeed = stopAtLedge
+                    ? 0
+                    : dampWithBooster ? dampVerticalSpeed(currentMovement.y) : currentMovement.y;
+            player.setDeltaMovement(
+                    tangent.x * wallRunSpeed + wallNormal.x * WALL_PUSH_STRENGTH,
+                    ySpeed,
+                    tangent.z * wallRunSpeed + wallNormal.z * WALL_PUSH_STRENGTH
+            );
         }
     }
 
@@ -254,16 +245,9 @@ public class WallRunState extends BaseState {
         return StateType.WALL_RUN;
     }
 
-    // 墙跑水平速度平滑：低于 jumpLimitSpeed 时向目标速度平滑加速，高于则保持（避免 Math.max 瞬间抬升的顿挫感）
-    private static double smoothWallRunSpeed(Player player, PlayerMovementContext context) {
-        double currentH = player.getDeltaMovement().horizontalDistance();
-        double targetH = context.getJumpLimitSpeed();
-        if (currentH >= targetH) return currentH;
-        return MomentumUtils.approach(
-                (float) currentH,
-                (float) targetH,
-                ServerConfig.WALL_RUN_ACCELERATION.get().floatValue(),
-                0.01f
-        );
+    private static double dampVerticalSpeed(double speed) {
+        double dampedSpeed = speed * VERTICAL_SPEED_RETAINED_PER_TICK;
+        return Math.abs(dampedSpeed) < VERTICAL_SPEED_EPSILON ? 0 : dampedSpeed;
     }
+
 }
