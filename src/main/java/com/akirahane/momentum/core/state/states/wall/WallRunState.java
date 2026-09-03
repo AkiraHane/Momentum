@@ -79,8 +79,15 @@ public class WallRunState extends BaseState {
 
 
     public static boolean canWallRunSpeedCheck(Player player, PlayerMovementContext context) {
-        return context.getSpeed().horizontalDistance() * 20 > ServerConfig.MIN_WALL_RUN_SPEED.get() &&
-                (context.isHasJetBooster() || context.getSpeed().horizontalDistance() > (float) -context.getSpeed().y);
+        boolean hasReentryGrace = context.getWallRunReentryGraceTicks() > 0;
+        double horizontalSpeed = context.getSpeed().horizontalDistance();
+        if (hasReentryGrace) {
+            // 碰到下一面墙时，单 tick 实际位移可能因碰撞偏小；宽限期内同时参考当前动量。
+            horizontalSpeed = Math.max(horizontalSpeed, player.getDeltaMovement().horizontalDistance());
+        }
+        double minimumSpeed = ServerConfig.MIN_WALL_RUN_SPEED.get() * (hasReentryGrace ? 0.75 : 1.0);
+        return horizontalSpeed * 20 > minimumSpeed &&
+                (hasReentryGrace || context.isHasJetBooster() || horizontalSpeed > (float) -context.getSpeed().y);
     }
 
     public static boolean checkKey(Player player, PlayerMovementContext context) {

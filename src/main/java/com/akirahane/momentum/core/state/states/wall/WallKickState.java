@@ -17,6 +17,10 @@ import static com.akirahane.momentum.core.context.PlayerMovementContext.*;
 
 public class WallKickState extends BaseState {
 
+    private static final int WALL_KICK_STATE_TICKS = 3;
+    private static final int WALL_RUN_REENTRY_GRACE_TICKS = 8;
+    private static final double HORIZONTAL_EPSILON = 1.0E-6;
+
     public static boolean canWallKick(Player player, PlayerMovementContext context) {
         return ServerConfig.ENABLE_WALL_KICK.getAsBoolean() && ClientConfig.ENABLE_WALL_KICK.getAsBoolean() &&
                 !player.onGround() &&
@@ -65,24 +69,15 @@ public class WallKickState extends BaseState {
         }
         context.setLeftFootJump(!context.isLeftFootJump());
         float jumpPower = ((LivingEntityAccessor) player).invokeGetJumpPower();
-        if (Mth.abs(context.getInputWallAngle()) >= 100) {
-            // 加速倍率
-            float limitJumpPower = jumpPower;
-            if (context.getWallKickCooldown() != 0) {
-                limitJumpPower = 0;
+        boolean fromWallRun = context.getPreviousStateType() == StateType.WALL_RUN;
+        if (fromWallRun) {
+            applyWallRunKick(player, context, jumpPower);
+            context.setWallRunReentryGraceTicks(WALL_RUN_REENTRY_GRACE_TICKS);
+            if (Mth.abs(context.getInputWallAngle()) >= 100) {
+                player.fallDistance = 0;
             }
-            player.setDeltaMovement(
-                    Mth.abs((float) (player.getDeltaMovement().x + context.getInputVec().x * limitJumpPower * 0.5)) <
-                            Mth.absMax(player.getDeltaMovement().x, context.getInputVec().x * jumpPower * 0.5) ?
-                            context.getInputVec().x * jumpPower * 0.5 :
-                            player.getDeltaMovement().x + context.getInputVec().x * limitJumpPower * 0.5
-                    ,
-                    jumpPower * 1.5,
-                    Mth.abs((float) (player.getDeltaMovement().z + context.getInputVec().z * limitJumpPower * 0.5)) <
-                            Mth.absMax(player.getDeltaMovement().z, context.getInputVec().z * jumpPower * 0.5) ?
-                            context.getInputVec().z * jumpPower * 0.5 :
-                            player.getDeltaMovement().z + context.getInputVec().z * limitJumpPower * 0.5
-            );
+        } else if (Mth.abs(context.getInputWallAngle()) >= 100) {
+            applyInputDirectedKick(player, context, jumpPower);
             player.fallDistance = 0;
         } else {
             player.addDeltaMovement(
@@ -99,7 +94,90 @@ public class WallKickState extends BaseState {
                 0.5F,
                 1.0F + player.getRandom().nextFloat() * 0.4F - 0.2F  // 0.8 ~ 1.2 随机音高
         );
-        context.setWallJumpTimer(5);
+        context.setWallJumpTimer(WALL_KICK_STATE_TICKS);
+    }
+
+    /**
+     * 墙跑派生的蹬墙跳：保留沿墙切线动量，并把方向转向墙外。
+     * 冷却只禁止增加水平总速度，不再删除已有速度分量。
+     */
+    private static void applyWallRunKick(Player player, PlayerMovementContext context, float jumpPower) {
+        Vec3 normal = context.getRunWallNormal();
+        if (normal.horizontalDistanceSqr() < HORIZONTAL_EPSILON) {
+            normal = context.getWallNormal();
+        }
+        normal = new Vec3(normal.x, 0, normal.z).normalize();
+
+        Vec3 current = player.getDeltaMovement();
+        Vec3 currentHorizontal = new Vec3(current.x, 0, current.z);
+        Vec3 tangent = new Vec3(-normal.z, 0, normal.x);
+        Vec3 tangentVelocity = tangent.scale(currentHorizontal.dot(tangent));
+        Vec3 awayFromWall = normal.scale(-jumpPower);
+        double ySpeed = Mth.abs(context.getInputWallAngle()) >= 100
+                ? jumpPower * 1.5
+                : current.y;
+
+        setMomentumPreservingHorizontalVelocity(
+                player,
+                context,
+                tangentVelocity.add(awayFromWall),
+                ySpeed,
+                jumpPower
+        );
+    }
+
+    /** 输入型蹬墙跳仍按输入转向，但不再分别重写世界坐标 X/Z。 */
+    private static void applyInputDirectedKick(Player player, PlayerMovementContext context, float jumpPower) {
+        Vec3 current = player.getDeltaMovement();
+        Vec3 currentHorizontal = new Vec3(current.x, 0, current.z);
+        Vec3 input = new Vec3(context.getInputVec().x, 0, context.getInputVec().z);
+        if (input.horizontalDistance() > 1.0) {
+            input = input.normalize();
+        }
+        Vec3 desiredHorizontal = currentHorizontal.add(input.scale(jumpPower * 0.5));
+        setMomentumPreservingHorizontalVelocity(
+                player,
+                context,
+                desiredHorizontal,
+                jumpPower * 1.5,
+                jumpPower
+        );
+    }
+
+    /**
+     * 使用向量总长度限制水平加速。冷却中可以转向但不降速；非冷却时只获得软上限允许的增量。
+     */
+    private static void setMomentumPreservingHorizontalVelocity(
+            Player player,
+            PlayerMovementContext context,
+            Vec3 desiredHorizontal,
+            double ySpeed,
+            float jumpPower
+    ) {
+        Vec3 current = player.getDeltaMovement();
+        Vec3 currentHorizontal = new Vec3(current.x, 0, current.z);
+        double currentSpeed = currentHorizontal.horizontalDistance();
+        double desiredSpeed = desiredHorizontal.horizontalDistance();
+
+        Vec3 direction;
+        if (desiredSpeed > HORIZONTAL_EPSILON) {
+            direction = desiredHorizontal.scale(1.0 / desiredSpeed);
+        } else if (currentSpeed > HORIZONTAL_EPSILON) {
+            direction = currentHorizontal.scale(1.0 / currentSpeed);
+        } else {
+            direction = Vec3.ZERO;
+        }
+
+        // 墙跳拥有独立于普通跳跃的速度余量；超过上限时只保速，不强制减速。
+        double wallKickSpeedLimit = context.getJumpLimitSpeed() + jumpPower * 0.5;
+        double acceleration = context.getWallKickCooldown() == 0
+                ? Math.min(
+                        Math.max(0, desiredSpeed - currentSpeed),
+                        Math.max(0, wallKickSpeedLimit - currentSpeed)
+                )
+                : 0;
+        double targetSpeed = currentSpeed + acceleration;
+        player.setDeltaMovement(direction.x * targetSpeed, ySpeed, direction.z * targetSpeed);
     }
 
     @Override

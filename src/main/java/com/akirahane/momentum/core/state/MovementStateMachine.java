@@ -66,6 +66,7 @@ public class MovementStateMachine {
     private void transition(BaseState next, Player player) {
         if (next.equals(currentState)) return;
         LOGGER.trace("[MovementStateMachine] {} to {}", currentState.getStateType(), next.getStateType());
+        context.setPreviousStateType(currentState.getStateType());
         currentState.onExit(player, context);
         currentState = next;
         currentState.onEnter(player, context);

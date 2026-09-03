@@ -199,6 +199,8 @@ public class PlayerMovementContext {
     // 状态转换附加数据 (用于客户端→服务端传递客户端独有的信息, 如 Dodge 方向)
     // 0=UP, 1=DOWN, 2=LEFT, 3=RIGHT, -1=无数据
     private int transitionExtraData = -1;
+    // 最近一次状态切换的来源，供入场逻辑区分同一动作的不同来源
+    private StateType previousStateType = StateType.ORIGINAL;
     // 墙面同步数据 (bit 0-2: wallNormal索引, bit 3: inputWallAngle左右标志; -1=无墙面数据)
     private byte transitionWallData = -1;
     // 翻越计时器
@@ -207,6 +209,8 @@ public class PlayerMovementContext {
     private int breakFallReadyCount = -1;
     // 墙跳计时器
     private int wallJumpTimer = 0;
+    // 从墙跑蹬墙后，短暂放宽再次进入墙跑的速度判定
+    private int wallRunReentryGraceTicks = 0;
     // 游泳推进计时器
     private int swimPushTimer = 0;
     // 墙跳加速冷却
@@ -369,6 +373,7 @@ public class PlayerMovementContext {
         if (this.jumpCooldown > 0) this.jumpCooldown--;
         if (this.breakFallReadyCount > 0) this.breakFallReadyCount--;
         if (this.wallJumpTimer > 0) this.wallJumpTimer--;
+        if (this.wallRunReentryGraceTicks > 0) this.wallRunReentryGraceTicks--;
         if (this.swimPushTimer > 0) this.swimPushTimer--;
         if (this.wallKickCooldown > 0) this.wallKickCooldown--;
         boolean newHasJetBooster = checkBoosterEquipped(player);
@@ -426,6 +431,7 @@ public class PlayerMovementContext {
         if (this.jumpCooldown > 0) this.jumpCooldown--;
         if (this.breakFallReadyCount > 0) this.breakFallReadyCount--;
         if (this.wallJumpTimer > 0) this.wallJumpTimer--;
+        if (this.wallRunReentryGraceTicks > 0) this.wallRunReentryGraceTicks--;
         if (this.swimPushTimer > 0) this.swimPushTimer--;
         if (this.wallKickCooldown > 0) this.wallKickCooldown--;
         remoteDetectWall(player);
