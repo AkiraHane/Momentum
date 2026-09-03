@@ -1,4 +1,4 @@
-name: Build
+name: Build and Publish
 
 on:
   push:
@@ -6,6 +6,10 @@ on:
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+concurrency:
+  group: publish-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
   build:
@@ -38,13 +42,50 @@ jobs:
 
       - name: Get mod info
         id: mod-info
+        shell: bash
         run: |
           MOD_ID=$(grep -m1 '^mod_id' gradle.properties | sed 's/.*=\s*//')
           MOD_VERSION=$(grep -m1 '^mod_version' gradle.properties | sed 's/.*=\s*//')
           MOD_BUILD=$(grep -m1 '^mod_build' gradle.properties | sed 's/.*=\s*//')
           MOD_PRERELEASE=$(grep -m1 '^mod_prerelease' gradle.properties | sed 's/.*=\s*//')
+          MINECRAFT_VERSION=$(grep -m1 '^minecraft_version' gradle.properties | sed 's/.*=\s*//')
+
+          FULL_VERSION="${MOD_VERSION}.${MOD_BUILD}-${MOD_PRERELEASE}"
+          EXPECTED_TAG="v${FULL_VERSION}"
+
+          if [[ "$GITHUB_REF_NAME" != "$EXPECTED_TAG" ]]; then
+            echo "::error title=Version mismatch::Tag must be $EXPECTED_TAG, but got $GITHUB_REF_NAME"
+            exit 1
+          fi
+
+          if [[ "$MOD_PRERELEASE" == "release" || -z "$MOD_PRERELEASE" ]]; then
+            PUBLISH_TYPE="release"
+          elif [[ "$MOD_PRERELEASE" == beta* || "$MOD_PRERELEASE" == rc* ]]; then
+            PUBLISH_TYPE="beta"
+          else
+            PUBLISH_TYPE="alpha"
+          fi
+
           echo "mod_id=$MOD_ID" >> "$GITHUB_OUTPUT"
-          echo "mod_version=${MOD_VERSION}.${MOD_BUILD}-${MOD_PRERELEASE}" >> "$GITHUB_OUTPUT"
+          echo "mod_version=$FULL_VERSION" >> "$GITHUB_OUTPUT"
+          echo "mod_prerelease=$MOD_PRERELEASE" >> "$GITHUB_OUTPUT"
+          echo "minecraft_version=$MINECRAFT_VERSION" >> "$GITHUB_OUTPUT"
+          echo "publish_type=$PUBLISH_TYPE" >> "$GITHUB_OUTPUT"
+
+      - name: Validate publishing secrets
+        shell: bash
+        env:
+          MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
+          CURSEFORGE_TOKEN: ${{ secrets.CURSEFORGE_TOKEN }}
+        run: |
+          if [[ -z "$MODRINTH_TOKEN" ]]; then
+            echo "::error title=Missing secret::Add MODRINTH_TOKEN under repository Actions secrets"
+            exit 1
+          fi
+          if [[ -z "$CURSEFORGE_TOKEN" ]]; then
+            echo "::error title=Missing secret::Add CURSEFORGE_TOKEN under repository Actions secrets"
+            exit 1
+          fi
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
@@ -61,3 +102,35 @@ jobs:
           prerelease: ${{ steps.mod-info.outputs.mod_prerelease != '' && steps.mod-info.outputs.mod_prerelease != 'release' }}
           files: build/libs/*.jar
           generate_release_notes: true
+
+      - name: Export GitHub release notes
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view "$GITHUB_REF_NAME" \
+            --json body \
+            --jq .body > build/release-notes.md
+
+      - name: Publish to Modrinth and CurseForge
+        # Pin the third-party action to the v3.3.1 commit because it receives publishing secrets.
+        uses: Kir-Antipov/mc-publish@52307b03863581dec6b652b83e597aec02ebb075
+        with:
+          files: build/libs/${{ steps.mod-info.outputs.mod_id }}-${{ steps.mod-info.outputs.mod_version }}.jar
+
+          name: Momentum ${{ steps.mod-info.outputs.mod_version }}
+          version: ${{ steps.mod-info.outputs.mod_version }}
+          version-type: ${{ steps.mod-info.outputs.publish_type }}
+          changelog-file: build/release-notes.md
+
+          loaders: neoforge
+          game-versions: ${{ steps.mod-info.outputs.minecraft_version }}
+          environment: client | server
+          java: 25
+
+          modrinth-id: tdSV3GtS
+          modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
+
+          curseforge-id: 1583971
+          curseforge-token: ${{ secrets.CURSEFORGE_TOKEN }}
+
+          fail-mode: fail
