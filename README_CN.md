@@ -2,14 +2,14 @@
 
 [English Version](README.md)
 
-一个为 Minecraft 增加跑酷与机动动作的 NeoForge 模组。
+一个为 Minecraft 增加跑酷与机动动作的 NeoForge/Fabric 模组。
 
 | | |
 |---|---|
 | **模组 ID** | `momentum` |
-| **版本** | `1.1.2-beta` |
+| **版本** | `1.2.10-release` |
 | **Minecraft** | `26.1.2` |
-| **加载器** | NeoForge `26.1.2.64-beta` |
+| **加载器** | NeoForge `26.1.2.64-beta`、Fabric Loader `0.18.6` |
 | **作者** | AkiraHane |
 | **协议** | All Rights Reserved |
 
@@ -17,18 +17,20 @@
 
 | 依赖 | 版本 | 必需 |
 |---|---|---|
-| PlayerAnimationLib | `1.2.3+mc.26.1` | 是。因 PlayerAnimationLib 仓库偶发连接问题，所需的 Core 和 Neo jar 直接放在 `libs/` 中。 |
-| MochaFloats | `5.0.0` | 是。同上，作为 PlayerAnimationLib 的依赖一并放在 `libs/` 中。 |
-| Curios | `15.0.0-beta.2+26.1.2` | 可选 (喷气助推器装备槽位) |
+| PlayerAnimationLib | `1.2.3+mc.26.1` | 是。请安装与当前加载器对应的版本。 |
+| Fabric API | `0.145.4+26.1.2` | 仅 Fabric 必需。 |
+| Curios | `15.0.0-beta.2+26.1.2` | NeoForge 可选（喷气助推器饰品槽位）。 |
+| Trinkets Updated | `4.0.0+26.1` | Fabric 可选（喷气助推器腰带槽位）。 |
 
 ## 构建
 
 需要 **JDK 25**（Mojang 随 Minecraft 26.1 一同发布 Java 25）。
 
 ```bash
-./gradlew build        # 构建模组
-./gradlew runClient    # 启动客户端测试
-./gradlew runData      # 生成数据/资源
+./gradlew build                   # 构建两个加载器版本
+./gradlew :neoforge:runClient    # 启动 NeoForge 客户端测试
+./gradlew :fabric:runClient      # 启动 Fabric 客户端测试
+./gradlew :neoforge:runData      # 生成 NeoForge 数据/资源
 ```
 
 ## 功能
@@ -91,7 +93,7 @@
 
 ### 装备
 
-**喷气助推器** — 装备于 Curios 腰带栏位。效果：
+**喷气助推器** — NeoForge 可装备于 Curios 腰带栏位，Fabric 可装备于 Trinkets Updated 腰带栏位，也可使用原版腿部装备槽。效果：
 - 通过属性修饰器提升移动速度、跳跃高度和上台阶高度。
 - 墙跑不会下坠。
 - 可在空中闪避。
@@ -114,13 +116,14 @@
 - `ServerConfig` 控制服务端强制启用。关闭后所有玩家均无法使用该动作。
 - `ClientConfig` 允许单个玩家在本地关闭特定动作。
 
-配置值通过 NeoForge 的 `ModConfigSpec` 系统读取。
+NeoForge 配置通过 `ModConfigSpec` 读取。Fabric 会生成经过范围校验的
+`config/momentum-client.json` 与 `config/momentum-server.json`，玩家加入服务器时会同步服务端权威配置。
 
 ## 架构
 
 - **状态机**：每个玩家拥有一个 `MovementStateMachine`，每客户端 tick 按优先级评估 17 个状态转换。状态变化通过轻量数据包同步至服务端。
 - **效果系统**：物理数值（加速度、阻力、方块阻力、速度上限）通过可组合的效果修改，类型包括 `REPLACE`、`BASE_MULTIPLIER`、`LOCAL_VALUE`、`COMPOSE`、`MULTIPLIER`，按优先级顺序生效。
-- **物理注入**：4 个 Mixin 类分别修改 `Entity`（上下台阶/坡度检测）、`LivingEntity`（空/水移动、跳跃增强、身体旋转、梯子加速）、`GameRenderer`（摄像头倾斜/FOV）和 `AvatarRenderer`（非原版状态的游泳姿态渲染）。
+- **物理注入**：共享 Mixin 分别修改 `Entity`（上下台阶/坡度检测）、`LivingEntity`（空/水移动、跳跃增强、身体旋转、梯子加速）、`GameRenderer`（视角晃动）和 `AvatarRenderer`（非原版姿态）；加载器客户端适配层负责摄像头倾斜、FOV 与第一人称手部变换。
 - **动画系统**：PlayerAnimationLib 驱动基岩版格式的骨骼动画，MoLang 表达式绑定到 `PlayerMovementContext` 导出的每 tick 移动数据。
 
 ## 反馈

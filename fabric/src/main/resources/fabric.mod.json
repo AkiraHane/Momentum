@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "id": "${mod_id}",
+  "version": "${mod_version}",
+  "name": "${mod_name}",
+  "description": "A momentum-based parkour movement mod.",
+  "authors": [
+    "Akirahane"
+  ],
+  "license": "${mod_license}",
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "com.akirahane.momentum.fabric.FabricMomentum"
+    ],
+    "client": [
+      "com.akirahane.momentum.fabric.client.FabricMomentumClient"
+    ]
+  },
+  "mixins": [
+    "momentum.mixins.json",
+    "momentum.fabric.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=${fabric_loader_version}",
+    "minecraft": "${minecraft_version}",
+    "java": ">=${java_version}",
+    "fabric-api": "*",
+    "player_animation_library": "*"
+  },
+  "suggests": {
+    "trinkets_updated": "*"
+  }
+}

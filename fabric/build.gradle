@@ -1,0 +1,59 @@
+plugins {
+    id 'multiloader-loader'
+    id 'net.fabricmc.fabric-loom'
+}
+
+loom {
+    mods {
+        "${mod_id}" {
+            sourceSet sourceSets.main
+        }
+    }
+
+    runs {
+        client {
+            client()
+            ideConfigGenerated = true
+            runDir = 'runs/client'
+            programArgs '--username', 'MomentumTester1'
+        }
+        client2 {
+            client()
+            ideConfigGenerated = true
+            runDir = 'runs/client2'
+            programArgs '--username', 'MomentumTester2'
+        }
+        server {
+            server()
+            ideConfigGenerated = true
+            runDir = 'runs/server'
+        }
+    }
+}
+
+dependencies {
+    minecraft "com.mojang:minecraft:${minecraft_version}"
+
+    implementation "net.fabricmc:fabric-loader:${fabric_loader_version}"
+    implementation "net.fabricmc.fabric-api:fabric-api:${fabric_version}"
+    implementation "com.zigythebird.playeranim:PlayerAnimationLibFabric:${pal_version}"
+    implementation "eu.pb4:trinkets:${trinkets_version}"
+}
+
+def loaderAttribute = Attribute.of('io.github.mcgradleconventions.loader', String)
+['apiElements', 'runtimeElements', 'sourcesElements'].each { variant ->
+    configurations.named(variant) {
+        attributes {
+            attribute(loaderAttribute, 'fabric')
+        }
+    }
+}
+sourceSets.configureEach {
+    [it.compileClasspathConfigurationName, it.runtimeClasspathConfigurationName].each { variant ->
+        configurations.named(variant) {
+            attributes {
+                attribute(loaderAttribute, 'fabric')
+            }
+        }
+    }
+}

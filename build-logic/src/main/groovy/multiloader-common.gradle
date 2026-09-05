@@ -1,0 +1,50 @@
+plugins {
+    id 'java-library'
+    id 'maven-publish'
+}
+
+base {
+    archivesName = "${mod_id}-${project.name}-${minecraft_version}"
+}
+
+java {
+    toolchain.languageVersion = JavaLanguageVersion.of(java_version)
+    withSourcesJar()
+}
+
+dependencies {
+    compileOnly 'org.projectlombok:lombok:1.18.46'
+    annotationProcessor 'org.projectlombok:lombok:1.18.46'
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+}
+
+def licenseFileName = "LICENSE_${mod_name}"
+tasks.withType(Jar).configureEach {
+    from(rootProject.file('LICENSE')) {
+        rename { licenseFileName }
+    }
+}
+
+processResources {
+    def replaceProperties = [
+            minecraft_version             : minecraft_version,
+            minecraft_version_range       : minecraft_version_range,
+            fabric_version                : fabric_version,
+            fabric_loader_version         : fabric_loader_version,
+            neoforge_version              : neoforge_version,
+            neoforge_loader_version_range : neoforge_loader_version_range,
+            mod_id                        : mod_id,
+            mod_name                      : mod_name,
+            mod_license                   : mod_license,
+            mod_version                   : project.version.toString(),
+            java_version                  : java_version
+    ]
+
+    inputs.properties replaceProperties
+    filesMatching(['META-INF/neoforge.mods.toml', 'fabric.mod.json', '*.mixins.json', 'pack.mcmeta']) {
+        expand replaceProperties
+    }
+}

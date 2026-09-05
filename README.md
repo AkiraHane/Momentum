@@ -2,14 +2,14 @@
 
 [中文版本](README_CN.md)
 
-A Minecraft NeoForge mod that adds parkour movement and combat maneuver actions.
+A Minecraft NeoForge/Fabric mod that adds parkour movement and combat maneuver actions.
 
 | | |
 |---|---|
 | **Mod ID** | `momentum` |
-| **Version** | `1.1.2-beta` |
+| **Version** | `1.2.10-release` |
 | **Minecraft** | `26.1.2` |
-| **Loader** | NeoForge `26.1.2.64-beta` |
+| **Loaders** | NeoForge `26.1.2.64-beta`, Fabric Loader `0.18.6` |
 | **Author** | AkiraHane |
 | **License** | All Rights Reserved |
 
@@ -17,18 +17,20 @@ A Minecraft NeoForge mod that adds parkour movement and combat maneuver actions.
 
 | Dependency | Version | Required |
 |---|---|---|
-| PlayerAnimationLib | `1.2.3+mc.26.1` | Yes. Because the PlayerAnimationLib repository is occasionally unreachable, the required Core and Neo jars are included directly in `libs/`. |
-| MochaFloats | `5.0.0` | Yes. Bundled in `libs/` for the same reason as above — it is a dependency of PlayerAnimationLib. |
-| Curios | `15.0.0-beta.2+26.1.2` | Optional (Jet Booster equipment slot) |
+| PlayerAnimationLib | `1.2.3+mc.26.1` | Yes. Install the variant matching the active loader. |
+| Fabric API | `0.145.4+26.1.2` | Required on Fabric only. |
+| Curios | `15.0.0-beta.2+26.1.2` | Optional on NeoForge (Jet Booster accessory slot). |
+| Trinkets Updated | `4.0.0+26.1` | Optional on Fabric (Jet Booster belt slot). |
 
 ## Build
 
 Requires **JDK 25** (Mojang ships Java 25 with Minecraft 26.1).
 
 ```bash
-./gradlew build        # Build the mod
-./gradlew runClient    # Launch client for testing
-./gradlew runData      # Generate data/resources
+./gradlew build                   # Build both loader variants
+./gradlew :neoforge:runClient    # Launch the NeoForge client for testing
+./gradlew :fabric:runClient      # Launch the Fabric client for testing
+./gradlew :neoforge:runData      # Generate NeoForge data/resources
 ```
 
 ## Features
@@ -91,7 +93,7 @@ The mod evaluates **17 movement states** each tick, entering the highest-priorit
 
 ### Equipment
 
-**Jet Booster** — equippable in the Curios belt slot. When equipped:
+**Jet Booster** — equippable in the Curios belt slot on NeoForge or the Trinkets Updated belt slot on Fabric. It can also use the vanilla legs slot. When equipped:
 - Movement speed, jump height, and step height are increased via attribute modifiers.
 - Wall run does not lose altitude.
 - Mid-air dodge is enabled.
@@ -114,13 +116,14 @@ All feature flags live in `ServerConfig` and `ClientConfig`. Most actions requir
 - `ServerConfig` controls server-side enforcement. Disabling an action here prevents ALL players from using it.
 - `ClientConfig` allows individual players to opt out of specific actions locally.
 
-Config values use NeoForge's `ModConfigSpec` system.
+NeoForge uses `ModConfigSpec`. Fabric writes validated `config/momentum-client.json` and
+`config/momentum-server.json` files and synchronizes authoritative server settings when a player joins.
 
 ## Architecture
 
 - **State machine**: each player has a `MovementStateMachine` that evaluates 17 state transitions per client tick in priority order. State changes are synced to the server via a lightweight packet.
 - **Effect system**: physics values (acceleration, friction, block friction, speed limit) are modified by composable effects with types `REPLACE`, `BASE_MULTIPLIER`, `LOCAL_VALUE`, `COMPOSE`, and `MULTIPLIER`, applied in priority order.
-- **Physics injection**: 4 Mixin classes modify `Entity` (step-up/step-down/slope detection), `LivingEntity` (air/water travel, jump boost, body rotation, ladder speed), `GameRenderer` (camera roll/FOV), and `AvatarRenderer` (swimming-pose rendering for non-vanilla states).
+- **Physics injection**: shared Mixins modify `Entity` (step-up/step-down/slope detection), `LivingEntity` (air/water travel, jump boost, body rotation, ladder speed), `GameRenderer` (view bobbing), and `AvatarRenderer` (non-vanilla poses). Loader-specific client hooks apply camera roll, FOV, and first-person hand transforms.
 - **Animation**: PlayerAnimationLib drives bone animations from bedrock-format animation files, with MoLang expressions bound to per-tick movement data exported from `PlayerMovementContext`.
 
 ## Feedback

@@ -71,6 +71,8 @@ jobs:
           echo "mod_prerelease=$MOD_PRERELEASE" >> "$GITHUB_OUTPUT"
           echo "minecraft_version=$MINECRAFT_VERSION" >> "$GITHUB_OUTPUT"
           echo "publish_type=$PUBLISH_TYPE" >> "$GITHUB_OUTPUT"
+          echo "neoforge_file=${MOD_ID}-neoforge-${MINECRAFT_VERSION}-${FULL_VERSION}.jar" >> "$GITHUB_OUTPUT"
+          echo "fabric_file=${MOD_ID}-fabric-${MINECRAFT_VERSION}-${FULL_VERSION}.jar" >> "$GITHUB_OUTPUT"
 
       - name: Validate publishing secrets
         shell: bash
@@ -91,7 +93,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ${{ steps.mod-info.outputs.mod_id }}-${{ steps.mod-info.outputs.mod_version }}
-          path: build/libs/*.jar
+          path: |
+            neoforge/build/libs/${{ steps.mod-info.outputs.neoforge_file }}
+            fabric/build/libs/${{ steps.mod-info.outputs.fabric_file }}
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
@@ -100,25 +104,28 @@ jobs:
           tag_name: ${{ github.ref_name }}
           draft: false
           prerelease: ${{ steps.mod-info.outputs.mod_prerelease != '' && steps.mod-info.outputs.mod_prerelease != 'release' }}
-          files: build/libs/*.jar
+          files: |
+            neoforge/build/libs/${{ steps.mod-info.outputs.neoforge_file }}
+            fabric/build/libs/${{ steps.mod-info.outputs.fabric_file }}
           generate_release_notes: true
 
       - name: Export GitHub release notes
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
+          mkdir -p build
           gh release view "$GITHUB_REF_NAME" \
             --json body \
             --jq .body > build/release-notes.md
 
-      - name: Publish to Modrinth and CurseForge
+      - name: Publish NeoForge to Modrinth and CurseForge
         # Pin the third-party action to the v3.3.1 commit because it receives publishing secrets.
         uses: Kir-Antipov/mc-publish@52307b03863581dec6b652b83e597aec02ebb075
         with:
-          files: build/libs/${{ steps.mod-info.outputs.mod_id }}-${{ steps.mod-info.outputs.mod_version }}.jar
+          files: neoforge/build/libs/${{ steps.mod-info.outputs.neoforge_file }}
 
-          name: Momentum ${{ steps.mod-info.outputs.mod_version }}
-          version: ${{ steps.mod-info.outputs.mod_version }}
+          name: Momentum ${{ steps.mod-info.outputs.mod_version }} (NeoForge)
+          version: ${{ steps.mod-info.outputs.mod_version }}+neoforge
           version-type: ${{ steps.mod-info.outputs.publish_type }}
           changelog-file: build/release-notes.md
 
@@ -129,6 +136,34 @@ jobs:
           dependencies: |
             player-animation-library(required){modrinth:ha1mEyJS}{curseforge:1283899}
             curios(optional){modrinth:vvuO3ImH}{curseforge:309927}
+
+          modrinth-id: tdSV3GtS
+          modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
+
+          curseforge-id: 1583971
+          curseforge-token: ${{ secrets.CURSEFORGE_TOKEN }}
+
+          fail-mode: fail
+
+      - name: Publish Fabric to Modrinth and CurseForge
+        # Pin the third-party action to the v3.3.1 commit because it receives publishing secrets.
+        uses: Kir-Antipov/mc-publish@52307b03863581dec6b652b83e597aec02ebb075
+        with:
+          files: fabric/build/libs/${{ steps.mod-info.outputs.fabric_file }}
+
+          name: Momentum ${{ steps.mod-info.outputs.mod_version }} (Fabric)
+          version: ${{ steps.mod-info.outputs.mod_version }}+fabric
+          version-type: ${{ steps.mod-info.outputs.publish_type }}
+          changelog-file: build/release-notes.md
+
+          loaders: fabric
+          game-versions: ${{ steps.mod-info.outputs.minecraft_version }}
+          environment: client | server
+          java: 25
+          dependencies: |
+            fabric-api(required){modrinth:P7dR8mSH}{curseforge:306612}
+            player-animation-library(required){modrinth:ha1mEyJS}{curseforge:1283899}
+            trinkets-updated(optional){modrinth:XaT8sLP6}{curseforge:1509777}
 
           modrinth-id: tdSV3GtS
           modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
