@@ -9,14 +9,11 @@ import com.akirahane.momentum.client.platform.NeoForgeClientPlatform;
 import com.akirahane.momentum.init.InitItems;
 import com.akirahane.momentum.core.state.MovementStateMachine;
 import com.akirahane.momentum.core.state.BaseState;
-import com.akirahane.momentum.core.state.StateType;
 import com.akirahane.momentum.init.InitAttachments;
 import com.akirahane.momentum.network.StateTransitionPacket;
 import com.akirahane.momentum.network.NeoForgeClientNetwork;
 import com.akirahane.momentum.platform.PlatformServices;
-import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.logging.LogUtils;
-import com.mojang.math.Axis;
 import com.zigythebird.playeranim.api.PlayerAnimationFactory;
 import com.zigythebird.playeranimcore.enums.PlayState;
 import net.minecraft.client.Minecraft;
@@ -45,7 +42,6 @@ import net.neoforged.neoforge.client.gui.IConfigScreenFactory;
 import net.neoforged.neoforge.event.tick.PlayerTickEvent;
 import org.slf4j.Logger;
 
-import static com.akirahane.momentum.client.config.ClientConfig.ENABLE_CAMERA_OFFSET;
 import static com.akirahane.momentum.client.config.ClientConfig.ENABLE_KEY_HINTS;
 
 // 此类不会在专用服务器上加载。在此处访问客户端代码是安全的。
@@ -150,67 +146,29 @@ public class MomentumClient {
         HintManager.clientTick(mc.player);
     }
 
-    // 渲染层统一保险：原版模式不施加任何相机/渲染修改
-    private static boolean isOriginal(Minecraft mc) {
-        if (mc.player == null) return true;
-        if (!mc.player.hasData(InitAttachments.MOVEMENT_STATE)) return true;
-        return mc.player.getData(InitAttachments.MOVEMENT_STATE).getCurrentState().getStateType() == StateType.ORIGINAL;
-    }
-
     @SubscribeEvent
     public static void onCameraAngles(ViewportEvent.ComputeCameraAngles event) {
-        if (!ENABLE_CAMERA_OFFSET.get()) {
-            return;
-        }
-        Minecraft mc = Minecraft.getInstance();
-        if (isOriginal(mc)) return;
         LocalPlayer player = Minecraft.getInstance().player;
         if (player == null) return;
 
-        var context = player.getData(InitAttachments.MOVEMENT_STATE).getContext();
-
         float partialTick = (float) event.getPartialTick();
-        float roll = context.getRenderCameraRoll(partialTick);
-        // 动量倾斜（滑铲、闪避等）
-        float momentumRoll = context.getRenderMomentumRoll(partialTick);
+        float roll = ClientVisualEffects.cameraRoll(player, partialTick);
 
-        if (roll + momentumRoll != 0F) {
-            event.setRoll(event.getRoll() + roll + momentumRoll);
+        if (roll != 0F) {
+            event.setRoll(event.getRoll() + roll);
         }
     }
 
     @SubscribeEvent
     public static void onComputeFov(ViewportEvent.ComputeFov event) {
-        if (!ENABLE_CAMERA_OFFSET.get()) {
-            return;
-        }
-        Minecraft mc = Minecraft.getInstance();
-        if (isOriginal(mc)) return;
         LocalPlayer player = Minecraft.getInstance().player;
         if (player == null) return;
 
-        var context = player.getData(InitAttachments.MOVEMENT_STATE).getContext();
-        float bonus = context.getRenderFovBonus((float) event.getPartialTick());
+        float bonus = ClientVisualEffects.fovBonus(player, (float) event.getPartialTick());
 
         if (bonus != 0F) {
             event.setFOV(event.getFOV() + bonus);
         }
-    }
-
-    @SubscribeEvent
-    public static void onRenderHand(RenderHandEvent event) {
-        Minecraft mc = Minecraft.getInstance();
-        if (isOriginal(mc)) return;
-        LocalPlayer player = Minecraft.getInstance().player;
-        if (player == null) return;
-
-        var machine = player.getData(InitAttachments.MOVEMENT_STATE);
-        var context = machine.getContext();
-        float pt = event.getPartialTick();
-
-        PoseStack pose = event.getPoseStack();
-        pose.translate(0, context.getRenderArmOffsetY(pt), 0);
-        pose.mulPose(Axis.XP.rotationDegrees(context.getRenderArmRotX(pt)));
     }
 
     @SubscribeEvent

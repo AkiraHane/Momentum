@@ -8,8 +8,7 @@
   ],
   "client": [
     "client.CameraMixin",
-    "client.DebugScreenEntryListMixin",
-    "client.ItemInHandRendererMixin"
+    "client.DebugScreenEntryListMixin"
   ],
   "injectors": {
     "defaultRequire": 1

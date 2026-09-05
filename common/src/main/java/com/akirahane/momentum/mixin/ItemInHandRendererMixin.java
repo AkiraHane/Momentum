@@ -1,6 +1,6 @@
-package com.akirahane.momentum.fabric.mixin.client;
+package com.akirahane.momentum.mixin;
 
-import com.akirahane.momentum.fabric.client.FabricClientVisuals;
+import com.akirahane.momentum.client.ClientVisualEffects;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.ItemInHandRenderer;
@@ -12,7 +12,13 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(ItemInHandRenderer.class)
 public abstract class ItemInHandRendererMixin {
-    @Inject(method = "renderHandsWithItems", at = @At("HEAD"))
+    @Inject(
+            method = "renderHandsWithItems",
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lcom/mojang/blaze3d/vertex/PoseStack;mulPose(Lorg/joml/Quaternionfc;)V",
+                    ordinal = 1,
+                    shift = At.Shift.AFTER))
     private void momentum$transformHands(
             float partialTick,
             PoseStack poseStack,
@@ -20,6 +26,6 @@ public abstract class ItemInHandRendererMixin {
             LocalPlayer player,
             int light,
             CallbackInfo ci) {
-        FabricClientVisuals.transformHands(poseStack, partialTick);
+        ClientVisualEffects.transformHands(player, poseStack, partialTick);
     }
 }

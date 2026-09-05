@@ -15,6 +15,7 @@
   },
   "client": [
     "AvatarRendererMixin",
-    "GameRendererMixin"
+    "GameRendererMixin",
+    "ItemInHandRendererMixin"
   ]
 }
