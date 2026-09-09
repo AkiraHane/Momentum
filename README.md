@@ -1,140 +1,165 @@
 # Momentum
 
-[中文版本](README_CN.md)
+[简体中文](README_CN.md)
 
-A Minecraft NeoForge/Fabric mod that adds parkour movement and combat maneuver actions.
+Momentum is a parkour movement mod for Minecraft. It adds momentum-preserving ground, air, wall, and water maneuvers, with matching first- and third-person animation effects.
+
+The `1.3.0-beta` line introduces a shared multi-loader codebase for NeoForge and Fabric. It is intended for testing before the next stable release.
 
 | | |
 |---|---|
 | **Mod ID** | `momentum` |
-| **Version** | `1.2.10-release` |
+| **Current source version** | `1.3.0-beta` |
 | **Minecraft** | `26.1.2` |
-| **Loaders** | NeoForge `26.1.2.64-beta`, Fabric Loader `0.18.6` |
+| **Loaders** | NeoForge `26.1.2.64-beta`; Fabric Loader `0.18.6` |
+| **Java** | `25` |
 | **Author** | AkiraHane |
 | **License** | All Rights Reserved |
 
-## Dependencies
+## Highlights in 1.3.0 beta
 
-| Dependency | Version | Required |
+- Added a `common` module shared by the NeoForge and Fabric builds.
+- Added a complete Fabric implementation, including Trinkets Updated support, configuration files, debug information, animations, camera effects, and multiplayer state synchronization.
+- State changes are broadcast only to players tracking the entity, with an initial snapshot when tracking begins.
+- Improved continuous wall-run → wall-kick → wall-run chaining. Wall kicks preserve existing momentum, use the intended input/view direction, and have a short re-entry grace period.
+- The wall-kick acceleration cooldown now defaults to `10` ticks.
+- Jet Booster wall running gradually damps both upward and downward vertical velocity toward zero. Normal wall running keeps its original gravity behavior; ledge locking remains a separate rule.
+- Fixed ladder launch acceleration, dolphin-jump transitions near ladders, directional slope acceleration, slide retention, and Fabric camera-roll direction.
+
+## Installation
+
+Install the mod and its required dependencies on both the client and server for multiplayer.
+
+1. Choose the Momentum JAR matching your loader: `momentum-neoforge-...jar` or `momentum-fabric-...jar`.
+2. Install Player Animation Library for the same Minecraft version and loader.
+3. Fabric users must also install Fabric API.
+4. Curios on NeoForge and Trinkets Updated on Fabric are optional. They add a belt accessory slot for the Jet Booster; the vanilla legs slot works without them.
+
+### Dependencies
+
+| Dependency | Version | Requirement |
 |---|---|---|
-| PlayerAnimationLib | `1.2.3+mc.26.1` | Yes. Install the variant matching the active loader. |
-| Fabric API | `0.145.4+26.1.2` | Required on Fabric only. |
-| Curios | `15.0.0-beta.2+26.1.2` | Optional on NeoForge (Jet Booster accessory slot). |
-| Trinkets Updated | `4.0.0+26.1` | Optional on Fabric (Jet Booster belt slot). |
+| Player Animation Library | `1.2.3+mc.26.1` | Required on both loaders |
+| Fabric API | `0.145.4+26.1.2` | Required on Fabric |
+| Curios | `15.0.0-beta.2+26.1.2` | Optional on NeoForge |
+| Trinkets Updated | `4.0.0+26.1` | Optional on Fabric |
 
-## Build
+## Controls
 
-Requires **JDK 25** (Mojang ships Java 25 with Minecraft 26.1).
+All controls can be changed in Minecraft's key-binding menu.
+
+| Default key | Action |
+|---|---|
+| `C` | Lower center: prone, slide, break-fall preparation, and vault into a low opening |
+| `Shift + M` | Enable or disable Momentum movement for the local player |
+| `Shift + N` | Show or hide contextual movement hints |
+| Vanilla movement keys | Wall run, wall climb, wall kick, dodge, power jump, and swimming use the configured movement/jump/sprint/sneak keys |
+
+## Movement
+
+Momentum currently has 18 state-machine states: 17 movement states plus the vanilla fallback state. The highest-priority valid state is selected each client tick and synchronized through the server.
+
+| Group | Actions |
+|---|---|
+| **Ground** | Walk, slide, prone, and power jump |
+| **Air / landing** | Airborne movement, break-fall preparation, break fall, and dodge |
+| **Wall** | Wall climb, wall slide, wall run, wall hang, wall kick, vault up, and vault into low openings |
+| **Water** | Swimming and swim dash, including dolphin jumps out of the water |
+| **Fallback** | Original state, used when Momentum is disabled or no maneuver matches |
+
+### Physics and chaining
+
+- Air drag, air steering, minimum action speeds, hunger consumption, and action cooldowns are configurable.
+- Sliding reduces friction. Downhill movement accelerates gradually toward the detected slope direction and approaches a soft maximum speed; uphill movement loses speed.
+- Sprinting on a ladder multiplies vertical movement, while positive climb speed is bounded to prevent repeated multiplication from launching the player upward.
+- Wall-running preserves tangential speed and applies only a small wall-normal push. Wall kicks retain existing horizontal momentum instead of rewriting independent world X/Z components.
+- Break-fall actions reduce fall damage and can chain into a slide when enough forward momentum remains.
+- Dodge and swim dash share their configured recovery resource.
+
+### Jet Booster
+
+The Jet Booster can be equipped in the vanilla legs slot, a Curios belt slot, or a Trinkets Updated belt slot. When equipped it:
+
+- increases movement speed, jump strength, and step height;
+- enables mid-air dodge;
+- reduces fall damage and effective fall distance;
+- removes wall-run gravity away from ledges and smoothly damps vertical velocity toward zero;
+- plays dedicated booster sounds during supported maneuvers.
+
+The item can be enchanted and is crafted from the recipe bundled with the mod.
+
+## Configuration
+
+Most actions have both a server switch and a client switch. Both must be enabled for the action to activate.
+
+- **NeoForge:** uses `ModConfigSpec`. Client settings are available from the loader's configuration screen, and server settings use the NeoForge server-config lifecycle.
+- **Fabric:** writes validated `config/momentum-client.json` and `config/momentum-server.json`. The server configuration is synchronized to joining clients. Fabric does not yet provide an in-game configuration screen or live file reload; edit the JSON files and restart/rejoin.
+
+Existing configuration files keep their saved values when code defaults change. For example, an existing `wallKickAccelerationCooldown: 20` must be changed manually to `10` if the new default is desired.
+
+## Development
+
+The project requires JDK 25. IntelliJ IDEA should delegate builds and tests to Gradle; IDEA's native builder cannot fully model the resource expansion used for loader metadata.
 
 ```bash
-./gradlew build                   # Build both loader variants
-./gradlew :neoforge:runClient    # Launch the NeoForge client for testing
-./gradlew :fabric:runClient      # Launch the Fabric client for testing
-./gradlew :neoforge:runData      # Generate NeoForge data/resources
+./gradlew build                       # Build common, Fabric, and NeoForge
+./gradlew :fabric:runClient           # Fabric test client 1
+./gradlew :fabric:runClient2          # Fabric test client 2
+./gradlew :fabric:runServer           # Fabric test server
+./gradlew :neoforge:runClient         # NeoForge test client 1
+./gradlew :neoforge:runClient2        # NeoForge test client 2
+./gradlew :neoforge:runServer         # NeoForge test server
+./gradlew :neoforge:runData           # Generate NeoForge data/resources
 ```
 
-## Features
+On Windows, replace `./gradlew` with `gradlew.bat`. Loader JARs are produced in:
 
-### Core Mechanics
+```text
+fabric/build/libs/
+neoforge/build/libs/
+```
 
-The mod overrides the player's ground and air friction, acceleration, and speed limits when the mod mode is active. All modifications use a composable effect system that processes modifiers in priority order. Each movement action has independent enable/disable toggles in both the server and client configs — both must be `true` for the action to activate.
+### Project layout
 
-- **Reduced air drag**: the vanilla hard-coded `0.91` air friction multiplier is replaced with a configurable value.
-- **Jump boost scaling**: horizontal sprint-jump speed scales with the Jump Boost effect level, capped by a configurable speed limit.
-- **Dynamic water friction**: movement speed in water is adjusted based on the player's submergence ratio — the more of the body is out of water, the closer the friction is to air values.
-- **Auto step-down**: when the player is on the ground and the horizontal movement would carry them downhill, the mod detects the slope and automatically steps down. The effective step-down height equals the vanilla auto-step-up height plus the horizontal speed component. Disabled in liquids and when already stepping up.
-- **Ladder speed boost**: holding the sprint key on ladders multiplies vertical climb speed.
-
-### Movement Actions
-
-The mod evaluates **17 movement states** each tick, entering the highest-priority matching state. Each state defines its own entry condition, per-tick behavior, and exit cleanup.
-
-#### Ground
-
-| State | Trigger | Behavior |
-|---|---|---|
-| **Slide** | Player is on ground, moving above a speed threshold, and presses the lower-center key (`C`) | Slides with reduced friction. When moving downhill, the detected slope direction is used as an acceleration vector. On exit: if horizontal speed exceeds vertical speed, may chain into another slide. |
-| **Prone** | On ground while holding `C`, or currently in a swimming pose in a space shorter than the crouch height | Forces the swimming pose, allowing the player to crawl through 1-block-high gaps. Body rotation follows horizontal movement direction. |
-| **Walk** | On ground, no higher-priority state matched | Applies the mod's ground physics (custom friction, acceleration, speed limits). |
-
-#### Air
-
-| State | Trigger | Behavior |
-|---|---|---|
-| **Airborne** | Not on ground, no wall or water state matched | In-air movement with mod acceleration, friction, and horizontal speed limit. Tracks per-tick speed for animation and MoLang bindings. |
-| **Break Fall Ready** | Falling with downward speed above a threshold while holding `C` | Preparation stance tracked by fall-speed animation. Transitions into Break Fall on landing. |
-| **Break Fall** | Takes fall damage while in a lowered posture (slide, prone, or break-fall-ready) | Rolls on landing to reduce fall damage. If forward horizontal speed exceeds downward speed when exiting, chains into a slide. With Jet Booster, fall damage is further reduced. |
-
-#### Wall
-
-| State | Trigger | Behavior |
-|---|---|---|
-| **Wall Slide** | In the air, moving toward a wall | Drops along the wall with reduced fall speed. Fall damage on landing is reduced. |
-| **Wall Hang** | Falling near a wall edge or ledge within detection range | Hangs on the wall edge. While hanging, the player can look sideways and move left/right; body rotation is clamped. |
-| **Wall Climb** | Against a wall, moving toward it, holding `Jump` | Climbs up the wall. Climb height scales with jump strength. Jet Booster caps the minimum upward speed. |
-| **Wall Kick** | Near a wall while airborne with a wall-jump cooldown available | Launches away from the wall with a fixed horizontal impulse. Has a cooldown. |
-| **Wall Run** | Moving parallel to a wall above a horizontal speed threshold, pressing `Up` | Runs along the wall. Body rotates to face the wall. Jet Booster adds an upward velocity component to counter gravity. |
-| **Vault Up** | Hanging on a wall edge, pressing `Jump` | Pulls the player up onto the ledge. |
-| **Vault In** | Standing or hanging near a 1-block-high gap; while standing press `Up` + `C`, while hanging press `C` + `Jump` | Crawls into the gap using the swimming pose. |
-
-#### Water
-
-| State | Trigger | Behavior |
-|---|---|---|
-| **Swim** | Sprinting underwater while holding `Up`, or at the water surface while holding `C` + `Up` | Vanilla swimming with mod-adjusted water friction. |
-| **Swim Dash** | Underwater, holding `Sprint` (while already swimming) or `Up` + `Sprint` (from below surface) | Dashes forward in the look direction with a 10-tick push timer. If the dash exits the water surface, the swimming pose and body rotation are maintained during the airborne arc (dolphin jump). |
-
-#### Special
-
-| State | Trigger | Behavior |
-|---|---|---|
-| **Dodge** | Double-tap the sprint key while holding a direction key (configurable to single-tap); Jet Booster enables mid-air dodge | Quick dash in the chosen direction, with brief invincibility frames (10 ticks). Uses shared cooldown with Swim Dash; up to one charge can be stored. |
-| **Original** | Mod toggled off (`Shift + M`) | All mod behavior disabled; vanilla movement applies. This is also the fallback when no other state matches. |
-
-### Equipment
-
-**Jet Booster** — equippable in the Curios belt slot on NeoForge or the Trinkets Updated belt slot on Fabric. It can also use the vanilla legs slot. When equipped:
-- Movement speed, jump height, and step height are increased via attribute modifiers.
-- Wall run does not lose altitude.
-- Mid-air dodge is enabled.
-- All fall damage is reduced by 50% and effective fall distance is reduced by 12 blocks.
-
-### Key Bindings
-
-| Key | Action |
+| Module | Responsibility |
 |---|---|
-| `C` | Lower center (prone, slide, break-fall-ready, vault-in) |
-| `Shift + M` | Toggle mod mode on/off |
-| `Shift + N` | Toggle on-screen key hints on/off |
+| `common` | Movement state machine, physics/effects, shared packets, animations, assets, and loader-neutral Mixins for Minecraft 26.1.2 |
+| `fabric` | Fabric entrypoints, lifecycle events, networking transport, attachments, JSON configuration, rendering hooks, and Trinkets integration |
+| `neoforge` | NeoForge entrypoints/events, payload transport, attachments, `ModConfigSpec`, rendering events, and Curios integration |
+| `build-logic` | Shared Gradle conventions and resource processing |
 
-Most active actions display contextual key prompts on screen, showing the relevant vanilla key bindings (`W`, `A`, `S`, `D`, `Space`, `Shift`, `Ctrl`).
+`common` is loader-neutral, not Minecraft-version-neutral. Minecraft API and Mixin changes are handled per Minecraft-version branch; logic with no Minecraft dependency can later move into a pure Java engine module. See [PORTING.md](PORTING.md) for the porting policy.
 
-### Configuration
+### Networking model
 
-All feature flags live in `ServerConfig` and `ClientConfig`. Most actions require both to be enabled:
+The local client evaluates movement transitions and sends compact state metadata to the server. The server applies the state and broadcasts it to tracking players plus self for replay compatibility. A state snapshot is sent when another player begins tracking the entity, so remote animations do not have to wait for the next transition.
 
-- `ServerConfig` controls server-side enforcement. Disabling an action here prevents ALL players from using it.
-- `ClientConfig` allows individual players to opt out of specific actions locally.
+## Automated publishing
 
-NeoForge uses `ModConfigSpec`. Fabric writes validated `config/momentum-client.json` and
-`config/momentum-server.json` files and synchronizes authoritative server settings when a player joins.
+Pushing a version tag runs the GitHub Actions workflow, builds both loader JARs, creates a GitHub Release, and publishes separate NeoForge and Fabric files to Modrinth and CurseForge.
 
-## Architecture
+The repository must define these Actions secrets:
 
-- **State machine**: each player has a `MovementStateMachine` that evaluates 17 state transitions per client tick in priority order. State changes are synced to the server via a lightweight packet.
-- **Effect system**: physics values (acceleration, friction, block friction, speed limit) are modified by composable effects with types `REPLACE`, `BASE_MULTIPLIER`, `LOCAL_VALUE`, `COMPOSE`, and `MULTIPLIER`, applied in priority order.
-- **Physics injection**: shared Mixins modify `Entity` (step-up/step-down/slope detection), `LivingEntity` (air/water travel, jump boost, body rotation, ladder speed), `GameRenderer` (view bobbing), and `AvatarRenderer` (non-vanilla poses). Loader-specific client hooks apply camera roll, FOV, and first-person hand transforms.
-- **Animation**: PlayerAnimationLib drives bone animations from bedrock-format animation files, with MoLang expressions bound to per-tick movement data exported from `PlayerMovementContext`.
+- `MODRINTH_TOKEN`
+- `CURSEFORGE_TOKEN`
+
+The tag must exactly match the version assembled from `gradle.properties`:
+
+```text
+v<mod_version>.<mod_build>-<mod_prerelease>
+```
+
+For the current source version, the matching tag is `v1.3.0-beta`.
 
 ## Feedback
 
-Issues and suggestions are welcome. Include mod version, Minecraft version, and reproduction steps when reporting a problem.
+When reporting a problem, include the Momentum version, loader, Minecraft version, installed optional dependencies, and reproduction steps. Multiplayer synchronization reports should include whether the issue affects the local player, remote players, or both.
 
-| Platform | Info |
-|----------|------|
+| Platform | Contact |
+|---|---|
 | QQ | `1796334524` |
 | Bilibili | [@AkiraHane](https://space.bilibili.com/27666009) |
 
 ---
 
-> This document was generated with AI assistance.
+> This document was prepared with AI assistance and reviewed against the current source tree.
