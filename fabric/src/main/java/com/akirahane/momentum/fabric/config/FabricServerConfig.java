@@ -58,7 +58,7 @@ public final class FabricServerConfig {
         setDouble(settings, "airFriction", MomentumServerConfig.AIR_FRICTION, 0.998, 0.0, 1.0);
         setDouble(settings, "airAccelerationXz", MomentumServerConfig.AIR_ACCELERATION_XZ, 1.0, 0.0, 3.0);
         setDouble(settings, "climbBoostMultiplier", MomentumServerConfig.CLIMB_BOOST_MULTIPLIER, 3.0, 0.0, 10.0);
-        setInt(settings, "wallKickAccelerationCooldown", MomentumServerConfig.WALL_KICK_ACCELERATION_COOLDOWN, 20, 0, 200);
+        setInt(settings, "wallKickAccelerationCooldown", MomentumServerConfig.WALL_KICK_ACCELERATION_COOLDOWN, 10, 0, 200);
 
         setSwitches(switches);
     }

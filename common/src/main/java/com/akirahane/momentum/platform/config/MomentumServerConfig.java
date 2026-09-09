@@ -16,7 +16,7 @@ public final class MomentumServerConfig {
     public static final ConfigValue<Double> AIR_FRICTION = value(0.998D);
     public static final ConfigValue<Double> AIR_ACCELERATION_XZ = value(1.0D);
     public static final ConfigValue<Double> CLIMB_BOOST_MULTIPLIER = value(3.0D);
-    public static final ConfigValue<Integer> WALL_KICK_ACCELERATION_COOLDOWN = value(20);
+    public static final ConfigValue<Integer> WALL_KICK_ACCELERATION_COOLDOWN = value(10);
 
     public static final ConfigValue<Boolean> ENABLE_PRONE = value(true);
     public static final ConfigValue<Boolean> ENABLE_SLIDE = value(true);
