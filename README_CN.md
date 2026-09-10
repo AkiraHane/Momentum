@@ -146,10 +146,16 @@ GitHub 仓库需要配置以下 Actions Secrets：
 标签必须与 `gradle.properties` 组合出的版本完全一致：
 
 ```text
-v<mod_version>.<mod_build>-<mod_prerelease>
+v<mod_version>.<mod_build>-<mod_prerelease>+mc<minecraft_version>
 ```
 
-当前源码版本对应的标签为 `v1.3.0-beta`。
+当前源码版本对应的标签为 `v1.3.0-beta+mc26.1.2`。
+GitHub 构建产物包名、发布平台版本标识和加载器 JAR 文件名也都会包含 Minecraft 版本，例如：
+
+```text
+momentum-neoforge-26.1.2-1.3.0-beta.jar
+momentum-fabric-26.1.2-1.3.0-beta.jar
+```
 
 ## 反馈
 

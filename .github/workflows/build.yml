@@ -51,7 +51,8 @@ jobs:
           MINECRAFT_VERSION=$(grep -m1 '^minecraft_version' gradle.properties | sed 's/.*=\s*//')
 
           FULL_VERSION="${MOD_VERSION}.${MOD_BUILD}-${MOD_PRERELEASE}"
-          EXPECTED_TAG="v${FULL_VERSION}"
+          RELEASE_VERSION="${FULL_VERSION}+mc${MINECRAFT_VERSION}"
+          EXPECTED_TAG="v${RELEASE_VERSION}"
 
           if [[ "$GITHUB_REF_NAME" != "$EXPECTED_TAG" ]]; then
             echo "::error title=Version mismatch::Tag must be $EXPECTED_TAG, but got $GITHUB_REF_NAME"
@@ -68,6 +69,7 @@ jobs:
 
           echo "mod_id=$MOD_ID" >> "$GITHUB_OUTPUT"
           echo "mod_version=$FULL_VERSION" >> "$GITHUB_OUTPUT"
+          echo "release_version=$RELEASE_VERSION" >> "$GITHUB_OUTPUT"
           echo "mod_prerelease=$MOD_PRERELEASE" >> "$GITHUB_OUTPUT"
           echo "minecraft_version=$MINECRAFT_VERSION" >> "$GITHUB_OUTPUT"
           echo "publish_type=$PUBLISH_TYPE" >> "$GITHUB_OUTPUT"
@@ -92,7 +94,7 @@ jobs:
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ steps.mod-info.outputs.mod_id }}-${{ steps.mod-info.outputs.mod_version }}
+          name: ${{ steps.mod-info.outputs.mod_id }}-${{ steps.mod-info.outputs.minecraft_version }}-${{ steps.mod-info.outputs.mod_version }}
           path: |
             neoforge/build/libs/${{ steps.mod-info.outputs.neoforge_file }}
             fabric/build/libs/${{ steps.mod-info.outputs.fabric_file }}
@@ -100,7 +102,7 @@ jobs:
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          name: ${{ steps.mod-info.outputs.mod_id }} ${{ steps.mod-info.outputs.mod_version }}
+          name: Momentum ${{ steps.mod-info.outputs.mod_version }} for Minecraft ${{ steps.mod-info.outputs.minecraft_version }}
           tag_name: ${{ github.ref_name }}
           draft: false
           prerelease: ${{ steps.mod-info.outputs.mod_prerelease != '' && steps.mod-info.outputs.mod_prerelease != 'release' }}
@@ -124,8 +126,8 @@ jobs:
         with:
           files: neoforge/build/libs/${{ steps.mod-info.outputs.neoforge_file }}
 
-          name: Momentum ${{ steps.mod-info.outputs.mod_version }} (NeoForge)
-          version: ${{ steps.mod-info.outputs.mod_version }}+neoforge
+          name: Momentum ${{ steps.mod-info.outputs.mod_version }} for Minecraft ${{ steps.mod-info.outputs.minecraft_version }} (NeoForge)
+          version: ${{ steps.mod-info.outputs.release_version }}-neoforge
           version-type: ${{ steps.mod-info.outputs.publish_type }}
           changelog-file: build/release-notes.md
 
@@ -151,8 +153,8 @@ jobs:
         with:
           files: fabric/build/libs/${{ steps.mod-info.outputs.fabric_file }}
 
-          name: Momentum ${{ steps.mod-info.outputs.mod_version }} (Fabric)
-          version: ${{ steps.mod-info.outputs.mod_version }}+fabric
+          name: Momentum ${{ steps.mod-info.outputs.mod_version }} for Minecraft ${{ steps.mod-info.outputs.minecraft_version }} (Fabric)
+          version: ${{ steps.mod-info.outputs.release_version }}-fabric
           version-type: ${{ steps.mod-info.outputs.publish_type }}
           changelog-file: build/release-notes.md
 

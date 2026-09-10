@@ -146,10 +146,16 @@ The repository must define these Actions secrets:
 The tag must exactly match the version assembled from `gradle.properties`:
 
 ```text
-v<mod_version>.<mod_build>-<mod_prerelease>
+v<mod_version>.<mod_build>-<mod_prerelease>+mc<minecraft_version>
 ```
 
-For the current source version, the matching tag is `v1.3.0-beta`.
+For the current source version, the matching tag is `v1.3.0-beta+mc26.1.2`.
+The Minecraft version is also included in the GitHub artifact bundle, platform version identifier, and loader JAR names. For example:
+
+```text
+momentum-neoforge-26.1.2-1.3.0-beta.jar
+momentum-fabric-26.1.2-1.3.0-beta.jar
+```
 
 ## Feedback
 
