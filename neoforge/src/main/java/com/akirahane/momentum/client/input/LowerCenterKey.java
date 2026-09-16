@@ -1,11 +1,8 @@
 package com.akirahane.momentum.client.input;
 
-import com.akirahane.momentum.Momentum;
 import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.logging.LogUtils;
 import net.minecraft.client.KeyMapping;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.settings.KeyConflictContext;
 import net.neoforged.neoforge.common.util.Lazy;
 import org.jetbrains.annotations.NotNull;
@@ -14,7 +11,6 @@ import org.slf4j.Logger;
 
 import static com.akirahane.momentum.client.init.InitKeyMappings.MOMENTUM_CATEGORY;
 
-@EventBusSubscriber(modid = Momentum.MODID, value = Dist.CLIENT)
 public class LowerCenterKey {
     protected static final Logger LOGGER = LogUtils.getLogger();
 
