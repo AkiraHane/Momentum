@@ -48,105 +48,84 @@ import static com.akirahane.momentum.core.effect.MomentumEffect.EffectType.*;
 @Getter
 @Setter
 public class PlayerMovementContext {
-    // 静态量
-    // 日志
-    protected static final Logger LOGGER = LogUtils.getLogger();
-    // 键位
-    public static final int UP = 0, DOWN = 1, LEFT = 2, RIGHT = 3, JUMP = 4, SPRINT = 5, SHIFT = 6, SHIFT_HOLD = 7;
-    // 音效
-//    HIT(SoundType::getHitSound),
-//    BREAK(SoundType::getBreakSound),
-//    PLACE(SoundType::getPlaceSound),
-//    FALL(SoundType::getFallSound);
-    public static final Function<SoundType, SoundEvent> STEP = SoundType::getStepSound,
-            HIT = SoundType::getHitSound,
-            BREAK = SoundType::getBreakSound,
-            PLACE = SoundType::getPlaceSound,
-            FALL = SoundType::getFallSound;
-    // 动画控制器
-    MomentumAnimationController controller;
-    // 动画moLang
-    MochaEngine<AnimationController> mocha;
+    // 按实际使用场景分组；待确认字段暂保留候选归属。
 
-    // 标志位
-    // 是否装备喷射器
-    private boolean hasJetBooster = false;
-    // 是否能进行机动
-    private boolean canMomentum = true;
-    // 是否不接受移动输入
-    private boolean noMoveInput = false;
-    // 是否禁止跳跃
-    private boolean noJump = false;
-    // 是否有边缘
-    private boolean hasLedge = false;
-    // 速降补偿找到ledge时的Y偏移量（用于进入WallHang时修正位置）
-    private double ledgeOffsetY = 0;
-    // 眼睛到下巴的前方是否有可抓取墙壁
-    private boolean hasFaceWall = false;
-    // 是否双击UP DOWN LEFT RIGHT JUMP
+    protected static final Logger LOGGER = LogUtils.getLogger();
+
+    // ==================== 一、仅本地 ====================
+
+    // ---------- 输入标识与历史 ----------
+    public static final int UP = 0, DOWN = 1, LEFT = 2, RIGHT = 3, JUMP = 4, SPRINT = 5, SHIFT = 6, SHIFT_HOLD = 7;
+    private int inputBufferIndex = 0;
+    private final int inputBufferSize = 10;
+    // 最近若干 tick 的按键历史。
+    @SuppressWarnings("unchecked")
+    private final HashSet<Integer>[] inputBuffer = new HashSet[inputBufferSize];
+
     private boolean doubleClickUp = false;
     private boolean doubleClickDown = false;
     private boolean doubleClickLeft = false;
     private boolean doubleClickRight = false;
+    // 待确认：尚未发现使用位置。
     private boolean doubleClickJump = false;
     private boolean doubleClickSprint = false;
-    // 是否进入受身
+
+    // ---------- 本地输入与动作选择 ----------
+    // 禁止方向输入。
+    private boolean noMoveInput = false;
+    // 是否满足机动条件。
+    private boolean canMomentum = true;
+    // 受身触发标志。
     private boolean toBreakFallState = false;
-    // 当前是否轮到左脚跳
-    private boolean leftFootJump = true;
-
-
-    // 移动速度
-    private Vec3 speed = Vec3.ZERO;
-    // 上一Tick移动速度
-    private Vec3 oldSpeed = Vec3.ZERO;
-    // 上一Tick的DeltaMovement
-    private Vec3 oldDeltaMovement = Vec3.ZERO;
-    // 滑行上下单位高度
-    private double blockStep = 0;
-    // 坡度加速向量
-    private Vec3 slopeUnitVector = Vec3.ZERO;
-    // 上次掉落的数据
-    private double lastFallDistance = 0;
-    // 闪避无敌时间
-    private final int dodgeInvincible = 10;
-    // 移动向量
+    // 面前是否有可抓取墙壁。
+    private boolean hasFaceWall = false;
+    // 是否有可抓取边缘；其他端的使用范围待确认。
+    private boolean hasLedge = false;
+    // 世界坐标下的移动输入。
     private Vec3 inputVec = Vec3.ZERO;
-    // 向墙的法向量
-    Vec3 wallNormal = Vec3.ZERO;
-    // 墙跑使用的法向量
+    // 进入墙跑时的墙面法向量；远程用途待确认。
     Vec3 runWallNormal = Vec3.ZERO;
-    // 向墙视线角度
-    float lookWallAngle = 360F;
-    // 向墙输入角度
-    float inputWallAngle = 360F;
-    // 跳跃最高速度(到达这个速度停止继续加速, 但不会减速)
-    private double jumpLimitSpeed = 0;
-    // 跳跃加速强度(同时吃速度属性和跳跃提升属性)
-    private double jumpAcceleration = 0;
-    // 连跳阻止加速持续时间
-    private int jumpCooldown = 0;
-    // 墙面方块摩擦力
-    private float wallFriction = 0.6f;
-    // need sound tick = 0
-    private float needSoundTick = 0;
-    // 当前墙面重力变化倍率
+    // 已应用的墙跑重力倍率，用于避免重复更新属性。
     private float gravityModify = 0;
-    // 跳跃动画播放速度
-    private float jumpAnimationSpeed = 1;
-    // 头身角度差
-    private float bodyHeadAngleDiff = 0F;
-    private float prevBodyHeadAngleDiff = 0F;
-    private float prevHeadXRot = 0F;
 
-    private int debugFrameCalls = 0;
-    private int debugTickCounter = 0;
+    // ---------- 本地地形移动 ----------
+    // 滑铲的台阶高度变化。
+    private double blockStep = 0;
+    // 坡向单位向量。
+    private Vec3 slopeUnitVector = Vec3.ZERO;
+    // 滑铲坡面加速效果。
+    public MomentumEffect SLIDE_ACCELERATION = new MomentumEffect(
+            Vec3.ZERO,
+            Vec3.ZERO,
+            COMPOSE,
+            0
+    );
 
-    // 摄像头旋转角度
+    // ---------- 本地动作持续与入口冷却 ----------
+    // 以下持续时间及冷却均以 tick 为单位。
+    private int breakFallTimer = 0;
+    // 闪避和游泳推进共用冷却。
+    private int dodgeCooldown = 0;
+    private int vaultTimer = 0;
+    // 蹬墙跳和蓄力跳共用状态保持计时。
+    private int wallJumpTimer = 0;
+    // 蹬墙跳后再次进入墙跑的速度判定宽限。
+    private int wallRunReentryGraceTicks = 0;
+    private int swimPushTimer = 0;
+
+    // ---------- 本地提示 ----------
+    // 受身准备提示的彩蛋随机数。
+    private int luckyNumber = 0;
+    // 本轮滑铲是否已触发冷却提示。
+    private boolean slideJumpCooldownJustFinished = false;
+
+    // ---------- 相机与第一人称手臂 ----------
+    // 相机 roll（度）。
     private float targetCameraRoll = 0F;
     private float currentCameraRoll = 0F;
     private float prevCameraRoll = 0F;
 
+    // FOV 增量（度）。
     private float targetFovBonus = 0F;
     private float currentFovBonus = 0F;
     private float prevFovBonus = 0F;
@@ -159,68 +138,105 @@ public class PlayerMovementContext {
     private float prevArmOffsetY = 0F;
     private float targetArmOffsetY = 0F;
 
+    // 手臂 X 旋转角度（度）。
     private float armRotX = 0F;
     private float prevArmRotX = 0F;
     private float targetArmRotX = 0F;
 
-    // 彩蛋随机数(1~100)
-    private int luckyNumber = 0;
-
-
-    // 当前播放的动画名称
-    private String currentAnimationName = null;
-
-
-    // 效果合计
-    // 输入缓冲角标
-    private int inputBufferIndex = 0;
-    // 输入缓冲大小
-    private final int inputBufferSize = 10;
-    // 输入缓冲
-    private final Map<MomentumEffectType, Set<MomentumEffect>> pendingEffectPool = new HashMap<>();
-    @SuppressWarnings("unchecked")
-    private final HashSet<Integer>[] inputBuffer = new HashSet[inputBufferSize];
-    // 墙面方块列表
-    private final List<BlockPos> wallBlocks = new ArrayList<>();
-
-    // 每tick要变动的效果
-    // 跳跃计数 用于跳跃限速
+    // ---------- 待确认：尚未发现使用位置 ----------
+    // 暂存于本地区块，实际归属待确认。
     private int jumpTimer = 0;
-    // 滑铲冷却
-    private int slideCooldown = 0;
-    // 滑铲冷却刚完成（用于触发提示）
-    private boolean slideJumpCooldownJustFinished = false;
-    // 受身计时器
-    private int breakFallTimer = 0;
-    // 闪避计时器
-    private int dodgeTimer = 0;
-    // 闪避冷却计时器
-    private int dodgeCooldown = 0;
-    // 状态转换附加数据 (用于客户端→服务端传递客户端独有的信息, 如 Dodge 方向)
-    // 0=UP, 1=DOWN, 2=LEFT, 3=RIGHT, -1=无数据
-    private int transitionExtraData = -1;
-    // 最近一次状态切换的来源，供入场逻辑区分同一动作的不同来源
-    private StateType previousStateType = StateType.ORIGINAL;
-    // 墙面同步数据 (bit 0-2: wallNormal索引, bit 3: inputWallAngle左右标志; -1=无墙面数据)
-    private byte transitionWallData = -1;
-    // 翻越计时器
-    private int vaultTimer = 0;
-    // 受身计数器
-    private int breakFallReadyCount = -1;
-    // 墙跳计时器
-    private int wallJumpTimer = 0;
-    // 从墙跑蹬墙后，短暂放宽再次进入墙跑的速度判定
-    private int wallRunReentryGraceTicks = 0;
-    // 游泳推进计时器
-    private int swimPushTimer = 0;
-    // 墙跳加速冷却
-    private int wallKickCooldown = 0;
-
-    // 状态中进行变动的数值
-    // 滞空计时器
+    private int jumpCooldown = 0;
+    private float wallFriction = 0.6f;
     private int airborneTimer = 0;
+    private int debugFrameCalls = 0;
+    private int debugTickCounter = 0;
 
-    // 机动模式总阻力
+    // ==================== 二、远程 + 本地 ====================
+
+    // ---------- 动画对象与播放状态 ----------
+    MomentumAnimationController controller;
+    // 与 controller 对应的 MoLang 运行时。
+    MochaEngine<AnimationController> mocha;
+    private String currentAnimationName = null;
+    // 下一次跳跃动画是否使用左脚。
+    private boolean leftFootJump = true;
+    private float jumpAnimationSpeed = 1;
+
+    // ---------- 动画与姿态插值 ----------
+    // 上一 tick 的真实位移（格/tick）。
+    private Vec3 oldSpeed = Vec3.ZERO;
+    // 动画插值用的头身角度（度）。
+    private float bodyHeadAngleDiff = 0F;
+    private float prevBodyHeadAngleDiff = 0F;
+    private float prevHeadXRot = 0F;
+    // 闪避剩余 tick，同时用于状态保持和动画切换。
+    private int dodgeTimer = 0;
+
+    // ---------- 客户端墙面姿态 ----------
+    // 指向墙面的法向量。
+    Vec3 wallNormal = Vec3.ZERO;
+    // 视线与墙面的有符号夹角（度）；360 表示无墙面。
+    float lookWallAngle = 360F;
+    // 输入与墙面的有符号夹角（度）；远程按位移估算，360 表示无方向。
+    float inputWallAngle = 360F;
+    // 快速下落时的抓边高度补偿；远程必要性待确认。
+    private double ledgeOffsetY = 0;
+
+    // ---------- 客户端音效 ----------
+    // 墙面音效播放间隔的剩余计数。
+    private float needSoundTick = 0;
+    // 用于选择墙面音效的方块列表。
+    private final List<BlockPos> wallBlocks = new ArrayList<>();
+    // 方块音效选择器。
+    // HIT、BREAK、PLACE 的用途待确认。
+    public static final Function<SoundType, SoundEvent> STEP = SoundType::getStepSound,
+            HIT = SoundType::getHitSound,
+            BREAK = SoundType::getBreakSound,
+            PLACE = SoundType::getPlaceSound,
+            FALL = SoundType::getFallSound;
+
+    // ==================== 三、服务端 + 远程 + 本地 ====================
+    // 此区块同时暂存三类未覆盖的跨端子集，以子组标明范围。
+
+    // ---------- 三方使用：装备与同步 ----------
+    // 是否装备助推器；远程更新来源待确认。
+    private boolean hasJetBooster = false;
+    // 动作附加数据，含义随状态而变；-1 表示无数据。
+    private int transitionExtraData = -1;
+    // bit 0-2: wallNormal 索引；bit 3: inputWallAngle 左右标志；-1=无墙面数据。
+    private byte transitionWallData = -1;
+    // 本 tick 的真实位移（格/tick）；服务端更新来源待确认。
+    private Vec3 speed = Vec3.ZERO;
+
+    // ---------- 待确认：服务端 + 本地的跳跃与运动 ----------
+    // 禁止起跳；服务端处理起跳移动包也会执行跳跃逻辑。
+    private boolean noJump = false;
+    // 水平跳跃加速上限（格/tick）。
+    private double jumpLimitSpeed = 0;
+    // 水平跳跃加速量；与 jumpLimitSpeed 当前都只在本地计算。
+    private double jumpAcceleration = 0;
+    // 上一 tick 的速度向量（DeltaMovement）；服务端更新来源待确认。
+    private Vec3 oldDeltaMovement = Vec3.ZERO;
+    // 滑铲加速冷却（tick）；远程用途待确认。
+    private int slideCooldown = 0;
+    // 蹬墙跳加速冷却（tick）；远程用途待确认。
+    private int wallKickCooldown = 0;
+    // 上一次状态，用于区分蹬墙跳来源；远程用途待确认。
+    private StateType previousStateType = StateType.ORIGINAL;
+
+    // ---------- 待确认：摔落处理的消费范围 ----------
+    // 受身准备剩余 tick；-1 表示未准备，本地摔落事件消费范围待确认。
+    private int breakFallReadyCount = -1;
+    // 以下字段尚未发现使用位置，归属待确认。
+    private double lastFallDistance = 0;
+    private final int dodgeInvincible = 10;
+
+    // ---------- 待确认：运动效果实际用于服务端 + 本地 ----------
+    // 效果生命周期当前仅在本地更新；static 效果实例跨玩家共享。
+    private final Map<MomentumEffectType, Set<MomentumEffect>> pendingEffectPool = new HashMap<>();
+
+    // 机动模式总阻力。
     public static MomentumEffect DEFAULT_FRICTION = new MomentumEffect(
             new Vec3(0.9, 0, 0),
             Vec3.ZERO,
@@ -228,7 +244,7 @@ public class PlayerMovementContext {
             -1
     );
 
-    // 翻滚breakfall总阻力
+    // 受身总阻力。
     public MomentumEffect BREAK_FALL_FRICTION = new MomentumEffect(
             new Vec3(0.5, 0, 0),
             Vec3.ZERO,
@@ -236,7 +252,7 @@ public class PlayerMovementContext {
             0
     );
 
-    // 闪避方块摩擦力
+    // 闪避方块摩擦力。
     public MomentumEffect DODGE_BLOCK_FRICTION = new MomentumEffect(
             new Vec3(0, 0, 0),
             Vec3.ZERO,
@@ -244,29 +260,22 @@ public class PlayerMovementContext {
             0
     );
 
-    // 滑铲总阻力
+    // 滑铲总阻力。
     public MomentumEffect SLIDE_FRICTION = new MomentumEffect(
             new Vec3(0.1, 0, 0),
             Vec3.ZERO,
             MULTIPLIER,
             -1
     );
-    // 滑铲方块阻力
+    // 滑铲方块阻力。
     public MomentumEffect SLIDE_BLOCK_FRICTION = new MomentumEffect(
             Vec3.ZERO,
             Vec3.ZERO,
             MULTIPLIER,
             0
     );
-    // 滑铲加速
-    public MomentumEffect SLIDE_ACCELERATION = new MomentumEffect(
-            Vec3.ZERO,
-            Vec3.ZERO,
-            COMPOSE,
-            0
-    );
 
-    // 空中操控强度：水平方向倍率（>1 更强，<1 更弱，1=原版）。进入空中状态时从 config 刷新数值
+    // 空中水平操控倍率。
     public MomentumEffect AIR_ACCELERATION = new MomentumEffect(
             new Vec3(1, 1, 1),
             Vec3.ZERO,
@@ -274,6 +283,7 @@ public class PlayerMovementContext {
             -1
     );
 
+    // 空中加速限速。
     public static MomentumEffect AIR_LIMIT_ACCELERATION = new MomentumEffect(
             new Vec3(0.3, Float.MAX_VALUE, 0.3),
             Vec3.ZERO,
@@ -281,7 +291,7 @@ public class PlayerMovementContext {
             -1
     );
 
-    // 挂墙移动阻力
+    // 挂墙移动阻力。
     public static MomentumEffect WALL_FRICTION = new MomentumEffect(
             new Vec3(0.4, 0, 0),
             Vec3.ZERO,
@@ -310,9 +320,7 @@ public class PlayerMovementContext {
     private void bindVariables() {
         Value value = this.mocha.scope().get("math");
         if (value instanceof ObjectValue math) {
-            // clamp
             math.setFunction("clamp", Mth::clamp);
-            // min
             math.setFunction("min", Math::min);
             math.setFunction("atan2", (y, x) -> (float) Math.toDegrees(Mth.atan2(y, x)));
         } else {
@@ -362,7 +370,7 @@ public class PlayerMovementContext {
         }
     }
 
-    // 在状态机tick之前调用，从Player读取最新数据
+    // 本地与服务端共用的计时器、装备更新。
     public void serverTick(Player player) {
         if (this.jumpTimer > 0) this.jumpTimer--;
         if (this.slideCooldown > 0) this.slideCooldown--;
@@ -389,10 +397,10 @@ public class PlayerMovementContext {
 
     public void clientTick(Player player) {
         if (this.slideCooldown == 1 && !SlideState.SLIDE.equals(this.currentAnimationName)){
-            player.playSound(SoundEvents.ARMOR_EQUIP_LEATHER.value(), 0.3F, 1.5F);     // 穿皮革装备声
+            player.playSound(SoundEvents.ARMOR_EQUIP_LEATHER.value(), 0.3F, 1.5F);
         }
         this.serverTick(player);
-        // 保存上 tick 的值, 用于渲染帧 partialTick lerp (GeckoLib 风格)
+        // 保存上一 tick 姿态，供渲染插值使用。
         this.prevBodyHeadAngleDiff = this.bodyHeadAngleDiff;
         this.prevHeadXRot = player.getXRot();
         this.doubleClickUp = isDoubleClick(UP);
@@ -404,7 +412,7 @@ public class PlayerMovementContext {
         double moveSpeed = player.getAttributeValue(Attributes.MOVEMENT_SPEED);
         double jumpStrength = player.getJumpBoostPower();
         this.jumpLimitSpeed = moveSpeed * (1 + jumpStrength) * 3;
-        // 软上限：跳跃加速随当前水平速度渐近衰减（越接近 jumpLimitSpeed 收益越小），替代硬性 cooldown 开关
+        // 越接近速度上限，跳跃加速收益越小。
         double baseJumpAccel = moveSpeed * (1 + jumpStrength) * 1.2;
         double jumpRatio = this.speed.horizontalDistance() / Math.max(this.jumpLimitSpeed, 0.001);
         this.jumpAcceleration = baseJumpAccel * Math.max(0.0, 1.0 - jumpRatio * jumpRatio);
@@ -458,25 +466,13 @@ public class PlayerMovementContext {
         this.targetArmRotX = rotX;
     }
 
-    // 设置一次随机数
     public void setLuckyNumber(Player player) {
         this.luckyNumber = player.getRandom().nextInt(100);
     }
 
     /**
-     * 从速度方向变化率计算动画播放速度 (帧率无关, 纯标量, 无符号震荡).
-     * <p>
-     * 公式: Δθ = |atan2(Vy₂, H₂) - atan2(Vy₁, H₁)|  (每 tick 速度仰角变化)
-     *       speed = 0.4 + clamp(Δθ° × 0.14, 0, 2.5)
-     * <p>
-     * 物理直觉: 跳跃顶点 Vy 过零时 Δθ 最大 → 动画最快通过水平位;
-     *           匀速时 Δθ ≈ 0 → 动画慢放, 身体缓慢起伏.
-     * <p>
-     * 参数表: 5°/tick→1.1× | 10°/tick→1.8× | 15°/tick→2.9×(cap)
-     *
-     * @param curSpeed  当前 tick 速度向量
-     * @param prevSpeed 上一 tick 速度向量
-     * @return 动画播放速度倍率, 范围约 [0.4, 2.9]
+     * 根据相邻 tick 的速度仰角变化计算动画播放速度。
+     * @return 播放速度倍率，范围 [0.4, 2.9]
      */
     public static float computeAnimSpeedFromVelocityAngle(Vec3 curSpeed, Vec3 prevSpeed) {
         float hCur = (float) curSpeed.horizontalDistance();
@@ -488,23 +484,11 @@ public class PlayerMovementContext {
     }
 
     /**
-     * 前馈+P 控制器: 让动画位置追踪速度仰角.
-     * <p>
-     * 核心思路: 动画速度 = 前馈(角度变化率) + P修正(位置误差)
-     * 角度不变 → 前馈=0 → 动画暂停等待, 不会像旧版那样以基线1.0盲目前进然后来回振荡.
-     * <p>
-     * 例: velocity仰角 0°→ -45°(1 tick), range=90°, animLength=1s, kF=1.0
-     * 前馈 = (45/90)×1×20×1 = 10 倍速追(1 tick就追上), P项再微调残差.
-     *
-     * @param velocity      当前速度向量
-     * @param prevVelocity  上一 tick 速度向量 (用于计算角度变化率)
-     * @param animTickSec   当前动画已播放时间 (秒), controller.tick / 20
-     * @param animLengthSec 动画总时长 (秒)
-     * @param angleTop      动画 t=0 对应的速度仰角 (°), 如 +60
-     * @param angleBottom   动画 t=L 对应的速度仰角 (°), 如 -40
-     * @param kP            比例增益, 2~4 推荐 (修正累积位置误差)
-     * @param kF            前馈增益, 0.5~1.5 推荐 (1.0=角度变化全量映射到动画速度)
-     * @return 动画速度倍率, [0.0, 5.0]
+     * 用速度方向变化和位置误差，使动画进度跟随速度仰角。
+     * 时间参数以秒计，角度以度计；angleTop/angleBottom 对应动画起点/终点。
+     * @param kP 动画位置误差增益
+     * @param kF 速度仰角变化率增益
+     * @return 播放速度倍率，范围 [0, 5]
      */
     public static float computeAnimSpeedByAngleTracking(
             Vec3 velocity, Vec3 prevVelocity, float animTickSec, float animLengthSec,
@@ -521,17 +505,13 @@ public class PlayerMovementContext {
         float range = angleTop - angleBottom;
         if (range <= 1e-6f) return 1.0f;
 
-        // 角度 → 目标动画位置
         float fraction = (angleTop - thetaClamped) / range;
         float targetPos = fraction * animLengthSec;
 
-        // === 前馈: 角度变化率 → 期望动画速度 ===
-        // 本 tick 角度变化量 (°), 正=向angleBottom移动
+        // 正值表示向动画终点移动。
         float angleDelta = thetaPrevClamped - thetaClamped;
-        // 映射为动画位置变化 / 秒
         float feedForward = (angleDelta / range) * animLengthSec * 20.0f * kF;
 
-        // === P 修正: 消除累积位置误差 ===
         float error = targetPos - animTickSec;
         float pCorrection = kP * error;
 
@@ -542,8 +522,7 @@ public class PlayerMovementContext {
     public void tickCameraRoll() {
         prevCameraRoll = currentCameraRoll;
 
-        // 远离 0 时：稍慢，0.12
-        // 回归 0 时：更快，0.25
+        // 回正速度快于倾斜速度。
         float smoothing = Math.abs(targetCameraRoll) > Math.abs(currentCameraRoll) ? 0.24F : 0.5F;
 
         float diff = targetCameraRoll - currentCameraRoll;
@@ -560,10 +539,8 @@ public class PlayerMovementContext {
         currentFovBonus += diff * 0.15F;
     }
 
-    // 视野拉宽：水平速度越快，FOV 越大（泰坦陨落/Apex 的高速冲刺视效）。仅在本地玩家 clientTick 调用。
-    // 只在实际机动状态（非原版）下生效；统一由 ENABLE_CAMERA_OFFSET 开关控制；并适配原版"视场角效果(FOV Effects)"辅助功能。
+
     private void computeTargetFovBonus(Player player) {
-        // 原版模式（flying/鞘翅/机动未启用等 ORIGINAL 状态）不拉视野
         MovementStateMachine sm = player.getData(InitAttachments.MOVEMENT_STATE);
         if (sm.getCurrentState().getStateType() == StateType.ORIGINAL) {
             this.targetFovBonus = 0F;
@@ -574,10 +551,10 @@ public class PlayerMovementContext {
             return;
         }
         double speedPerSec = getSpeed().horizontalDistance() * 20;
-        double minSpeed = 5.0;   // 低于此速度不触发
-        double maxSpeed = 21.0;  // 达到此速度拉满
+        double minSpeed = 5.0;
+        double maxSpeed = 21.0;
         float speedFactor = (float) Mth.clamp((speedPerSec - minSpeed) / (maxSpeed - minSpeed), 0.0, 1.0);
-        // 适配原版"视场角效果"辅助功能开关（0.0 关闭 FOV 拉伸 → 机动 FOV 拉宽也归零）
+        // 遵循原版“视场角效果”选项。
         float fovEffectScale = Minecraft.getInstance().options.fovEffectScale().get().floatValue();
         this.targetFovBonus = speedFactor * (float) ClientConfig.FOV_BONUS_MAX.get().doubleValue() * fovEffectScale;
     }
@@ -591,13 +568,11 @@ public class PlayerMovementContext {
             Vec3 velocity = player.getDeltaMovement();
             double horizontalSpeed = velocity.horizontalDistance();
 
-            // 速度参数（每秒格数更直观）
             double speedPerSec = horizontalSpeed * 20;
-            double minSpeed = 5.0;   // 最小速度阈值（每秒 4 格才开始有效果）
-            double maxSpeed = 21.0;  // 最大速度（达到这个速度倾斜满）
+            double minSpeed = 5.0;
+            double maxSpeed = 21.0;
 
             if (speedPerSec > minSpeed) {
-                // 归一化方向
                 Vec3 vDir = new Vec3(velocity.x, 0, velocity.z).normalize();
                 float yaw = player.getYRot();
                 Vec3 lookDir = new Vec3(
@@ -609,17 +584,15 @@ public class PlayerMovementContext {
                 // 叉积 y = sin(夹角)，范围 [-1, 1]
                 double crossY = vDir.x * lookDir.z - vDir.z * lookDir.x;
 
-                // 角度偏差阈值：sin 值小于这个不触发
-                // sin(15°) ≈ 0.26，意味着夹角小于 15° 不触发
+                // sin(15°)，忽略小角度偏差。
                 double angleThreshold = 0.26;
 
                 if (Math.abs(crossY) > angleThreshold) {
-                    // 重新映射：把 [threshold, 1] 映射到 [0, 1]，避免突变
+                    // 从阈值起连续增加倾斜，避免突变。
                     double sign = Math.signum(crossY);
                     double mappedCross = (Math.abs(crossY) - angleThreshold) / (1.0 - angleThreshold);
                     mappedCross = Math.min(1.0, mappedCross) * sign;
 
-                    // 速度因子：[minSpeed, maxSpeed] 线性映射到 [0, 1]
                     float speedFactor = (float) Mth.clamp(
                             (speedPerSec - minSpeed) / (maxSpeed - minSpeed),
                             0.0, 1.0
@@ -630,7 +603,6 @@ public class PlayerMovementContext {
             }
         }
 
-        // 平滑插值
         float smoothing = 0.2F;
         currentMomentumRoll = Mth.lerp(smoothing, currentMomentumRoll, targetRoll);
 
@@ -651,19 +623,18 @@ public class PlayerMovementContext {
         return Mth.lerp(partialTick, prevFovBonus, currentFovBonus);
     }
 
-    // 是否双击了某个键(两个true中至少隔一个false)
+    // 查询当前按键是否在缓冲期内再次按下。
     public boolean isDoubleClick(int key) {
         int len = inputBuffer.length;
         int current = inputBufferIndex;
 
-        // 当前必须是 true
         if (!inputBuffer[current].contains(key)) return false;
 
         boolean foundFirst = false;
         int idx = current;
         for (int i = 1; i < len; i++) {
             int lastIdx = idx;
-            idx = (current + i) % len; // 从第一个开始找
+            idx = (current + i) % len;
             if (inputBuffer[idx].contains(key) && !foundFirst) {
                 foundFirst = true;
                 continue;
@@ -671,7 +642,7 @@ public class PlayerMovementContext {
             if (foundFirst) {
                 for (int clickKey : inputBuffer[idx]) {
                     if (!inputBuffer[lastIdx].contains(clickKey)) {
-                        // clickKey 是 这次 多出来的, 按下了其他键, 忽略判断和跳跃
+                        // 跳跃以外的其他新按键会打断双击匹配。
                         if (clickKey != JUMP && clickKey != key) foundFirst = false;
                     }
                 }
@@ -680,7 +651,7 @@ public class PlayerMovementContext {
         return foundFirst;
     }
 
-    // 判断在过去5个tick内(不包括当前)是否按下了指定按键
+    // 查询前 offset 个 tick 的按键记录，不含当前 tick。
     public boolean wasKeyPressedRecently(int key, int offset) {
         int len = inputBuffer.length;
         int current = inputBufferIndex;
@@ -694,13 +665,10 @@ public class PlayerMovementContext {
         return false;
     }
 
-    // 喷气助推器判断
     private boolean checkBoosterEquipped(Player player) {
-        // 检查护腿槽
         if (player.getItemBySlot(EquipmentSlot.LEGS).is(InitItems.JET_BOOSTER_ITEM.get())) {
             return true;
         }
-        // 检查Curios腰饰槽（如果Curios存在）
         if (CuriosCompat.isLoaded() && CuriosHandler.hasJetBooster(player)) {
             return true;
         }
@@ -715,7 +683,7 @@ public class PlayerMovementContext {
         }
     }
 
-    // 预计算墙面检测方向, 避免每 tick 重建
+    // 【远程 + 本地】墙面检测方向。
     private static final Vec3[] WALL_CARDINALS = {
             new Vec3(0, 0, -1),  // NORTH
             new Vec3(0, 0, 1),   // SOUTH
@@ -729,7 +697,7 @@ public class PlayerMovementContext {
             new Vec3(-1, 0, -1).normalize(),
     };
 
-    // 所有墙面法线方向 (cardinal 4 + diagonal 4), 用于网络同步编解码
+    // 方向顺序对应网络编号，调整顺序会改变协议。
     private static final Vec3[] ALL_WALL_NORMALS = {
             WALL_CARDINALS[0], WALL_CARDINALS[1], WALL_CARDINALS[2], WALL_CARDINALS[3],
             WALL_DIAGONALS[0], WALL_DIAGONALS[1], WALL_DIAGONALS[2], WALL_DIAGONALS[3],
@@ -748,38 +716,37 @@ public class PlayerMovementContext {
         return ALL_WALL_NORMALS[index];
     }
 
+    // 【远程 + 本地】墙面检测候选。
     private static class WallCandidate {
         Vec3 normal;
+        // 仅本地用于收集墙面音效方块。
         AABB expanded;
         boolean hasFaceWall;
         boolean hasLedge;
-        double ledgeOffsetY = 0; // 速降补偿找到ledge时的Y偏移量
+        double ledgeOffsetY = 0; // 抓边高度补偿
         float lookAngle;        // 有符号，用于输出
         float inputAngle;       // 有符号，用于输出
         float lookAngleDiff;    // 无符号，用于排序
         float inputAngleDiff;   // 无符号，用于排序
     }
 
-    // 客户端墙面数据判断
     public void detectWall(Player player) {
         AABB box = player.getBoundingBox();
         Level level = player.level();
         double reach = 0.5;
 
         float yawRad = (float) Math.toRadians(player.getYRot());
-        // sin/cos 已经归一化, 不需要再 normalize()
         Vec3 lookVec = new Vec3(-Math.sin(yawRad), 0, Math.cos(yawRad));
 
         Vec3 inputVec = this.inputVec;
         boolean hasInput = inputVec.lengthSqr() > 0.001;
         Vec3 inputNorm = hasInput ? inputVec.normalize() : lookVec;
 
-        // 先在 4 个垂直方向找候选，按优先级挑
+        // 优先四个正方向，再尝试斜向。
         List<WallCandidate> cardCands = collectWallCandidates(
                 player, level, box, WALL_CARDINALS, lookVec, inputVec, inputNorm, hasInput, reach);
         WallCandidate best = pickByPriority(cardCands, hasInput);
 
-        // 垂直方向都没合适的，再看 4 个斜向
         if (best == null) {
             List<WallCandidate> diagCands = collectWallCandidates(
                     player, level, box, WALL_DIAGONALS, lookVec, inputVec, inputNorm, hasInput, reach);
@@ -797,7 +764,6 @@ public class PlayerMovementContext {
             return;
         }
 
-        // 应用结果
         wallBlocks.clear();
         BlockPos.betweenClosedStream(best.expanded).forEach(pos -> {
             BlockState state = level.getBlockState(pos);
@@ -863,7 +829,7 @@ public class PlayerMovementContext {
             c.hasFaceWall = !level.noCollision(player, chinBox);
             c.hasLedge = level.noCollision(player, ledgeBox) && c.hasFaceWall;
 
-            // 速降补偿: 如果当前位置没有ledge但下落速度快, 沿下落路径向上回溯
+            // 快速下落可能越过边缘，沿下落路径回溯检测。
             if (!c.hasLedge && c.hasFaceWall && player.getDeltaMovement().y < -0.4) {
                 double fallDist = Math.abs(player.getDeltaMovement().y);
                 for (double yOff = 0.2; yOff <= fallDist + 0.5; yOff += 0.2) {
@@ -891,14 +857,14 @@ public class PlayerMovementContext {
     private WallCandidate pickByPriority(List<WallCandidate> candidates, boolean hasInput) {
         if (candidates.isEmpty()) return null;
 
-        // 优先选有边缘的；如果没有，回退到所有候选
+        // 优先可抓取边缘。
         List<WallCandidate> ledged = new ArrayList<>();
         for (WallCandidate c : candidates) {
             if (c.hasLedge) ledged.add(c);
         }
         List<WallCandidate> pool = !ledged.isEmpty() ? ledged : candidates;
 
-        // 池内：有输入按输入选最近，没输入按视角选最近
+        // 有输入时按输入方向选墙，否则按视线方向。
         WallCandidate best = null;
         float bestDiff = Float.MAX_VALUE;
         for (WallCandidate c : pool) {
@@ -928,10 +894,8 @@ public class PlayerMovementContext {
         this.inputVec = new Vec3(x, 0, z);
     }
 
-    // 非客户端本地玩家墙面数据判断
     public void remoteDetectWall(Player player) {
-        // 有网络同步的墙面数据 → 直接使用, 跳过 collectWallCandidates 扫描
-        // 没有同步数据 → 扫描墙面 (用速度方向替代键盘输入)
+        // 扫描墙面，无候选时回退到同步方向。
         AABB box = player.getBoundingBox();
         Level level = player.level();
         double reach = 0.5;
@@ -939,18 +903,16 @@ public class PlayerMovementContext {
         float yawRad = (float) Math.toRadians(player.getYRot());
         Vec3 lookVec = new Vec3(-Math.sin(yawRad), 0, Math.cos(yawRad));
 
-        // 远程玩家没有键盘输入, 用速度方向替代
+        // 以位移方向代替远程玩家的输入。
         Vec3 velocity = this.speed;
         Vec3 inputVec = new Vec3(velocity.x, 0, velocity.z);
         boolean hasInput = inputVec.horizontalDistanceSqr() > 1.0E-6;
         Vec3 inputNorm = hasInput ? inputVec.normalize() : lookVec;
 
-        // 垂直方向：先 ledged 后普通
         List<WallCandidate> cardCands = collectWallCandidates(
                 player, level, box, WALL_CARDINALS, lookVec, inputVec, inputNorm, hasInput, reach);
         WallCandidate best = pickByPriority(cardCands, hasInput);
 
-        // 斜向兜底
         if (best == null) {
             List<WallCandidate> diagCands = collectWallCandidates(
                     player, level, box, WALL_DIAGONALS, lookVec, inputVec, inputNorm, hasInput, reach);
@@ -979,7 +941,6 @@ public class PlayerMovementContext {
         this.setLedgeOffsetY(best.ledgeOffsetY);
     }
 
-    // 使用网络同步的墙面数据计算 WallCandidate 的各项内容
     private void applySyncedWallData(Player player) {
         int wallIndex = this.transitionWallData & 0x7;
 
@@ -1005,7 +966,7 @@ public class PlayerMovementContext {
         double lookCross = lookVec.x * wallNormal.z - lookVec.z * wallNormal.x;
         float lookAngle = (float) Math.toDegrees(Math.atan2(lookCross, lookDot));
 
-        // 用速度方向替代输入方向计算 inputAngle
+        // 以速度方向估算输入夹角。
         Vec3 velocity = player.getDeltaMovement();
         Vec3 inputVec = new Vec3(velocity.x, 0, velocity.z);
         boolean hasInput = inputVec.horizontalDistanceSqr() > 1.0E-6;
@@ -1016,7 +977,7 @@ public class PlayerMovementContext {
             inputAngle = (float) Math.toDegrees(Math.atan2(inputCross, inputDot));
         }
 
-        // hasFaceWall / hasLedge 检测 (仅检测同步来的墙面方向)
+        // 只检测同步方向上的墙壁和边缘。
         AABB expanded = box.expandTowards(wallNormal.x * reach, 0, wallNormal.z * reach);
         double eyeY = player.getEyeY();
         double topY = box.maxY;
@@ -1033,7 +994,6 @@ public class PlayerMovementContext {
         boolean hasFaceWall = !level.noCollision(player, chinBox);
         boolean hasLedge = level.noCollision(player, ledgeBox) && hasFaceWall;
 
-        // 写入 context
         this.setWallNormal(wallNormal);
         this.setLookWallAngle(lookAngle);
         this.setInputWallAngle(hasInput ? inputAngle : 360F);
@@ -1041,7 +1001,6 @@ public class PlayerMovementContext {
         this.setHasLedge(hasLedge);
         this.setLedgeOffsetY(0);
 
-        // 填充 wallBlocks (用于音效播放)
         this.wallBlocks.clear();
         BlockPos.betweenClosedStream(expanded).forEach(pos -> {
             BlockState state = level.getBlockState(pos);
@@ -1065,21 +1024,19 @@ public class PlayerMovementContext {
         );
     }
 
-    // 向指定效果添加永久buff
+    // 永久效果需主动移除。
     public void addPermanentEffect(MomentumEffectType type, MomentumEffect effect) {
         effect.setDuration(-1);
         effect.setElapsedDuration(0);
         this.pendingEffectPool.get(type).add(effect);
     }
 
-    // 向指定效果添加时效buff
     public void addEffect(MomentumEffectType type, MomentumEffect effect, int duration) {
         effect.setDuration(duration);
         effect.setElapsedDuration(0);
         this.pendingEffectPool.get(type).add(effect);
     }
 
-    // 为指定效果去除buff
     public void removeEffect(MomentumEffectType type, MomentumEffect effect) {
         effect.setElapsedDuration(0);
         this.pendingEffectPool.get(type).remove(effect);
