@@ -2,11 +2,10 @@ package com.akirahane.momentum.core.state.states.special;
 
 import com.akirahane.momentum.client.config.ClientConfig;
 import com.akirahane.momentum.config.ServerConfig;
-import com.akirahane.momentum.core.context.PlayerMovementContext;
+import com.akirahane.momentum.core.context.PlayerMomentumContext;
 import com.akirahane.momentum.core.effect.MomentumEffectType;
 import com.akirahane.momentum.core.state.StateType;
 import com.akirahane.momentum.core.state.BaseState;
-import com.akirahane.momentum.core.state.states.wall.*;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.Pose;
 import net.minecraft.world.entity.player.Player;
@@ -18,13 +17,13 @@ public class BreakFallState extends BaseState {
     // 动画名称
     public static String BREAK_FALL = "break_fall";
 
-    public static boolean canBreakFall(Player player, PlayerMovementContext context) {
+    public static boolean canBreakFall(Player player, PlayerMomentumContext context) {
         return ServerConfig.ENABLE_BREAK_FALL.getAsBoolean() && ClientConfig.ENABLE_BREAK_FALL.getAsBoolean() &&
                 context.isToBreakFallState();
     }
 
     @Override
-    public void onEnter(Player player, PlayerMovementContext context) {
+    public void onEnter(Player player, PlayerMomentumContext context) {
         context.setBreakFallTimer(12);
         player.setForcedPose(Pose.SWIMMING);
         context.setNoJump(true);
@@ -48,7 +47,7 @@ public class BreakFallState extends BaseState {
     }
 
     @Override
-    public void onExit(Player player, PlayerMovementContext context) {
+    public void onExit(Player player, PlayerMomentumContext context) {
         super.onExit(player, context);
         context.setNoJump(false);
         context.setNoMoveInput(false);

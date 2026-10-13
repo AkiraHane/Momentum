@@ -4,29 +4,30 @@ import com.akirahane.momentum.client.config.ClientConfig;
 import com.akirahane.momentum.client.hud.HintManager;
 import com.akirahane.momentum.client.hud.WallHangHints;
 import com.akirahane.momentum.config.ServerConfig;
-import com.akirahane.momentum.core.context.PlayerMovementContext;
+import com.akirahane.momentum.core.context.PlayerMomentumContext;
 import com.akirahane.momentum.core.state.BaseState;
 import com.akirahane.momentum.core.state.StateType;
-import com.akirahane.momentum.core.state.states.wall.*;
 import com.akirahane.momentum.mixin.LivingEntityAccessor;
+import com.akirahane.momentum.core.utils.WallSoundUtils;
+import com.akirahane.momentum.client.utils.MomentumInputUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
 
-import static com.akirahane.momentum.core.context.PlayerMovementContext.*;
+import static com.akirahane.momentum.core.context.PlayerMomentumContext.*;
 
 public class PowerJumpState extends BaseState {
 
-    public static boolean canPowerJump(Player player, PlayerMovementContext context) {
+    public static boolean canPowerJump(Player player, PlayerMomentumContext context) {
         if (!ServerConfig.ENABLE_POWER_JUMP.getAsBoolean() || !ClientConfig.ENABLE_POWER_JUMP.getAsBoolean()) {
             return false;
         }
         if (!player.onGround()) {
             return false;
         }
-        boolean checkRelease = context.wasKeyPressedRecently(SHIFT_HOLD, 5);
+        boolean checkRelease = MomentumInputUtils.wasKeyPressedRecently(context, SHIFT_HOLD, 5);
         if (checkRelease && Minecraft.getInstance().options.keyShift.isDown()){
             HintManager.add(WallHangHints.POWER_JUMP_READY);
             return false;
@@ -37,7 +38,7 @@ public class PowerJumpState extends BaseState {
         return false;
     }
 
-    public static boolean checkKey(Player player, PlayerMovementContext context) {
+    public static boolean checkKey(Player player, PlayerMomentumContext context) {
         HintManager.add(WallHangHints.POWER_JUMP_READY);
         return context.getInputBuffer()[context.getInputBufferIndex()].contains(JUMP);
     }
@@ -50,7 +51,7 @@ public class PowerJumpState extends BaseState {
 
 
     @Override
-    public void onEnter(Player player, PlayerMovementContext context) {
+    public void onEnter(Player player, PlayerMomentumContext context) {
         float yaw = player.getYRot();
         Vec3 lookVec = new Vec3(
                 -Math.sin(Math.toRadians(yaw)),
@@ -82,7 +83,7 @@ public class PowerJumpState extends BaseState {
                         context.getInputVec().z * jumpPower * 0.5 :
                         player.getDeltaMovement().z + context.getInputVec().z * jumpPower * 0.5
         );
-        context.playWallSound(player, PlayerMovementContext.FALL, 0.15F, 1);
+        WallSoundUtils.playWallSound(player, context, WallSoundUtils.FALL, 0.15F, 1);
         player.playSound(
                 SoundEvents.ARROW_SHOOT,
                 0.5F,

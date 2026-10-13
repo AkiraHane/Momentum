@@ -4,9 +4,11 @@ import com.akirahane.momentum.client.config.ClientConfig;
 import com.akirahane.momentum.client.hud.HintManager;
 import com.akirahane.momentum.client.hud.WallHangHints;
 import com.akirahane.momentum.config.ServerConfig;
-import com.akirahane.momentum.core.context.PlayerMovementContext;
+import com.akirahane.momentum.core.context.PlayerMomentumContext;
 import com.akirahane.momentum.core.state.StateType;
 import com.akirahane.momentum.core.state.BaseState;
+import com.akirahane.momentum.core.utils.WallDetectionUtils;
+import com.akirahane.momentum.core.utils.WallSoundUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
@@ -15,7 +17,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
 
 import static com.akirahane.momentum.client.init.InitSounds.JET2;
-import static com.akirahane.momentum.core.context.PlayerMovementContext.STEP;
+import static com.akirahane.momentum.core.utils.WallSoundUtils.STEP;
 
 public class WallRunState extends BaseState {
     // 动画名称
@@ -27,7 +29,7 @@ public class WallRunState extends BaseState {
     private static final double VERTICAL_SPEED_RETAINED_PER_TICK = 0.8;
     private static final double VERTICAL_SPEED_EPSILON = 0.01;
 
-    public static boolean canWallRun(Player player, PlayerMovementContext context) {
+    public static boolean canWallRun(Player player, PlayerMomentumContext context) {
         return ServerConfig.ENABLE_WALL_RUN.getAsBoolean() && ClientConfig.ENABLE_WALL_RUN.getAsBoolean() &&
                 !Vec3.ZERO.equals(context.getWallNormal()) &&
                 !Vec3.ZERO.equals(context.getInputVec()) &&
@@ -41,7 +43,7 @@ public class WallRunState extends BaseState {
     }
 
     // 维持
-    public static boolean canWallRunHold(Player player, PlayerMovementContext context) {
+    public static boolean canWallRunHold(Player player, PlayerMomentumContext context) {
         return ServerConfig.ENABLE_WALL_RUN.getAsBoolean() && ClientConfig.ENABLE_WALL_RUN.getAsBoolean() &&
                 !Vec3.ZERO.equals(context.getWallNormal()) &&
                 context.getWallNormal().equals(context.getRunWallNormal()) &&
@@ -51,7 +53,7 @@ public class WallRunState extends BaseState {
                 checkKeyHold(player, context) &&
                 !player.onGround();
     }
-    public static boolean isLookAndSpeedSameSide(Player player, PlayerMovementContext context) {
+    public static boolean isLookAndSpeedSameSide(Player player, PlayerMomentumContext context) {
         Vec3 wallNormal = context.getWallNormal();
         if (Vec3.ZERO.equals(wallNormal)) return false;
 
@@ -80,7 +82,7 @@ public class WallRunState extends BaseState {
     }
 
 
-    public static boolean canWallRunSpeedCheck(Player player, PlayerMovementContext context) {
+    public static boolean canWallRunSpeedCheck(Player player, PlayerMomentumContext context) {
         boolean hasReentryGrace = context.getWallRunReentryGraceTicks() > 0;
         double horizontalSpeed = context.getSpeed().horizontalDistance();
         if (hasReentryGrace) {
@@ -92,13 +94,13 @@ public class WallRunState extends BaseState {
                 (hasReentryGrace || context.isHasJetBooster() || horizontalSpeed > (float) -context.getSpeed().y);
     }
 
-    public static boolean checkKey(Player player, PlayerMovementContext context) {
+    public static boolean checkKey(Player player, PlayerMomentumContext context) {
         HintManager.add(WallHangHints.WALL_RUN);
         return Minecraft.getInstance().options.keyUp.isDown() &&
                 Minecraft.getInstance().options.keyJump.isDown();
     }
 
-    public static boolean checkKeyHold(Player player, PlayerMovementContext context) {
+    public static boolean checkKeyHold(Player player, PlayerMomentumContext context) {
         HintManager.add(WallHangHints.WALL_RUN_HOLD);
         return Minecraft.getInstance().options.keyUp.isDown();
     }
@@ -112,7 +114,7 @@ public class WallRunState extends BaseState {
     }
 
     @Override
-    public void onEnter(Player player, PlayerMovementContext context) {
+    public void onEnter(Player player, PlayerMomentumContext context) {
         Vec3 wallNormal = context.getWallNormal();
         context.setRunWallNormal(wallNormal);
         float inputWallAngle = context.getInputWallAngle();
@@ -128,7 +130,7 @@ public class WallRunState extends BaseState {
             // 本地玩家: 编码左右方向 + wallNormal → 通过网络同步
             useLeft = inputWallAngle > 0;
             context.setTransitionExtraData(useLeft ? 1 : 0);
-            int wallIndex = PlayerMovementContext.encodeWallNormal(wallNormal);
+            int wallIndex = WallDetectionUtils.encodeWallNormal(wallNormal);
             context.setTransitionWallData((byte)(wallIndex >= 0 ? wallIndex : -1));
         } else {
             // 服务端/远程玩家: 从网络包恢复
@@ -174,12 +176,12 @@ public class WallRunState extends BaseState {
             }
         }
         context.setNeedSoundTick(SOUND_TICK);
-        context.playWallSound(player, STEP, 0.15F, 1);
+        WallSoundUtils.playWallSound(player, context, STEP, 0.15F, 1);
         context.setTargetCameraRoll(inputWallAngle > 0 ? -15F : 15F);
     }
 
     @Override
-    public void clientTick(Player player, PlayerMovementContext context) {
+    public void clientTick(Player player, PlayerMomentumContext context) {
         super.clientTick(player, context);
         Vec3 wallNormal = context.getRunWallNormal();
         Vec3 currentMovement = player.getDeltaMovement();
@@ -218,18 +220,18 @@ public class WallRunState extends BaseState {
     }
 
     @Override
-    public void clientTickRemote(Player player, PlayerMovementContext context) {
+    public void clientTickRemote(Player player, PlayerMomentumContext context) {
         float speed = (float) Math.min(context.getSpeed().length() * 5, 5);
         playStateAnimation(player, context.getCurrentAnimationName(), context, 0, speed);
         context.setNeedSoundTick(context.getNeedSoundTick() - speed);
         if (context.getNeedSoundTick() <= 0) {
-            context.playWallSound(player, STEP, 0.15F, 1);
+            WallSoundUtils.playWallSound(player, context, STEP, 0.15F, 1);
             context.setNeedSoundTick(context.getNeedSoundTick() + SOUND_TICK);
         }
     }
 
     @Override
-    public void onExit(Player player, PlayerMovementContext context) {
+    public void onExit(Player player, PlayerMomentumContext context) {
         super.onExit(player, context);
         context.setTargetCameraRoll(0F);  // 退出时回正
 

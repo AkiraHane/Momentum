@@ -4,11 +4,10 @@ import com.akirahane.momentum.client.config.ClientConfig;
 import com.akirahane.momentum.client.hud.HintManager;
 import com.akirahane.momentum.client.hud.WallHangHints;
 import com.akirahane.momentum.config.ServerConfig;
-import com.akirahane.momentum.core.context.PlayerMovementContext;
+import com.akirahane.momentum.core.context.PlayerMomentumContext;
 import com.akirahane.momentum.core.effect.MomentumEffectType;
 import com.akirahane.momentum.core.state.StateType;
 import com.akirahane.momentum.core.state.BaseState;
-import com.akirahane.momentum.core.state.states.wall.*;
 import net.minecraft.client.Minecraft;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.entity.Pose;
@@ -18,8 +17,8 @@ import net.minecraft.world.phys.Vec3;
 import static com.akirahane.momentum.client.init.InitSounds.JET2;
 import static com.akirahane.momentum.config.ServerConfig.DODGE_COOLDOWN;
 import static com.akirahane.momentum.config.ServerConfig.DODGE_STORAGE;
-import static com.akirahane.momentum.core.MomentumUtils.canPlayerFitAtPose;
-import static com.akirahane.momentum.core.context.PlayerMovementContext.SPRINT;
+import static com.akirahane.momentum.core.utils.CollisionUtils.canPlayerFitAtPose;
+import static com.akirahane.momentum.core.context.PlayerMomentumContext.SPRINT;
 
 public class DodgeState extends BaseState {
     // 动画名称
@@ -28,7 +27,7 @@ public class DodgeState extends BaseState {
     public static String DODGE_LEFT = "dodge_left";
     public static String DODGE_RIGHT = "dodge_right";
 
-    public static boolean canDodge(Player player, PlayerMovementContext context) {
+    public static boolean canDodge(Player player, PlayerMomentumContext context) {
         if (!ServerConfig.ENABLE_DODGE.getAsBoolean() || !ClientConfig.ENABLE_DODGE.getAsBoolean()) {
             return false;
         }
@@ -75,7 +74,7 @@ public class DodgeState extends BaseState {
     }
 
     @Override
-    public void onEnter(Player player, PlayerMovementContext context) {
+    public void onEnter(Player player, PlayerMomentumContext context) {
         String animationName;
         float yRot = player.getYRot();
         if (player.level().isClientSide() && Minecraft.getInstance().player == player) {
@@ -170,7 +169,7 @@ public class DodgeState extends BaseState {
     }
 
     @Override
-    public void clientTick(Player player, PlayerMovementContext context) {
+    public void clientTick(Player player, PlayerMomentumContext context) {
         if (context.getDodgeTimer() < 6) {
             context.setMomentumRollIntensity(0F);
         }
@@ -178,7 +177,7 @@ public class DodgeState extends BaseState {
     }
 
     @Override
-    public void clientTickRemote(Player player, PlayerMovementContext context) {
+    public void clientTickRemote(Player player, PlayerMomentumContext context) {
         super.clientTickRemote(player, context);
         if (context.getDodgeTimer() == 6 && !player.onGround() && !player.isSwimming()) {
             float yaw = player.getYRot();
@@ -204,7 +203,7 @@ public class DodgeState extends BaseState {
     }
 
     @Override
-    public void onExit(Player player, PlayerMovementContext context) {
+    public void onExit(Player player, PlayerMomentumContext context) {
         super.onExit(player, context);
         context.setNoJump(false);
         context.setNoMoveInput(false);

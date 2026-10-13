@@ -7,7 +7,7 @@ import com.akirahane.momentum.core.effect.MomentumEffect;
 import com.akirahane.momentum.core.effect.MomentumEffectType;
 import com.akirahane.momentum.core.state.StateType;
 import com.akirahane.momentum.core.state.BaseState;
-import com.akirahane.momentum.core.context.PlayerMovementContext;
+import com.akirahane.momentum.core.context.PlayerMomentumContext;
 import com.akirahane.momentum.mixin.LivingEntityAccessor;
 import com.akirahane.momentum.config.ServerConfig;
 import net.minecraft.sounds.SoundEvents;
@@ -16,7 +16,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
 
 import static com.akirahane.momentum.client.input.LowerCenterKey.LOWER_CENTER;
-import static com.akirahane.momentum.core.MomentumUtils.UPHILL_DECEL_FACTOR;
+import static com.akirahane.momentum.core.utils.SlideUtils.UPHILL_DECEL_FACTOR;
 import static com.akirahane.momentum.core.effect.MomentumEffect.EffectType.LOCAL_VALUE;
 import static com.akirahane.momentum.core.effect.MomentumEffectType.ACCELERATION;
 import static net.minecraft.world.level.block.SoundType.GRASS;
@@ -29,14 +29,14 @@ public class SlideState extends BaseState {
     // 跳跃减速窗口时间
     protected int JUMP_DECELERATION_WINDOW = 5;
 
-    public static boolean canSlide(Player player, PlayerMovementContext context) {
+    public static boolean canSlide(Player player, PlayerMomentumContext context) {
         return ServerConfig.ENABLE_SLIDE.getAsBoolean() && ClientConfig.ENABLE_SLIDE.getAsBoolean() &&
                 player.onGround() &&
                 canSlideSpeedCheck(player, context) &&
                 checkKey(player, context);
     }
 
-    public static boolean canSlideSpeedCheck(Player player, PlayerMovementContext context) {
+    public static boolean canSlideSpeedCheck(Player player, PlayerMomentumContext context) {
         return context.getSpeed().horizontalDistance() * 20 >
                 (player.isSprinting() ? ServerConfig.MIN_SLIDE_SPEED.get() : ServerConfig.MIN_SLIDE_SPEED.get() * 2) &&
                 (context.getPendingEffectPool().get(MomentumEffectType.ACCELERATION).contains(context.SLIDE_ACCELERATION) ||
@@ -44,26 +44,26 @@ public class SlideState extends BaseState {
     }
 
     // 保持滑铲：不区分是否疾跑，统一用 MIN_SLIDE_SPEED 门槛
-    public static boolean canSlideHold(Player player, PlayerMovementContext context) {
+    public static boolean canSlideHold(Player player, PlayerMomentumContext context) {
         return ServerConfig.ENABLE_SLIDE.getAsBoolean() && ClientConfig.ENABLE_SLIDE.getAsBoolean() &&
                 player.onGround() &&
                 canSlideHoldSpeedCheck(player, context) &&
                 checkKey(player, context);
     }
 
-    public static boolean canSlideHoldSpeedCheck(Player player, PlayerMovementContext context) {
+    public static boolean canSlideHoldSpeedCheck(Player player, PlayerMomentumContext context) {
         return context.getSpeed().horizontalDistance() * 20 > ServerConfig.MIN_SLIDE_SPEED.get() &&
                 (context.getPendingEffectPool().get(MomentumEffectType.ACCELERATION).contains(context.SLIDE_ACCELERATION) ||
                         context.getOldSpeed().horizontalDistance() >= -context.getOldSpeed().y);
     }
 
-    public static boolean checkKey(Player player, PlayerMovementContext context) {
+    public static boolean checkKey(Player player, PlayerMomentumContext context) {
         HintManager.add(WallHangHints.SLIDE);
         return LOWER_CENTER.get().isDown();
     }
 
     @Override
-    public void onEnter(Player player, PlayerMovementContext context) {
+    public void onEnter(Player player, PlayerMomentumContext context) {
         player.setForcedPose(Pose.SWIMMING);
         context.setNoMoveInput(true);
         context.addPermanentEffect(MomentumEffectType.FRICTION, context.SLIDE_FRICTION);
@@ -95,7 +95,7 @@ public class SlideState extends BaseState {
     }
 
     @Override
-    public void clientTick(Player player, PlayerMovementContext context) {
+    public void clientTick(Player player, PlayerMomentumContext context) {
         super.clientTick(player, context);
 
         // 滑铲冷却完成提示
@@ -106,7 +106,7 @@ public class SlideState extends BaseState {
     }
 
     @Override
-    public void clientTickRemote(Player player, PlayerMovementContext context) {
+    public void clientTickRemote(Player player, PlayerMomentumContext context) {
         if (player.tickCount % 2 == 0) {
             player.playSound(
                     GRASS.getStepSound(),
@@ -116,7 +116,7 @@ public class SlideState extends BaseState {
         }
     }
 
-    public void onExit(Player player, PlayerMovementContext context) {
+    public void onExit(Player player, PlayerMomentumContext context) {
         super.onExit(player, context);
         Vec3 slopeDir = context.getSlopeUnitVector();
         if (Vec3.ZERO.equals(slopeDir) && context.getBlockStep() > 0) {

@@ -1,7 +1,7 @@
 package com.akirahane.momentum.init;
 
 import com.akirahane.momentum.Momentum;
-import com.akirahane.momentum.core.state.MovementStateMachine;
+import com.akirahane.momentum.core.state.MomentumStateMachine;
 import com.akirahane.momentum.network.StateBroadcastPacket;
 import com.akirahane.momentum.network.StateTransitionPacket;
 import com.akirahane.momentum.network.ToggleMomentumPacket;
@@ -47,7 +47,7 @@ public class InitNetwork {
                 StateTransitionPacket.STREAM_CODEC,
                 (packet, context) -> {
                     Player player = context.player();
-                    MovementStateMachine stateMachine = player.getData(InitAttachments.MOVEMENT_STATE);
+                    MomentumStateMachine stateMachine = player.getData(InitAttachments.MOMENTUM_STATE);
                     // 将客户端独有数据注入 context, 供 onEnter() 服务端侧使用
                     stateMachine.getContext().setTransitionExtraData(packet.extraData());
                     stateMachine.getContext().setTransitionWallData(packet.wallData());
@@ -67,7 +67,7 @@ public class InitNetwork {
                     if (player == mc.player) return;
 
                     // 直接设置那个玩家实体上的状态机
-                    MovementStateMachine stateMachine = player.getData(InitAttachments.MOVEMENT_STATE);
+                    MomentumStateMachine stateMachine = player.getData(InitAttachments.MOMENTUM_STATE);
                     // 注入附加数据 (如 Dodge 方向), 供 onEnter() 在远程客户端使用
                     stateMachine.getContext().setTransitionExtraData(packet.extraData());
                     stateMachine.getContext().setTransitionWallData(packet.wallData());

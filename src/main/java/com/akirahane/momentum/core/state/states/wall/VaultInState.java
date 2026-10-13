@@ -4,7 +4,7 @@ import com.akirahane.momentum.client.config.ClientConfig;
 import com.akirahane.momentum.client.hud.HintManager;
 import com.akirahane.momentum.client.hud.WallHangHints;
 import com.akirahane.momentum.config.ServerConfig;
-import com.akirahane.momentum.core.context.PlayerMovementContext;
+import com.akirahane.momentum.core.context.PlayerMomentumContext;
 import com.akirahane.momentum.core.state.BaseState;
 import com.akirahane.momentum.core.state.StateType;
 import net.minecraft.client.Minecraft;
@@ -21,7 +21,7 @@ public class VaultInState extends BaseState {
     // 动画名称
     public static final String VAULT_IN = "vault_in";
 
-    public static boolean canVaultIn(Player player, PlayerMovementContext context) {
+    public static boolean canVaultIn(Player player, PlayerMomentumContext context) {
         return ServerConfig.ENABLE_VAULT_IN.getAsBoolean() && ClientConfig.ENABLE_VAULT_IN.getAsBoolean() &&
                 (context.isHasLedge() || player.onGround() && !context.isHasFaceWall()) &&
                 !Vec3.ZERO.equals(context.getInputVec()) && Mth.abs(context.getInputWallAngle()) < 90 &&
@@ -29,7 +29,7 @@ public class VaultInState extends BaseState {
                 ;
     }
 
-    public static boolean checkKey(Player player, PlayerMovementContext context) {
+    public static boolean checkKey(Player player, PlayerMomentumContext context) {
         if (player.onGround() && !context.isHasFaceWall()){
             HintManager.add(WallHangHints.VAULT_IN_STAND);
             return Minecraft.getInstance().options.keyUp.isDown() &&
@@ -43,7 +43,7 @@ public class VaultInState extends BaseState {
     }
 
     @Override
-    public void onEnter(Player player, PlayerMovementContext context) {
+    public void onEnter(Player player, PlayerMomentumContext context) {
         player.setForcedPose(Pose.SWIMMING);
         context.setVaultTimer(10);
         context.setNoJump(true);
@@ -67,7 +67,7 @@ public class VaultInState extends BaseState {
     }
 
     @Override
-    public void onExit(Player player, PlayerMovementContext context) {
+    public void onExit(Player player, PlayerMomentumContext context) {
         super.onExit(player, context);
         var instance = player.getAttribute(Attributes.STEP_HEIGHT);
         if (instance != null) {

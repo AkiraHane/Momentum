@@ -1,18 +1,18 @@
 package com.akirahane.momentum.core.state.states;
 
+import com.akirahane.momentum.core.context.PlayerMomentumContext;
 import com.akirahane.momentum.core.state.StateType;
-import com.akirahane.momentum.core.context.PlayerMovementContext;
 import com.akirahane.momentum.core.state.BaseState;
 import com.akirahane.momentum.init.InitAttachments;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
 
 import static com.akirahane.momentum.config.ServerConfig.MANEUVER_CONSUME_HUNGER;
-import static com.akirahane.momentum.core.context.PlayerMovementContext.DEFAULT_FRICTION;
+import static com.akirahane.momentum.core.context.PlayerMomentumContext.DEFAULT_FRICTION;
 import static com.akirahane.momentum.core.effect.MomentumEffectType.FRICTION;
 
 public class OriginalState extends BaseState {
-    public static boolean canOriginal(Player player, PlayerMovementContext context) {
+    public static boolean canOriginal(Player player, PlayerMomentumContext context) {
         return !(player.getData(InitAttachments.MOMENTUM_ENABLED) && context.isCanMomentum())
                 || player.getAbilities().flying    // 飞行
                 || player.isFallFlying()           // 鞘翅
@@ -26,7 +26,7 @@ public class OriginalState extends BaseState {
     }
 
     @Override
-    public void onEnter(Player player, PlayerMovementContext context) {
+    public void onEnter(Player player, PlayerMomentumContext context) {
         context.resetEffect();
         playStateAnimation(player, IDLE, context);
         stopAnimation(player, context);
@@ -41,12 +41,12 @@ public class OriginalState extends BaseState {
     }
 
     @Override
-    public void serverTick(Player player, PlayerMovementContext context) {
+    public void serverTick(Player player, PlayerMomentumContext context) {
         // 原版状态不额外消耗饱食度
     }
 
     @Override
-    public void onExit(Player player, PlayerMovementContext context) {
+    public void onExit(Player player, PlayerMomentumContext context) {
         super.onExit(player, context);
         context.resetEffect();
         stopAnimation(player, context);

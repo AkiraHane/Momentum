@@ -4,10 +4,12 @@ import com.akirahane.momentum.client.config.ClientConfig;
 import com.akirahane.momentum.client.hud.HintManager;
 import com.akirahane.momentum.client.hud.WallHangHints;
 import com.akirahane.momentum.config.ServerConfig;
-import com.akirahane.momentum.core.context.PlayerMovementContext;
+import com.akirahane.momentum.core.context.PlayerMomentumContext;
 import com.akirahane.momentum.core.effect.MomentumEffectType;
 import com.akirahane.momentum.core.state.StateType;
 import com.akirahane.momentum.core.state.BaseState;
+import com.akirahane.momentum.core.utils.WallDetectionUtils;
+import com.akirahane.momentum.core.utils.WallSoundUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
@@ -16,8 +18,8 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
 
 import static com.akirahane.momentum.client.input.LowerCenterKey.LOWER_CENTER;
-import static com.akirahane.momentum.core.context.PlayerMovementContext.STEP;
-import static com.akirahane.momentum.core.context.PlayerMovementContext.WALL_FRICTION;
+import static com.akirahane.momentum.core.utils.WallSoundUtils.STEP;
+import static com.akirahane.momentum.core.context.PlayerMomentumContext.WALL_FRICTION;
 
 public class WallHangState extends BaseState {
 
@@ -29,7 +31,7 @@ public class WallHangState extends BaseState {
     public static final String WALL_HANG_RIGHT = "wall_hang_right";
     public static final String WALL_HANG_LEFT = "wall_hang_left";
 
-    public static boolean canWallHang(Player player, PlayerMovementContext context) {
+    public static boolean canWallHang(Player player, PlayerMomentumContext context) {
         return ServerConfig.ENABLE_WALL_HANG.getAsBoolean() && ClientConfig.ENABLE_WALL_HANG.getAsBoolean() &&
                 !player.onGround() &&
                 context.isHasLedge() &&
@@ -41,7 +43,7 @@ public class WallHangState extends BaseState {
                 !checkKey(player, context);
     }
 
-    public static boolean checkKey(Player player, PlayerMovementContext context) {
+    public static boolean checkKey(Player player, PlayerMomentumContext context) {
         HintManager.add(WallHangHints.WALL_HANG);
         return Minecraft.getInstance().options.keyShift.isDown();
     }
@@ -56,10 +58,10 @@ public class WallHangState extends BaseState {
     }
 
     @Override
-    public void onEnter(Player player, PlayerMovementContext context) {
+    public void onEnter(Player player, PlayerMomentumContext context) {
         // 同步 wallNormal 给远程玩家
         if (player.level().isClientSide() && Minecraft.getInstance().player == player) {
-            int wallIndex = PlayerMovementContext.encodeWallNormal(context.getWallNormal());
+            int wallIndex = WallDetectionUtils.encodeWallNormal(context.getWallNormal());
             context.setTransitionWallData((byte)(wallIndex >= 0 ? wallIndex : -1));
         }
         playStateAnimation(player, WALL_HANG, context, 1, 1);
@@ -80,12 +82,12 @@ public class WallHangState extends BaseState {
         player.fallDistance = 0;
         context.addPermanentEffect(MomentumEffectType.FRICTION, WALL_FRICTION);
         context.setNeedSoundTick(SOUND_TICK);
-        context.playWallSound(player, STEP, 0.15F, 1);
+        WallSoundUtils.playWallSound(player, context, STEP, 0.15F, 1);
         context.setTargetArmTransform(0.15F, -10F);
     }
 
     @Override
-    public void clientTick(Player player, PlayerMovementContext context) {
+    public void clientTick(Player player, PlayerMomentumContext context) {
         super.clientTick(player, context);
         // 如果没有按后键, 给个向墙的速度防止失误掉落
         if (Minecraft.getInstance().options.keyDown.isDown() ||
@@ -107,7 +109,7 @@ public class WallHangState extends BaseState {
     }
 
     @Override
-    public void clientTickRemote(Player player, PlayerMovementContext context) {
+    public void clientTickRemote(Player player, PlayerMomentumContext context) {
         float speed = (float) context.getSpeed().horizontalDistance() * 20;
         if (speed > 0.05) {
             if (context.getInputWallAngle() < 0) {
@@ -117,7 +119,7 @@ public class WallHangState extends BaseState {
             }
             context.setNeedSoundTick(context.getNeedSoundTick() - speed);
             if (context.getNeedSoundTick() <= 0) {
-                context.playWallSound(player, STEP, 0.15F, 1);
+                WallSoundUtils.playWallSound(player, context, STEP, 0.15F, 1);
                 context.setNeedSoundTick(context.getNeedSoundTick() + SOUND_TICK);
             }
         } else {
@@ -142,7 +144,7 @@ public class WallHangState extends BaseState {
     }
 
     @Override
-    public void onExit(Player player, PlayerMovementContext context) {
+    public void onExit(Player player, PlayerMomentumContext context) {
         super.onExit(player, context);
         var instance = player.getAttribute(Attributes.GRAVITY);
         if (instance != null) {

@@ -1,6 +1,6 @@
 package com.akirahane.momentum.mixin;
 
-import com.akirahane.momentum.core.state.MovementStateMachine;
+import com.akirahane.momentum.core.state.MomentumStateMachine;
 import com.akirahane.momentum.core.state.StateType;
 import com.akirahane.momentum.init.InitAttachments;
 import com.google.common.collect.ImmutableList;
@@ -32,7 +32,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.List;
 
-import static com.akirahane.momentum.core.MomentumUtils.setSlideAcceleration;
+import static com.akirahane.momentum.core.utils.SlideUtils.setSlideAcceleration;
 
 @Mixin(Entity.class)
 public abstract class EntityMixin {
@@ -69,7 +69,7 @@ public abstract class EntityMixin {
         if (!player.level().isClientSide()) {
             return original;
         }
-        MovementStateMachine stateMachine = player.getData(InitAttachments.MOVEMENT_STATE);
+        MomentumStateMachine stateMachine = player.getData(InitAttachments.MOMENTUM_STATE);
         if (stateMachine.getCurrentState().getStateType().equals(StateType.ORIGINAL)) {
             return original;
         }
@@ -89,7 +89,7 @@ public abstract class EntityMixin {
         if (!player.level().isClientSide()) {
             return original.call(boundingBox, colliders, maxStepHeight, stepHeightToSkip);
         }
-        MovementStateMachine stateMachine = player.getData(InitAttachments.MOVEMENT_STATE);
+        MomentumStateMachine stateMachine = player.getData(InitAttachments.MOMENTUM_STATE);
         if (stateMachine.getCurrentState().getStateType().equals(StateType.ORIGINAL)) {
             return original.call(boundingBox, colliders, maxStepHeight, stepHeightToSkip);
         }
@@ -180,7 +180,7 @@ public abstract class EntityMixin {
         if (player.isInLiquid()) {
             return;
         }
-        MovementStateMachine stateMachine = player.getData(InitAttachments.MOVEMENT_STATE);
+        MomentumStateMachine stateMachine = player.getData(InitAttachments.MOMENTUM_STATE);
         if (stateMachine.getCurrentState().getStateType().equals(StateType.ORIGINAL)) {
             return;
         }

@@ -4,7 +4,7 @@ import com.akirahane.momentum.client.config.ClientConfig;
 import com.akirahane.momentum.client.hud.HintManager;
 import com.akirahane.momentum.client.hud.WallHangHints;
 import com.akirahane.momentum.config.ServerConfig;
-import com.akirahane.momentum.core.context.PlayerMovementContext;
+import com.akirahane.momentum.core.context.PlayerMomentumContext;
 import com.akirahane.momentum.core.state.BaseState;
 import com.akirahane.momentum.core.state.StateType;
 import com.akirahane.momentum.core.state.states.wall.*;
@@ -19,14 +19,14 @@ import net.minecraft.world.phys.Vec3;
 import static com.akirahane.momentum.client.init.InitSounds.JET2;
 import static com.akirahane.momentum.config.ServerConfig.DODGE_COOLDOWN;
 import static com.akirahane.momentum.config.ServerConfig.DODGE_STORAGE;
-import static com.akirahane.momentum.core.context.PlayerMovementContext.SPRINT;
+import static com.akirahane.momentum.core.context.PlayerMomentumContext.SPRINT;
 
 public class SwimDashState extends BaseState {
 
     // 海豚跳动画
     public static String DOLPHIN_JUMP = "dolphin_jump";
 
-    public static boolean canSwimDash(Player player, PlayerMovementContext context) {
+    public static boolean canSwimDash(Player player, PlayerMomentumContext context) {
         if (!ServerConfig.ENABLE_WATER_PUSH.getAsBoolean() || !ClientConfig.ENABLE_WATER_PUSH.getAsBoolean()) {
             return false;
         }
@@ -61,7 +61,7 @@ public class SwimDashState extends BaseState {
                 WallClimbState::canWallClimb);
     }
 
-    public void onEnter(Player player, PlayerMovementContext context) {
+    public void onEnter(Player player, PlayerMomentumContext context) {
         player.setSwimming(true);
         player.setSprinting(true);
         float yRot = player.getYRot();
@@ -112,7 +112,7 @@ public class SwimDashState extends BaseState {
     }
 
     @Override
-    public void clientTick(Player player, PlayerMovementContext context) {
+    public void clientTick(Player player, PlayerMomentumContext context) {
         if (!player.isInWater()) {
             context.setSwimPushTimer(10);
             var instance = player.getAttribute(Attributes.GRAVITY);
@@ -128,7 +128,7 @@ public class SwimDashState extends BaseState {
     }
 
     @Override
-    public void clientTickRemote(Player player, PlayerMovementContext context) {
+    public void clientTickRemote(Player player, PlayerMomentumContext context) {
         if (!player.isInWater()) {
             playStateAnimation(player, DOLPHIN_JUMP, context);
         } else if (!IDLE.equals(context.getCurrentAnimationName())) {
@@ -136,7 +136,7 @@ public class SwimDashState extends BaseState {
         }
     }
 
-    public void onExit(Player player, PlayerMovementContext context) {
+    public void onExit(Player player, PlayerMomentumContext context) {
         super.onExit(player, context);
         context.setNoJump(false);
         context.setNoMoveInput(false);

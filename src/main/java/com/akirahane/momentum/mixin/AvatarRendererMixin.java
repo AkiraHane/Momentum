@@ -1,7 +1,7 @@
 package com.akirahane.momentum.mixin;
 
-import com.akirahane.momentum.core.context.PlayerMovementContext;
-import com.akirahane.momentum.core.state.MovementStateMachine;
+import com.akirahane.momentum.core.context.PlayerMomentumContext;
+import com.akirahane.momentum.core.state.MomentumStateMachine;
 import com.akirahane.momentum.core.state.StateType;
 import com.akirahane.momentum.init.InitAttachments;
 import net.minecraft.client.renderer.entity.player.AvatarRenderer;
@@ -20,8 +20,8 @@ public abstract class AvatarRendererMixin {
     public void momentum$modifyRenderState(Avatar entity, AvatarRenderState state, float partialTicks, CallbackInfo ci) {
         if (!(entity instanceof Player player)) return;
 
-        MovementStateMachine stateMachine = player.getData(InitAttachments.MOVEMENT_STATE);
-        PlayerMovementContext context = stateMachine.getContext();
+        MomentumStateMachine stateMachine = player.getData(InitAttachments.MOMENTUM_STATE);
+        PlayerMomentumContext context = stateMachine.getContext();
         StateType currentState = stateMachine.getCurrentState().getStateType();
 
         if (StateType.SWIM.equals(currentState)) {

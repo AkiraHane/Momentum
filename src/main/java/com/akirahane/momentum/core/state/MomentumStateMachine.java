@@ -1,8 +1,9 @@
 package com.akirahane.momentum.core.state;
 
-import com.akirahane.momentum.core.context.PlayerMovementContext;
+import com.akirahane.momentum.core.context.PlayerMomentumContext;
 import com.akirahane.momentum.core.effect.MomentumEffect;
 import com.akirahane.momentum.core.effect.MomentumEffectType;
+import com.akirahane.momentum.core.utils.MomentumTickUtils;
 import com.mojang.logging.LogUtils;
 import lombok.Getter;
 import lombok.Setter;
@@ -16,18 +17,18 @@ import static com.akirahane.momentum.core.state.StateType.ORIGINAL;
 
 @Getter
 @Setter
-public class MovementStateMachine {
+public class MomentumStateMachine {
     // 日志
     protected static final Logger LOGGER = LogUtils.getLogger();
     // 当前状态
     private BaseState currentState;
     // 玩家数据上下文
-    private final PlayerMovementContext context;
+    private final PlayerMomentumContext context;
     // 是否需要广播状态
     private boolean dirty = false;
 
-    public MovementStateMachine(Player player) {
-        this.context = new PlayerMovementContext(player);
+    public MomentumStateMachine(Player player) {
+        this.context = new PlayerMomentumContext(player);
         currentState = ORIGINAL.getState();
         LOGGER.trace("[MovementStateMachine] init");
     }
@@ -37,7 +38,7 @@ public class MovementStateMachine {
     public BaseState clientTick(Player player) {
         handleEffect();
         BaseState org = currentState;
-        context.clientTick(player);
+        MomentumTickUtils.clientTick(player, context);
         currentState.clientTick(player, context);
         BaseState next = currentState.evaluate(player, context);
         transition(next, player);
@@ -52,13 +53,13 @@ public class MovementStateMachine {
 
     // 服务端实施效果
     public void serverTick(Player player) {
-        context.serverTick(player);
+        MomentumTickUtils.serverTick(player, context);
         currentState.serverTick(player, context);
     }
 
     // 客户端远程玩家tick
     public void clientTickRemote(Player player) {
-        context.clientTickRemote(player);
+        MomentumTickUtils.clientTickRemote(player, context);
         currentState.clientTickRemote(player, context);
     }
 

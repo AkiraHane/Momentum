@@ -3,10 +3,10 @@ package com.akirahane.momentum.client;
 import com.akirahane.momentum.Momentum;
 import com.akirahane.momentum.client.animation.MomentumAnimationController;
 import com.akirahane.momentum.client.config.ClientConfig;
-import com.akirahane.momentum.client.debug.MovementDebugEntry;
+import com.akirahane.momentum.client.debug.MomentumDebugEntry;
 import com.akirahane.momentum.client.hud.HintManager;
+import com.akirahane.momentum.core.state.MomentumStateMachine;
 import com.akirahane.momentum.init.InitItems;
-import com.akirahane.momentum.core.state.MovementStateMachine;
 import com.akirahane.momentum.core.state.BaseState;
 import com.akirahane.momentum.core.state.StateType;
 import com.akirahane.momentum.init.InitAttachments;
@@ -53,9 +53,9 @@ import static com.akirahane.momentum.client.config.ClientConfig.ENABLE_KEY_HINTS
 public class MomentumClient {
     protected static final Logger LOGGER = LogUtils.getLogger();
 
-    public static final Identifier MOVEMENT_INFO =
+    public static final Identifier MOMENTUM_INFO =
             Identifier.fromNamespaceAndPath(Momentum.MODID, "movement_info");
-    public static final Identifier MOVEMENT_ANIM =
+    public static final Identifier MOMENTUM_ANIM =
             Identifier.fromNamespaceAndPath(Momentum.MODID, "movement_anim");
 
     public MomentumClient(ModContainer modContainer, IEventBus modEventBus) {
@@ -73,7 +73,7 @@ public class MomentumClient {
     public static void onClientPlayerTick(PlayerTickEvent.Pre event) {
         if (event.getEntity() instanceof LocalPlayer player) {
             // 本地玩家
-            MovementStateMachine sm = player.getData(InitAttachments.MOVEMENT_STATE);
+            MomentumStateMachine sm = player.getData(InitAttachments.MOMENTUM_STATE);
             BaseState state = sm.clientTick(player);
             if (state != null) {
                 ClientPacketDistributor.sendToServer(
@@ -84,7 +84,7 @@ public class MomentumClient {
             }
         } else if (event.getEntity() instanceof AbstractClientPlayer otherPlayer) {
             // 其他联机玩家
-            MovementStateMachine sm = otherPlayer.getData(InitAttachments.MOVEMENT_STATE);
+            MomentumStateMachine sm = otherPlayer.getData(InitAttachments.MOMENTUM_STATE);
             sm.clientTickRemote(otherPlayer);
         }
     }
@@ -93,7 +93,7 @@ public class MomentumClient {
     @SubscribeEvent(priority = EventPriority.LOWEST)
     public static void onClientPlayerTick(PlayerTickEvent.Post event) {
         if (event.getEntity() instanceof Player player) {
-            MovementStateMachine sm = player.getData(InitAttachments.MOVEMENT_STATE);
+            MomentumStateMachine sm = player.getData(InitAttachments.MOMENTUM_STATE);
             sm.getContext().setOldSpeed(sm.getContext().getSpeed());
             sm.getContext().setSpeed(new Vec3(
                     player.getX() - player.xOld,
@@ -106,8 +106,8 @@ public class MomentumClient {
 
     @SubscribeEvent
     public static void onRegisterDebugEntries(RegisterDebugEntriesEvent event) {
-        event.register(MOVEMENT_INFO, new MovementDebugEntry());
-        event.includeInProfile(MOVEMENT_INFO, DebugScreenProfile.DEFAULT, DebugScreenEntryStatus.NEVER);
+        event.register(MOMENTUM_INFO, new MomentumDebugEntry());
+        event.includeInProfile(MOMENTUM_INFO, DebugScreenProfile.DEFAULT, DebugScreenEntryStatus.NEVER);
     }
 
     // https://docs.zigythebird.com/pal/how_to_play_animations
@@ -116,7 +116,7 @@ public class MomentumClient {
     public static void onClientSetup(FMLClientSetupEvent event) {
         event.enqueueWork(() -> {
             PlayerAnimationFactory.ANIMATION_DATA_FACTORY.registerFactory(
-                    MOVEMENT_ANIM, 1500, // 1500 优先级，gameplay 动画
+                    MOMENTUM_ANIM, 1500, // 1500 优先级，gameplay 动画
                     avatar -> {
                         if (avatar instanceof Player player) {
                             return new MomentumAnimationController(player,
@@ -139,8 +139,8 @@ public class MomentumClient {
     // 渲染层统一保险：原版模式不施加任何相机/渲染修改
     private static boolean isOriginal(Minecraft mc) {
         if (mc.player == null) return true;
-        if (!mc.player.hasData(InitAttachments.MOVEMENT_STATE)) return true;
-        return mc.player.getData(InitAttachments.MOVEMENT_STATE).getCurrentState().getStateType() == StateType.ORIGINAL;
+        if (!mc.player.hasData(InitAttachments.MOMENTUM_STATE)) return true;
+        return mc.player.getData(InitAttachments.MOMENTUM_STATE).getCurrentState().getStateType() == StateType.ORIGINAL;
     }
 
     @SubscribeEvent
@@ -153,7 +153,7 @@ public class MomentumClient {
         LocalPlayer player = Minecraft.getInstance().player;
         if (player == null) return;
 
-        var context = player.getData(InitAttachments.MOVEMENT_STATE).getContext();
+        var context = player.getData(InitAttachments.MOMENTUM_STATE).getContext();
 
         float partialTick = (float) event.getPartialTick();
         float roll = context.getRenderCameraRoll(partialTick);
@@ -175,7 +175,7 @@ public class MomentumClient {
         LocalPlayer player = Minecraft.getInstance().player;
         if (player == null) return;
 
-        var context = player.getData(InitAttachments.MOVEMENT_STATE).getContext();
+        var context = player.getData(InitAttachments.MOMENTUM_STATE).getContext();
         float bonus = context.getRenderFovBonus((float) event.getPartialTick());
 
         if (bonus != 0F) {
@@ -190,7 +190,7 @@ public class MomentumClient {
         LocalPlayer player = Minecraft.getInstance().player;
         if (player == null) return;
 
-        var machine = player.getData(InitAttachments.MOVEMENT_STATE);
+        var machine = player.getData(InitAttachments.MOMENTUM_STATE);
         var context = machine.getContext();
         float pt = event.getPartialTick();
 

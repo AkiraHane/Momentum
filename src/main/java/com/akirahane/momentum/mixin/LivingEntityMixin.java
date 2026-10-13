@@ -1,8 +1,8 @@
 package com.akirahane.momentum.mixin;
 
 import com.akirahane.momentum.config.ServerConfig;
-import com.akirahane.momentum.core.context.PlayerMovementContext;
-import com.akirahane.momentum.core.state.MovementStateMachine;
+import com.akirahane.momentum.core.context.PlayerMomentumContext;
+import com.akirahane.momentum.core.state.MomentumStateMachine;
 import com.akirahane.momentum.core.state.StateType;
 import com.akirahane.momentum.init.InitAttachments;
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
@@ -48,7 +48,7 @@ public abstract class LivingEntityMixin extends Entity implements Attackable, Wa
         if (!(self instanceof Player player)) {
             return original;
         }
-        MovementStateMachine stateMachine = player.getData(InitAttachments.MOVEMENT_STATE);
+        MomentumStateMachine stateMachine = player.getData(InitAttachments.MOMENTUM_STATE);
         if (stateMachine.getCurrentState().getStateType().equals(StateType.ORIGINAL)) {
             return original;
         }
@@ -63,7 +63,7 @@ public abstract class LivingEntityMixin extends Entity implements Attackable, Wa
         if (!(self instanceof Player player)) {
             return original;
         }
-        MovementStateMachine stateMachine = player.getData(InitAttachments.MOVEMENT_STATE);
+        MomentumStateMachine stateMachine = player.getData(InitAttachments.MOMENTUM_STATE);
         if (stateMachine.getCurrentState().getStateType() == StateType.ORIGINAL) {
             return original;
         }
@@ -86,7 +86,7 @@ public abstract class LivingEntityMixin extends Entity implements Attackable, Wa
         if (!(self instanceof Player player)) {
             return original;
         }
-        MovementStateMachine stateMachine = player.getData(InitAttachments.MOVEMENT_STATE);
+        MomentumStateMachine stateMachine = player.getData(InitAttachments.MOMENTUM_STATE);
         if (stateMachine.getCurrentState().getStateType().equals(StateType.ORIGINAL)) {
             return original;
         }
@@ -103,7 +103,7 @@ public abstract class LivingEntityMixin extends Entity implements Attackable, Wa
         if (!(self instanceof Player player)) {
             return original;
         }
-        MovementStateMachine stateMachine = player.getData(InitAttachments.MOVEMENT_STATE);
+        MomentumStateMachine stateMachine = player.getData(InitAttachments.MOMENTUM_STATE);
         if (stateMachine.getCurrentState().getStateType().equals(StateType.ORIGINAL)) {
             return original;
         }
@@ -118,7 +118,7 @@ public abstract class LivingEntityMixin extends Entity implements Attackable, Wa
         if (!(self instanceof Player player)) {
             return original;
         }
-        MovementStateMachine stateMachine = player.getData(InitAttachments.MOVEMENT_STATE);
+        MomentumStateMachine stateMachine = player.getData(InitAttachments.MOMENTUM_STATE);
         if (stateMachine.getCurrentState().getStateType().equals(StateType.ORIGINAL)) {
             return original;
         }
@@ -136,7 +136,7 @@ public abstract class LivingEntityMixin extends Entity implements Attackable, Wa
         if (!(self instanceof Player player)) {
             return original;
         }
-        MovementStateMachine stateMachine = player.getData(InitAttachments.MOVEMENT_STATE);
+        MomentumStateMachine stateMachine = player.getData(InitAttachments.MOMENTUM_STATE);
         if (stateMachine.getCurrentState().getStateType().equals(StateType.ORIGINAL)) {
             return original;
         }
@@ -150,7 +150,7 @@ public abstract class LivingEntityMixin extends Entity implements Attackable, Wa
         if (!(self instanceof Player player)) {
             return original;
         }
-        MovementStateMachine stateMachine = player.getData(InitAttachments.MOVEMENT_STATE);
+        MomentumStateMachine stateMachine = player.getData(InitAttachments.MOMENTUM_STATE);
         if (stateMachine.getCurrentState().getStateType().equals(StateType.ORIGINAL)) {
             return original;
         }
@@ -198,7 +198,7 @@ public abstract class LivingEntityMixin extends Entity implements Attackable, Wa
             original.call(self, originalBoost);
             return;
         }
-        MovementStateMachine stateMachine = player.getData(InitAttachments.MOVEMENT_STATE);
+        MomentumStateMachine stateMachine = player.getData(InitAttachments.MOMENTUM_STATE);
         if (stateMachine.getCurrentState().getStateType().equals(StateType.ORIGINAL)) {
             original.call(self, originalBoost);
             return;
@@ -232,7 +232,7 @@ public abstract class LivingEntityMixin extends Entity implements Attackable, Wa
         if (!(self instanceof Player player)) {
             return;
         }
-        MovementStateMachine stateMachine = player.getData(InitAttachments.MOVEMENT_STATE);
+        MomentumStateMachine stateMachine = player.getData(InitAttachments.MOMENTUM_STATE);
         if (stateMachine.getCurrentState().getStateType().equals(StateType.ORIGINAL)) {
             return;
         }
@@ -251,7 +251,7 @@ public abstract class LivingEntityMixin extends Entity implements Attackable, Wa
             return;
         }
 
-        MovementStateMachine stateMachine = player.getData(InitAttachments.MOVEMENT_STATE);
+        MomentumStateMachine stateMachine = player.getData(InitAttachments.MOMENTUM_STATE);
         if (stateMachine.getCurrentState().getStateType().equals(StateType.ORIGINAL)) {
             return;
         }
@@ -262,7 +262,7 @@ public abstract class LivingEntityMixin extends Entity implements Attackable, Wa
                 StateType.WALL_SLIDE.equals(state) ||
                 StateType.WALL_HANG.equals(state)
         ) {
-            PlayerMovementContext context = stateMachine.getContext();
+            PlayerMomentumContext context = stateMachine.getContext();
             Vec3 wallNormal = context.getWallNormal();
 
             if (wallNormal.lengthSqr() > 0.001) {
@@ -298,7 +298,7 @@ public abstract class LivingEntityMixin extends Entity implements Attackable, Wa
         if (!self.onClimbable()) return original;
         if (!Minecraft.getInstance().options.keySprint.isDown()) return original;
 
-        MovementStateMachine stateMachine = player.getData(InitAttachments.MOVEMENT_STATE);
+        MomentumStateMachine stateMachine = player.getData(InitAttachments.MOMENTUM_STATE);
         if (stateMachine.getCurrentState().getStateType().equals(StateType.ORIGINAL)) {
             return original;
         }

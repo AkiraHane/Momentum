@@ -1,6 +1,6 @@
 package com.akirahane.momentum;
 
-import com.akirahane.momentum.core.state.MovementStateMachine;
+import com.akirahane.momentum.core.state.MomentumStateMachine;
 import com.akirahane.momentum.core.state.StateType;
 import com.akirahane.momentum.init.InitAttachments;
 import com.akirahane.momentum.init.InitItems;
@@ -59,7 +59,7 @@ public class Momentum {
     @SubscribeEvent(priority = EventPriority.LOWEST)
     public static void onPlayerTick(PlayerTickEvent.Pre event) {
         if (event.getEntity() instanceof ServerPlayer player) {
-            MovementStateMachine sm = player.getData(InitAttachments.MOVEMENT_STATE);
+            MomentumStateMachine sm = player.getData(InitAttachments.MOMENTUM_STATE);
             sm.serverTick(player);
         }
     }
@@ -68,7 +68,7 @@ public class Momentum {
     public static void onServerTick(ServerTickEvent.Post event) {
         MinecraftServer server = event.getServer();
         for (ServerPlayer player : server.getPlayerList().getPlayers()) {
-            MovementStateMachine stateMachine = player.getData(InitAttachments.MOVEMENT_STATE);
+            MomentumStateMachine stateMachine = player.getData(InitAttachments.MOMENTUM_STATE);
             if (stateMachine.isDirty()) {
                 StateBroadcastPacket packet = new StateBroadcastPacket(player.getId(), stateMachine.getCurrentState().getStateType(), stateMachine.getContext().getTransitionExtraData(), stateMachine.getContext().getTransitionWallData());
                 for (ServerPlayer observer : player.level().players()) {
@@ -85,7 +85,7 @@ public class Momentum {
     public static void onLivingFall(LivingFallEvent event) {
         if (!(event.getEntity() instanceof Player player)) return;
 
-        MovementStateMachine stateMachine = player.getData(InitAttachments.MOVEMENT_STATE);
+        MomentumStateMachine stateMachine = player.getData(InitAttachments.MOMENTUM_STATE);
         float distance = (float) event.getDistance();
         float multiplier = event.getDamageMultiplier();
 
@@ -116,7 +116,7 @@ public class Momentum {
     public static void onPlayerHurt(LivingIncomingDamageEvent event) {
         if (!(event.getEntity() instanceof Player player)) return;
 
-        MovementStateMachine stateMachine = player.getData(InitAttachments.MOVEMENT_STATE);
+        MomentumStateMachine stateMachine = player.getData(InitAttachments.MOMENTUM_STATE);
         if (StateType.DODGE.equals(stateMachine.getCurrentState().getStateType())) {
             event.setCanceled(true);
             player.fallDistance = 0;

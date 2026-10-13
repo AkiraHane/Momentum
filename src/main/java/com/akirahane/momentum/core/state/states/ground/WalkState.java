@@ -1,25 +1,25 @@
 package com.akirahane.momentum.core.state.states.ground;
 
+import com.akirahane.momentum.core.context.PlayerMomentumContext;
 import com.akirahane.momentum.core.state.StateType;
 import com.akirahane.momentum.core.state.BaseState;
-import com.akirahane.momentum.core.context.PlayerMovementContext;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.player.Player;
 
 public class WalkState extends BaseState {
     // 动画名称 ice_slide
     public static String ICE_SLIDE = "ice_slide";
-    public static boolean canWalk(Player player, PlayerMovementContext context) {
+    public static boolean canWalk(Player player, PlayerMomentumContext context) {
         return player.onGround();
     }
 
     @Override
-    public void onEnter(Player player, PlayerMovementContext context) {
+    public void onEnter(Player player, PlayerMomentumContext context) {
         this.clientTickRemote(player, context);
     }
 
     @Override
-    public void clientTickRemote(Player player, PlayerMovementContext context) {
+    public void clientTickRemote(Player player, PlayerMomentumContext context) {
         BlockPos posBelow = player.getBlockPosBelowThatAffectsMyMovement();
         float blockFriction = player.onGround() ? player.level().getBlockState(posBelow).getFriction(player.level(), posBelow, player) : 0F;
         if (blockFriction > 0.95F && context.getSpeed().horizontalDistance() > 0.1F) {

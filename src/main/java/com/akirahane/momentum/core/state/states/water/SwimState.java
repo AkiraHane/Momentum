@@ -2,10 +2,9 @@ package com.akirahane.momentum.core.state.states.water;
 
 import com.akirahane.momentum.client.hud.HintManager;
 import com.akirahane.momentum.client.hud.WallHangHints;
-import com.akirahane.momentum.core.context.PlayerMovementContext;
+import com.akirahane.momentum.core.context.PlayerMomentumContext;
 import com.akirahane.momentum.core.state.StateType;
 import com.akirahane.momentum.core.state.BaseState;
-import com.akirahane.momentum.core.state.states.wall.*;
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.entity.player.Player;
 
@@ -13,7 +12,7 @@ import static com.akirahane.momentum.client.input.LowerCenterKey.LOWER_CENTER;
 
 public class SwimState extends BaseState {
 
-    public static boolean canSwim(Player player, PlayerMovementContext context) {
+    public static boolean canSwim(Player player, PlayerMomentumContext context) {
         if (player.isSwimming()) {
             return true;
         } else if (player.isUnderWater()) {
@@ -37,14 +36,14 @@ public class SwimState extends BaseState {
         return without(DEFAULT_CHAIN, StateType.SLIDE);
     }
 
-    public void onEnter(Player player, PlayerMovementContext context) {
+    public void onEnter(Player player, PlayerMomentumContext context) {
         super.onEnter(player, context);
         player.setSwimming(true);
         player.setSprinting(true);
         LOGGER.trace("player.isSwimming(): {}", player.isSwimming());
     }
 
-    public void onExit(Player player, PlayerMovementContext context) {
+    public void onExit(Player player, PlayerMomentumContext context) {
         super.onExit(player, context);
     }
 

@@ -4,10 +4,12 @@ import com.akirahane.momentum.client.config.ClientConfig;
 import com.akirahane.momentum.client.hud.HintManager;
 import com.akirahane.momentum.client.hud.WallHangHints;
 import com.akirahane.momentum.config.ServerConfig;
-import com.akirahane.momentum.core.context.PlayerMovementContext;
+import com.akirahane.momentum.core.context.PlayerMomentumContext;
 import com.akirahane.momentum.core.effect.MomentumEffectType;
 import com.akirahane.momentum.core.state.StateType;
 import com.akirahane.momentum.core.state.BaseState;
+import com.akirahane.momentum.core.utils.WallDetectionUtils;
+import com.akirahane.momentum.core.utils.WallSoundUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
@@ -16,7 +18,8 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
 
 import static com.akirahane.momentum.client.init.InitSounds.JET3;
-import static com.akirahane.momentum.core.context.PlayerMovementContext.*;
+import static com.akirahane.momentum.core.utils.WallSoundUtils.STEP;
+import static com.akirahane.momentum.core.context.PlayerMomentumContext.*;
 
 public class WallClimbState extends BaseState {
     // 动画名称
@@ -24,7 +27,7 @@ public class WallClimbState extends BaseState {
 
     private static final int SOUND_TICK = 10;
 
-    public static boolean canWallClimb(Player player, PlayerMovementContext context) {
+    public static boolean canWallClimb(Player player, PlayerMomentumContext context) {
         return  ServerConfig.ENABLE_WALL_CLIMB.getAsBoolean() && ClientConfig.ENABLE_WALL_CLIMB.getAsBoolean() &&
                 !Minecraft.getInstance().options.keyShift.isDown() &&
                 (!Vec3.ZERO.equals(context.getWallNormal()) &&
@@ -37,7 +40,7 @@ public class WallClimbState extends BaseState {
     }
 
     // 维持
-    public static boolean canWallClimbHold(Player player, PlayerMovementContext context) {
+    public static boolean canWallClimbHold(Player player, PlayerMomentumContext context) {
         return ServerConfig.ENABLE_WALL_CLIMB.getAsBoolean() && ClientConfig.ENABLE_WALL_CLIMB.getAsBoolean() &&
                 !Minecraft.getInstance().options.keyShift.isDown() &&
                 (!Vec3.ZERO.equals(context.getWallNormal()) &&
@@ -49,7 +52,7 @@ public class WallClimbState extends BaseState {
         );
     }
 
-    public static boolean checkKey(Player player, PlayerMovementContext context) {
+    public static boolean checkKey(Player player, PlayerMomentumContext context) {
         if (!player.onClimbable()){
             HintManager.add(WallHangHints.WALL_CLIMB);
             return Minecraft.getInstance().options.keyJump.isDown();
@@ -67,10 +70,10 @@ public class WallClimbState extends BaseState {
     }
 
     @Override
-    public void onEnter(Player player, PlayerMovementContext context) {
+    public void onEnter(Player player, PlayerMomentumContext context) {
         // 同步 wallNormal 给远程玩家
         if (player.level().isClientSide() && Minecraft.getInstance().player == player) {
-            int wallIndex = PlayerMovementContext.encodeWallNormal(context.getWallNormal());
+            int wallIndex = WallDetectionUtils.encodeWallNormal(context.getWallNormal());
             context.setTransitionWallData((byte)(wallIndex >= 0 ? wallIndex : -1));
         }
         playStateAnimation(player, WALL_CLIMB, context);
@@ -87,12 +90,12 @@ public class WallClimbState extends BaseState {
             player.addDeltaMovement(new Vec3(0, player.getDeltaMovement().y * 0.2, 0));
         }
         context.setNeedSoundTick(SOUND_TICK);
-        context.playWallSound(player, STEP, 0.15F, 1);
+        WallSoundUtils.playWallSound(player, context, STEP, 0.15F, 1);
         context.setTargetArmTransform(0.15F, -20F);
     }
 
     @Override
-    public void clientTick(Player player, PlayerMovementContext context) {
+    public void clientTick(Player player, PlayerMomentumContext context) {
         super.clientTick(player, context);
         if (context.isHasJetBooster() && !player.onClimbable()){
             player.setDeltaMovement(
@@ -104,7 +107,7 @@ public class WallClimbState extends BaseState {
     }
 
     @Override
-    public void clientTickRemote(Player player, PlayerMovementContext context) {
+    public void clientTickRemote(Player player, PlayerMomentumContext context) {
         float speed = (float) Math.min(context.getSpeed().y * 6, 5);
         playStateAnimation(player, WALL_CLIMB, context, 0, speed);
         context.setNeedSoundTick(context.getNeedSoundTick() - speed);
@@ -112,13 +115,13 @@ public class WallClimbState extends BaseState {
             if (context.isHasJetBooster()){
                 player.playSound(JET3.value(), 0.2F, 1.5F + player.getRandom().nextFloat() * 0.4F - 0.2F);
             }
-            context.playWallSound(player, STEP, 0.15F, 1);
+            WallSoundUtils.playWallSound(player, context, STEP, 0.15F, 1);
             context.setNeedSoundTick(context.getNeedSoundTick() + SOUND_TICK);
         }
     }
 
     @Override
-    public void onExit(Player player, PlayerMovementContext context) {
+    public void onExit(Player player, PlayerMomentumContext context) {
         super.onExit(player, context);
         context.removeEffect(MomentumEffectType.LIMIT_ACCELERATION_SPEED, AIR_LIMIT_ACCELERATION);
         var instance = player.getAttribute(Attributes.GRAVITY);

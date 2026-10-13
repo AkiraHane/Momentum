@@ -3,7 +3,7 @@ package com.akirahane.momentum.core.state;
 import com.akirahane.momentum.Momentum;
 import com.akirahane.momentum.client.hud.HintManager;
 import com.akirahane.momentum.client.hud.WallHangHints;
-import com.akirahane.momentum.core.context.PlayerMovementContext;
+import com.akirahane.momentum.core.context.PlayerMomentumContext;
 import com.akirahane.momentum.core.state.states.OriginalState;
 import com.akirahane.momentum.core.state.states.air.AirborneState;
 import com.akirahane.momentum.core.state.states.air.BreakFallReadyState;
@@ -57,12 +57,12 @@ public abstract class BaseState {
     // ==================== 生命周期 ====================
 
     // 进入状态时调用一次。
-    public void onEnter(Player player, PlayerMovementContext context) {
+    public void onEnter(Player player, PlayerMomentumContext context) {
         playStateAnimation(player, IDLE, context);
     }
 
     // 服务器和客户端都支持的功能
-    public void serverTick(Player player, PlayerMovementContext context) {
+    public void serverTick(Player player, PlayerMomentumContext context) {
         if (MANEUVER_CONSUME_HUNGER.get()) {
             float modify = MANEUVER_CONSUME_HUNGER_AMOUNT.get().floatValue();
             if (context.isHasJetBooster()) {
@@ -73,22 +73,22 @@ public abstract class BaseState {
     }
 
     // 视觉效果和移动、状态转换相关内容
-    public void clientTick(Player player, PlayerMovementContext context) {
+    public void clientTick(Player player, PlayerMomentumContext context) {
         serverTick(player, context);
         clientTickRemote(player, context);
     }
 
     // 其他玩家要在客户端渲染视觉效果的所需数据
-    public void clientTickRemote(Player player, PlayerMovementContext context) {
+    public void clientTickRemote(Player player, PlayerMomentumContext context) {
     }
 
     // 离开状态时调用一次。
-    public void onExit(Player player, PlayerMovementContext context) {
+    public void onExit(Player player, PlayerMomentumContext context) {
         context.setTargetArmTransform(0, 0);
     }
 
     // 状态转换检查
-    public BaseState evaluate(Player player, PlayerMovementContext context) {
+    public BaseState evaluate(Player player, PlayerMomentumContext context) {
         HintManager.clear();
         HintManager.add(WallHangHints.ORIGINAL_STATE);
         HintManager.add(WallHangHints.TOGGLE_HINT);
@@ -108,8 +108,8 @@ public abstract class BaseState {
     // ==================== 状态转换链（唯一默认链 + 每状态声明式微调） ====================
 
     // 状态转换规则：目标状态 + 进入条件。tryTransition 返回满足条件的下一状态，否则 null
-    protected record Transition(StateType target, BiPredicate<Player, PlayerMovementContext> can) {
-        BaseState tryTransition(Player player, PlayerMovementContext context) {
+    protected record Transition(StateType target, BiPredicate<Player, PlayerMomentumContext> can) {
+        BaseState tryTransition(Player player, PlayerMomentumContext context) {
             return can.test(player, context) ? target.getState() : null;
         }
     }
@@ -159,7 +159,7 @@ public abstract class BaseState {
 
     // 微调辅助：替换指定状态的进入条件（常用于把"进入检查"换成"自保持检查"）
     protected static List<Transition> withPredicate(List<Transition> chain, StateType target,
-                                                    BiPredicate<Player, PlayerMovementContext> can) {
+                                                    BiPredicate<Player, PlayerMomentumContext> can) {
         List<Transition> out = new ArrayList<>(chain);
         for (int i = 0; i < out.size(); i++) {
             if (out.get(i).target() == target) {
@@ -172,7 +172,7 @@ public abstract class BaseState {
     // 微调辅助：把 target 状态的检查移动到 anchor 之后（用于自保持检查需要比默认入口更早的情况，
     // 如受身/翻越动画期间不被滑铲/游泳等打断）。会先移除原 target，再在 anchor 后插入新谓词。
     protected static List<Transition> moveAfter(List<Transition> chain, StateType target, StateType anchor,
-                                                BiPredicate<Player, PlayerMovementContext> can) {
+                                                BiPredicate<Player, PlayerMomentumContext> can) {
         List<Transition> out = new ArrayList<>(chain);
         out.removeIf(tr -> tr.target() == target);
         for (int i = 0; i < out.size(); i++) {
@@ -188,11 +188,11 @@ public abstract class BaseState {
 
 
     // 客户端，状态切换时调用
-    public static void playStateAnimation(Player player, @NotNull String animName, PlayerMovementContext context) {
+    public static void playStateAnimation(Player player, @NotNull String animName, PlayerMomentumContext context) {
         playStateAnimation(player, animName, context, 6, 1.0f);
     }
 
-    public static void playStateAnimation(Player player, @NotNull String animName, PlayerMovementContext context, int fadeInTime, float speed) {
+    public static void playStateAnimation(Player player, @NotNull String animName, PlayerMomentumContext context, int fadeInTime, float speed) {
         if (!player.level().isClientSide()) {
             return;
         }
@@ -220,7 +220,7 @@ public abstract class BaseState {
     }
 
     // 停止动画
-    public static void stopAnimation(Player player, PlayerMovementContext context) {
+    public static void stopAnimation(Player player, PlayerMomentumContext context) {
         if (!player.level().isClientSide() || context.getCurrentAnimationName() == null) {
             return;
         }

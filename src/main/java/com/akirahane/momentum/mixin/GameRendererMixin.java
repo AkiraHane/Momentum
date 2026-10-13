@@ -20,9 +20,9 @@ public class GameRendererMixin {
     private void momentum$cancelBobView(CameraRenderState cameraState, PoseStack poseStack, CallbackInfo ci) {
         Minecraft mc = Minecraft.getInstance();
         if (mc.player == null) return;
-        if (!mc.player.hasData(InitAttachments.MOVEMENT_STATE)) return;
+        if (!mc.player.hasData(InitAttachments.MOMENTUM_STATE)) return;
 
-        var machine = mc.player.getData(InitAttachments.MOVEMENT_STATE);
+        var machine = mc.player.getData(InitAttachments.MOMENTUM_STATE);
         if (StateType.SLIDE.equals(machine.getCurrentState().getStateType())) {
             ci.cancel();
         }

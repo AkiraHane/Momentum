@@ -4,7 +4,7 @@ import com.akirahane.momentum.client.config.ClientConfig;
 import com.akirahane.momentum.client.hud.HintManager;
 import com.akirahane.momentum.client.hud.WallHangHints;
 import com.akirahane.momentum.config.ServerConfig;
-import com.akirahane.momentum.core.context.PlayerMovementContext;
+import com.akirahane.momentum.core.context.PlayerMomentumContext;
 import com.akirahane.momentum.core.effect.MomentumEffectType;
 import com.akirahane.momentum.core.state.BaseState;
 import com.akirahane.momentum.core.state.StateType;
@@ -14,20 +14,20 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
 
 import static com.akirahane.momentum.client.input.LowerCenterKey.LOWER_CENTER;
-import static com.akirahane.momentum.core.context.PlayerMovementContext.AIR_LIMIT_ACCELERATION;
+import static com.akirahane.momentum.core.context.PlayerMomentumContext.AIR_LIMIT_ACCELERATION;
 
 public class BreakFallReadyState extends BaseState {
     // 动画名称
     public static String BREAK_FALL_READY = "break_fall_ready";
 
-    public static boolean canBreakFallReady(Player player, PlayerMovementContext context) {
+    public static boolean canBreakFallReady(Player player, PlayerMomentumContext context) {
         return ServerConfig.ENABLE_BREAK_FALL_READY.getAsBoolean() && ClientConfig.ENABLE_BREAK_FALL_READY.getAsBoolean() &&
                 !player.onGround() &&
                 player.fallDistance > Math.min(4, player.getAttributeValue(Attributes.SAFE_FALL_DISTANCE)) &&
                 checkKey(player, context);
     }
 
-    public static boolean checkKey(Player player, PlayerMovementContext context) {
+    public static boolean checkKey(Player player, PlayerMomentumContext context) {
         if (context.getLuckyNumber() > 98){
             HintManager.add(WallHangHints.BREAK_FALL_READY_EGG);
         } else {
@@ -37,8 +37,8 @@ public class BreakFallReadyState extends BaseState {
     }
 
     @Override
-    public void onEnter(Player player, PlayerMovementContext context) {
-        context.setLuckyNumber(player);
+    public void onEnter(Player player, PlayerMomentumContext context) {
+        context.setLuckyNumber(player.getRandom().nextInt(100));
         context.addPermanentEffect(MomentumEffectType.LIMIT_ACCELERATION_SPEED, AIR_LIMIT_ACCELERATION);
         context.setJumpAnimationSpeed(1F);
         context.setMomentumRollIntensity(8F);
@@ -80,7 +80,7 @@ public class BreakFallReadyState extends BaseState {
     }
 
     @Override
-    public void clientTickRemote(Player player, PlayerMovementContext context) {
+    public void clientTickRemote(Player player, PlayerMomentumContext context) {
         if (context.getSpeed().y < -1.0F) {
             float speed = (float) (Math.clamp(-context.getSpeed().y / 2.5, 0.0f, 1.5f) + 0.5F);
             playStateAnimation(player, FALL, context, 20, speed);
@@ -104,7 +104,7 @@ public class BreakFallReadyState extends BaseState {
     }
 
     @Override
-    public void onExit(Player player, PlayerMovementContext context) {
+    public void onExit(Player player, PlayerMomentumContext context) {
         super.onExit(player, context);
         context.setBreakFallReadyCount(-1);
         context.setToBreakFallState(false);

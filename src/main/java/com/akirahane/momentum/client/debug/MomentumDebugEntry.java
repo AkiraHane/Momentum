@@ -1,29 +1,23 @@
 package com.akirahane.momentum.client.debug;
 
-import com.akirahane.momentum.client.MomentumClient;
-import com.akirahane.momentum.client.animation.MomentumAnimationController;
-import com.akirahane.momentum.core.context.PlayerMovementContext;
+import com.akirahane.momentum.core.context.PlayerMomentumContext;
 import com.akirahane.momentum.init.InitAttachments;
 import com.akirahane.momentum.mixin.LivingEntityAccessor;
-import com.zigythebird.playeranim.api.PlayerAnimationAccess;
-import com.zigythebird.playeranimcore.animation.AnimationController;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.debug.DebugScreenDisplayer;
 import net.minecraft.client.gui.components.debug.DebugScreenEntry;
 import net.minecraft.resources.Identifier;
-import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.NotNull;
-import team.unnamed.mocha.MochaEngine;
 
 import javax.annotation.Nullable;
 
 import static com.akirahane.momentum.Momentum.MODID;
 
-public class MovementDebugEntry implements DebugScreenEntry {
+public class MomentumDebugEntry implements DebugScreenEntry {
 
     private static final Identifier group =
             Identifier.fromNamespaceAndPath(MODID, "movement");
@@ -32,7 +26,7 @@ public class MovementDebugEntry implements DebugScreenEntry {
     public void display(@NotNull DebugScreenDisplayer displayer, @Nullable Level level, @Nullable LevelChunk clientChunk, @Nullable LevelChunk serverChunk) {
         Minecraft mc = Minecraft.getInstance();
         if (mc.player == null) return;
-        PlayerMovementContext context = mc.player.getData(InitAttachments.MOVEMENT_STATE).getContext();
+        PlayerMomentumContext context = mc.player.getData(InitAttachments.MOMENTUM_STATE).getContext();
         Vec3 vel = context.getSpeed().multiply(20, 20, 20);
         displayer.addToGroup(group, String.format("[Momentum] H Speed * 20: %.4f", vel.horizontalDistance()));
         displayer.addToGroup(group, String.format("[Momentum] Y Vel * 20: %.4f", vel.y));

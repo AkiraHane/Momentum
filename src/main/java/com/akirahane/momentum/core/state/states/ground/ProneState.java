@@ -2,29 +2,28 @@ package com.akirahane.momentum.core.state.states.ground;
 
 import com.akirahane.momentum.client.hud.HintManager;
 import com.akirahane.momentum.client.hud.WallHangHints;
+import com.akirahane.momentum.core.context.PlayerMomentumContext;
 import com.akirahane.momentum.core.state.StateType;
 import com.akirahane.momentum.core.state.BaseState;
-import com.akirahane.momentum.core.context.PlayerMovementContext;
-import com.akirahane.momentum.core.state.states.wall.*;
 import net.minecraft.world.entity.Pose;
 import net.minecraft.world.entity.player.Player;
 
 import static com.akirahane.momentum.client.input.LowerCenterKey.LOWER_CENTER;
-import static com.akirahane.momentum.core.MomentumUtils.canPlayerFitAtPose;
+import static com.akirahane.momentum.core.utils.CollisionUtils.canPlayerFitAtPose;
 import static com.akirahane.momentum.core.state.states.ground.SlideState.canSlideSpeedCheck;
 
 
 public class ProneState extends BaseState {
-    public static boolean canProne(Player player, PlayerMovementContext context) {
+    public static boolean canProne(Player player, PlayerMomentumContext context) {
         return (player.getPose() == Pose.SWIMMING && !canPlayerFitAtPose(player, Pose.CROUCHING)) ||
                 player.onGround() && checkKey(player, context);
     }
-    public static boolean canProneHold(Player player, PlayerMovementContext context) {
+    public static boolean canProneHold(Player player, PlayerMomentumContext context) {
         return (player.getPose() == Pose.SWIMMING && !canPlayerFitAtPose(player, Pose.CROUCHING)) ||
                 player.onGround() && checkKey(player, context);
     }
 
-    public static boolean checkKey(Player player, PlayerMovementContext context) {
+    public static boolean checkKey(Player player, PlayerMomentumContext context) {
         if (!canSlideSpeedCheck(player, context) && !HintManager.contains(WallHangHints.VAULT_IN_STAND)) {
             HintManager.add(WallHangHints.PRONE);
         }
@@ -40,13 +39,13 @@ public class ProneState extends BaseState {
     }
 
     @Override
-    public void onEnter(Player player, PlayerMovementContext context) {
+    public void onEnter(Player player, PlayerMomentumContext context) {
         super.onEnter(player, context);
         player.setForcedPose(Pose.SWIMMING);
     }
 
     @Override
-    public void onExit(Player player, PlayerMovementContext context) {
+    public void onExit(Player player, PlayerMomentumContext context) {
         super.onExit(player, context);
         player.setForcedPose(null);
     }

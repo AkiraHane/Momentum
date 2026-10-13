@@ -4,16 +4,17 @@ import com.akirahane.momentum.client.config.ClientConfig;
 import com.akirahane.momentum.client.hud.HintManager;
 import com.akirahane.momentum.client.hud.WallHangHints;
 import com.akirahane.momentum.config.ServerConfig;
-import com.akirahane.momentum.core.context.PlayerMovementContext;
+import com.akirahane.momentum.core.context.PlayerMomentumContext;
 import com.akirahane.momentum.core.state.BaseState;
 import com.akirahane.momentum.core.state.StateType;
 import com.akirahane.momentum.mixin.LivingEntityAccessor;
+import com.akirahane.momentum.core.utils.WallSoundUtils;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
 
-import static com.akirahane.momentum.core.context.PlayerMovementContext.*;
+import static com.akirahane.momentum.core.context.PlayerMomentumContext.*;
 
 public class WallKickState extends BaseState {
 
@@ -22,7 +23,7 @@ public class WallKickState extends BaseState {
     private static final double HORIZONTAL_EPSILON = 1.0E-6;
     private static final double WALL_RUN_KICK_NORMAL_MULTIPLIER = 1;
 
-    public static boolean canWallKick(Player player, PlayerMovementContext context) {
+    public static boolean canWallKick(Player player, PlayerMomentumContext context) {
         return ServerConfig.ENABLE_WALL_KICK.getAsBoolean() && ClientConfig.ENABLE_WALL_KICK.getAsBoolean() &&
                 !player.onGround() &&
                 !Vec3.ZERO.equals(context.getWallNormal()) &&
@@ -31,13 +32,13 @@ public class WallKickState extends BaseState {
     }
 
     // 跑墙特殊进入条件
-    public static boolean canWallKickRun(Player player, PlayerMovementContext context) {
+    public static boolean canWallKickRun(Player player, PlayerMomentumContext context) {
         return ServerConfig.ENABLE_WALL_KICK.getAsBoolean() && ClientConfig.ENABLE_WALL_KICK.getAsBoolean() &&
                 !Vec3.ZERO.equals(context.getWallNormal()) &&
                 checkKey(player, context);
     }
 
-    public static boolean checkKey(Player player, PlayerMovementContext context) {
+    public static boolean checkKey(Player player, PlayerMomentumContext context) {
         HintManager.add(WallHangHints.WALL_KICK);
         return context.getInputBuffer()[context.getInputBufferIndex()].contains(JUMP);
     }
@@ -50,7 +51,7 @@ public class WallKickState extends BaseState {
 
 
     @Override
-    public void onEnter(Player player, PlayerMovementContext context) {
+    public void onEnter(Player player, PlayerMomentumContext context) {
         float yaw = player.getYRot();
         Vec3 lookVec = new Vec3(
                 -Math.sin(Math.toRadians(yaw)),
@@ -96,7 +97,7 @@ public class WallKickState extends BaseState {
                     )
             );
         }
-        context.playWallSound(player, PlayerMovementContext.FALL, 0.15F, 1);
+        WallSoundUtils.playWallSound(player, context, WallSoundUtils.FALL, 0.15F, 1);
         player.playSound(
                 SoundEvents.ARROW_SHOOT,
                 0.5F,
@@ -109,7 +110,7 @@ public class WallKickState extends BaseState {
      * 墙跑派生的墙面导向蹬墙跳：保留完整水平动量，并把方向转向墙外。
      * 冷却只禁止增加水平总速度，不再删除已有速度分量。
      */
-    private static void applyWallRunKick(Player player, PlayerMovementContext context, float jumpPower) {
+    private static void applyWallRunKick(Player player, PlayerMomentumContext context, float jumpPower) {
         Vec3 normal = context.getRunWallNormal();
         if (normal.horizontalDistanceSqr() < HORIZONTAL_EPSILON) {
             normal = context.getWallNormal();
@@ -133,7 +134,7 @@ public class WallKickState extends BaseState {
     }
 
     /** 输入型蹬墙跳仍按输入转向，但不再分别重写世界坐标 X/Z。 */
-    private static void applyInputDirectedKick(Player player, PlayerMovementContext context, float jumpPower) {
+    private static void applyInputDirectedKick(Player player, PlayerMomentumContext context, float jumpPower) {
         Vec3 current = player.getDeltaMovement();
         Vec3 currentHorizontal = new Vec3(current.x, 0, current.z);
         Vec3 input = new Vec3(context.getInputVec().x, 0, context.getInputVec().z);
@@ -155,7 +156,7 @@ public class WallKickState extends BaseState {
      */
     private static void setMomentumPreservingHorizontalVelocity(
             Player player,
-            PlayerMovementContext context,
+            PlayerMomentumContext context,
             Vec3 desiredHorizontal,
             double ySpeed,
             float jumpPower
@@ -187,7 +188,7 @@ public class WallKickState extends BaseState {
     }
 
     @Override
-    public void clientTickRemote(Player player, PlayerMovementContext context) {
+    public void clientTickRemote(Player player, PlayerMomentumContext context) {
         super.clientTickRemote(player, context);
         float yaw = player.getYRot();
         Vec3 lookVec = new Vec3(
@@ -209,7 +210,7 @@ public class WallKickState extends BaseState {
     }
 
     @Override
-    public void onExit(Player player, PlayerMovementContext context) {
+    public void onExit(Player player, PlayerMomentumContext context) {
         super.onExit(player, context);
         context.setWallKickCooldown(ServerConfig.WALL_KICK_ACCELERATION_COOLDOWN.getAsInt());
     }

@@ -1,7 +1,7 @@
 package com.akirahane.momentum.client.input;
 
 import com.akirahane.momentum.Momentum;
-import com.akirahane.momentum.core.state.MovementStateMachine;
+import com.akirahane.momentum.core.state.MomentumStateMachine;
 import com.akirahane.momentum.init.InitAttachments;
 import com.mojang.logging.LogUtils;
 import net.minecraft.client.Minecraft;
@@ -14,7 +14,7 @@ import org.slf4j.Logger;
 
 import java.util.HashSet;
 
-import static com.akirahane.momentum.core.context.PlayerMovementContext.*;
+import static com.akirahane.momentum.core.context.PlayerMomentumContext.*;
 
 @EventBusSubscriber(modid = Momentum.MODID, value = Dist.CLIENT)
 public class MCInputKey {
@@ -35,7 +35,7 @@ public class MCInputKey {
         Minecraft mc = Minecraft.getInstance();
         LocalPlayer player = mc.player;
         if (player == null) return;
-        MovementStateMachine machine = player.getData(InitAttachments.MOVEMENT_STATE);
+        MomentumStateMachine machine = player.getData(InitAttachments.MOMENTUM_STATE);
         HashSet<Integer>[] list = machine.getContext().getInputBuffer();
         machine.getContext().setInputBufferIndex(
                 (machine.getContext().getInputBufferIndex() + 1) % machine.getContext().getInputBufferSize()

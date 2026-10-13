@@ -1,7 +1,7 @@
 package com.akirahane.momentum.core.state.states.air;
 
 import com.akirahane.momentum.config.ServerConfig;
-import com.akirahane.momentum.core.context.PlayerMovementContext;
+import com.akirahane.momentum.core.context.PlayerMomentumContext;
 import com.akirahane.momentum.core.effect.MomentumEffectType;
 import com.akirahane.momentum.core.state.StateType;
 import com.akirahane.momentum.core.state.BaseState;
@@ -9,17 +9,17 @@ import com.akirahane.momentum.core.state.states.ground.SlideState;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
 
-import static com.akirahane.momentum.core.context.PlayerMovementContext.AIR_LIMIT_ACCELERATION;
+import static com.akirahane.momentum.core.context.PlayerMomentumContext.AIR_LIMIT_ACCELERATION;
 
 public class AirborneState extends BaseState {
 
-    public static boolean canAirborne(Player player, PlayerMovementContext context) {
+    public static boolean canAirborne(Player player, PlayerMomentumContext context) {
         return !player.onGround();
     }
 
     @Override
-    public void onEnter(Player player, PlayerMovementContext context) {
-        context.setLuckyNumber(player);
+    public void onEnter(Player player, PlayerMomentumContext context) {
+        context.setLuckyNumber(player.getRandom().nextInt(100));
         context.addPermanentEffect(MomentumEffectType.LIMIT_ACCELERATION_SPEED, AIR_LIMIT_ACCELERATION);
         // 空中操控：从 config 刷新空中转向强度并接入（>1 更强，<1 更弱，1=原版）
         double airXz = ServerConfig.AIR_ACCELERATION_XZ.get();
@@ -65,7 +65,7 @@ public class AirborneState extends BaseState {
     }
 
     @Override
-    public void clientTickRemote(Player player, PlayerMovementContext context) {
+    public void clientTickRemote(Player player, PlayerMomentumContext context) {
         if (player.isInWater()) {
             playStateAnimation(player, IDLE, context);
         } else if (context.getSpeed().y < -1.0F) {
@@ -115,7 +115,7 @@ public class AirborneState extends BaseState {
     }
 
     @Override
-    public void onExit(Player player, PlayerMovementContext context) {
+    public void onExit(Player player, PlayerMomentumContext context) {
         super.onExit(player, context);
         context.setMomentumRollIntensity(0);
         context.setJumpAnimationSpeed(1F);

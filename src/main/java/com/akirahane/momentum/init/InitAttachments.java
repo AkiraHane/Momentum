@@ -1,6 +1,6 @@
 package com.akirahane.momentum.init;
 
-import com.akirahane.momentum.core.state.MovementStateMachine;
+import com.akirahane.momentum.core.state.MomentumStateMachine;
 import com.mojang.serialization.Codec;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.world.entity.player.Player;
@@ -27,10 +27,10 @@ public class InitAttachments {
                             .sync(ByteBufCodecs.BOOL.cast())
                             .build()
             );
-    public static final Supplier<AttachmentType<@NotNull MovementStateMachine>> MOVEMENT_STATE =
-            ATTACHMENT_TYPES.register("movement_state",
+    public static final Supplier<AttachmentType<@NotNull MomentumStateMachine>> MOMENTUM_STATE =
+            ATTACHMENT_TYPES.register("momentum_state",
                     () -> AttachmentType.builder(
-                                    holder -> new MovementStateMachine((Player) holder)
+                                    holder -> new MomentumStateMachine((Player) holder)
                             ).build()
             );
 
