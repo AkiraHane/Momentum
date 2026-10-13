@@ -48,17 +48,17 @@ import static com.akirahane.momentum.core.effect.MomentumEffect.EffectType.*;
 @Getter
 @Setter
 public class PlayerMovementContext {
-    // 按实际使用场景分组；待确认字段暂保留候选归属。
+    // ==================== 通用变量 ====================
 
+    // ---------- 日志与调试 ----------
     protected static final Logger LOGGER = LogUtils.getLogger();
+    private int debugFrameCalls = 0;
+    private int debugTickCounter = 0;
 
-    // ==================== 一、仅本地 ====================
-
-    // ---------- 输入标识与历史 ----------
+    // ---------- 输入 ----------
     public static final int UP = 0, DOWN = 1, LEFT = 2, RIGHT = 3, JUMP = 4, SPRINT = 5, SHIFT = 6, SHIFT_HOLD = 7;
     private int inputBufferIndex = 0;
     private final int inputBufferSize = 10;
-    // 最近若干 tick 的按键历史。
     @SuppressWarnings("unchecked")
     private final HashSet<Integer>[] inputBuffer = new HashSet[inputBufferSize];
 
@@ -66,60 +66,105 @@ public class PlayerMovementContext {
     private boolean doubleClickDown = false;
     private boolean doubleClickLeft = false;
     private boolean doubleClickRight = false;
-    // 待确认：尚未发现使用位置。
     private boolean doubleClickJump = false;
     private boolean doubleClickSprint = false;
 
-    // ---------- 本地输入与动作选择 ----------
-    // 禁止方向输入。
     private boolean noMoveInput = false;
-    // 是否满足机动条件。
-    private boolean canMomentum = true;
-    // 受身触发标志。
-    private boolean toBreakFallState = false;
-    // 面前是否有可抓取墙壁。
-    private boolean hasFaceWall = false;
-    // 是否有可抓取边缘；其他端的使用范围待确认。
-    private boolean hasLedge = false;
+    private boolean noJump = false;
     // 世界坐标下的移动输入。
     private Vec3 inputVec = Vec3.ZERO;
-    // 进入墙跑时的墙面法向量；远程用途待确认。
-    Vec3 runWallNormal = Vec3.ZERO;
-    // 已应用的墙跑重力倍率，用于避免重复更新属性。
-    private float gravityModify = 0;
 
-    // ---------- 本地地形移动 ----------
-    // 滑铲的台阶高度变化。
-    private double blockStep = 0;
-    // 坡向单位向量。
-    private Vec3 slopeUnitVector = Vec3.ZERO;
-    // 滑铲坡面加速效果。
-    public MomentumEffect SLIDE_ACCELERATION = new MomentumEffect(
+    // ---------- 移动数据 ----------
+    // 相邻 tick 的真实位移（格/tick）。
+    private Vec3 speed = Vec3.ZERO;
+    private Vec3 oldSpeed = Vec3.ZERO;
+    // 上一 tick 的 DeltaMovement。
+    private Vec3 oldDeltaMovement = Vec3.ZERO;
+    // 水平跳跃加速上限与加速量（格/tick）。
+    private double jumpLimitSpeed = 0;
+    private double jumpAcceleration = 0;
+
+    // ---------- 墙面检测 ----------
+    private boolean hasFaceWall = false;
+    private boolean hasLedge = false;
+    // 指向墙面的法向量。
+    Vec3 wallNormal = Vec3.ZERO;
+    // 有符号夹角（度）；360 表示无墙面或无输入方向。
+    float lookWallAngle = 360F;
+    float inputWallAngle = 360F;
+    // 快速下落时的抓边高度补偿。
+    private double ledgeOffsetY = 0;
+
+    private static final Vec3[] WALL_CARDINALS = {
+            new Vec3(0, 0, -1),  // NORTH
+            new Vec3(0, 0, 1),   // SOUTH
+            new Vec3(1, 0, 0),   // EAST
+            new Vec3(-1, 0, 0),  // WEST
+    };
+    private static final Vec3[] WALL_DIAGONALS = {
+            new Vec3(1, 0, 1).normalize(),
+            new Vec3(1, 0, -1).normalize(),
+            new Vec3(-1, 0, 1).normalize(),
+            new Vec3(-1, 0, -1).normalize(),
+    };
+
+    // 方向顺序对应网络编号，调整顺序会改变协议。
+    private static final Vec3[] ALL_WALL_NORMALS = {
+            WALL_CARDINALS[0], WALL_CARDINALS[1], WALL_CARDINALS[2], WALL_CARDINALS[3],
+            WALL_DIAGONALS[0], WALL_DIAGONALS[1], WALL_DIAGONALS[2], WALL_DIAGONALS[3],
+    };
+
+    // ---------- 装备与机动条件 ----------
+    private boolean hasJetBooster = false;
+    private boolean canMomentum = true;
+
+    // ---------- 状态与同步 ----------
+    private StateType previousStateType = StateType.ORIGINAL;
+    // 含义随动作而变；-1 表示无数据。
+    private int transitionExtraData = -1;
+    // bit 0-2: wallNormal 索引；bit 3: inputWallAngle 左右标志；-1=无墙面数据。
+    private byte transitionWallData = -1;
+
+    // ---------- 共用计时与冷却（tick） ----------
+    // 闪避与水中推进共用。
+    private int dodgeCooldown = 0;
+    // 蹬墙跳与蓄力跳共用。
+    private int wallJumpTimer = 0;
+    // 翻越与翻入共用。
+    private int vaultTimer = 0;
+
+    // ---------- 运动效果 ----------
+    private final Map<MomentumEffectType, Set<MomentumEffect>> pendingEffectPool = new HashMap<>();
+
+    // 机动模式总阻力。
+    public static MomentumEffect DEFAULT_FRICTION = new MomentumEffect(
+            new Vec3(0.9, 0, 0),
             Vec3.ZERO,
-            Vec3.ZERO,
-            COMPOSE,
-            0
+            MULTIPLIER,
+            -1
     );
 
-    // ---------- 本地动作持续与入口冷却 ----------
-    // 以下持续时间及冷却均以 tick 为单位。
-    private int breakFallTimer = 0;
-    // 闪避和游泳推进共用冷却。
-    private int dodgeCooldown = 0;
-    private int vaultTimer = 0;
-    // 蹬墙跳和蓄力跳共用状态保持计时。
-    private int wallJumpTimer = 0;
-    // 蹬墙跳后再次进入墙跑的速度判定宽限。
-    private int wallRunReentryGraceTicks = 0;
-    private int swimPushTimer = 0;
+    // 多个空中、贴墙动作共用的水平加速限速。
+    public static MomentumEffect AIR_LIMIT_ACCELERATION = new MomentumEffect(
+            new Vec3(0.3, Float.MAX_VALUE, 0.3),
+            Vec3.ZERO,
+            COMPOSE,
+            -1
+    );
 
-    // ---------- 本地提示 ----------
-    // 受身准备提示的彩蛋随机数。
-    private int luckyNumber = 0;
-    // 本轮滑铲是否已触发冷却提示。
-    private boolean slideJumpCooldownJustFinished = false;
+    // ---------- 动画 ----------
+    MomentumAnimationController controller;
+    MochaEngine<AnimationController> mocha;
+    private String currentAnimationName = null;
+    // 下一次跳跃动画是否使用左脚。
+    private boolean leftFootJump = true;
+    private float jumpAnimationSpeed = 1;
+    // 相邻 tick 的头身角度（度），用于动画插值。
+    private float bodyHeadAngleDiff = 0F;
+    private float prevBodyHeadAngleDiff = 0F;
+    private float prevHeadXRot = 0F;
 
-    // ---------- 相机与第一人称手臂 ----------
+    // ---------- 相机 ----------
     // 相机 roll（度）。
     private float targetCameraRoll = 0F;
     private float currentCameraRoll = 0F;
@@ -134,6 +179,7 @@ public class PlayerMovementContext {
     private float currentMomentumRoll = 0F;
     private float prevMomentumRoll = 0F;
 
+    // ---------- 第一人称手臂 ----------
     private float armOffsetY = 0F;
     private float prevArmOffsetY = 0F;
     private float targetArmOffsetY = 0F;
@@ -143,131 +189,41 @@ public class PlayerMovementContext {
     private float prevArmRotX = 0F;
     private float targetArmRotX = 0F;
 
-    // ---------- 待确认：尚未发现使用位置 ----------
-    // 暂存于本地区块，实际归属待确认。
-    private int jumpTimer = 0;
-    private int jumpCooldown = 0;
-    private float wallFriction = 0.6f;
-    private int airborneTimer = 0;
-    private int debugFrameCalls = 0;
-    private int debugTickCounter = 0;
-
-    // ==================== 二、远程 + 本地 ====================
-
-    // ---------- 动画对象与播放状态 ----------
-    MomentumAnimationController controller;
-    // 与 controller 对应的 MoLang 运行时。
-    MochaEngine<AnimationController> mocha;
-    private String currentAnimationName = null;
-    // 下一次跳跃动画是否使用左脚。
-    private boolean leftFootJump = true;
-    private float jumpAnimationSpeed = 1;
-
-    // ---------- 动画与姿态插值 ----------
-    // 上一 tick 的真实位移（格/tick）。
-    private Vec3 oldSpeed = Vec3.ZERO;
-    // 动画插值用的头身角度（度）。
-    private float bodyHeadAngleDiff = 0F;
-    private float prevBodyHeadAngleDiff = 0F;
-    private float prevHeadXRot = 0F;
-    // 闪避剩余 tick，同时用于状态保持和动画切换。
-    private int dodgeTimer = 0;
-
-    // ---------- 客户端墙面姿态 ----------
-    // 指向墙面的法向量。
-    Vec3 wallNormal = Vec3.ZERO;
-    // 视线与墙面的有符号夹角（度）；360 表示无墙面。
-    float lookWallAngle = 360F;
-    // 输入与墙面的有符号夹角（度）；远程按位移估算，360 表示无方向。
-    float inputWallAngle = 360F;
-    // 快速下落时的抓边高度补偿；远程必要性待确认。
-    private double ledgeOffsetY = 0;
-
-    // ---------- 客户端音效 ----------
+    // ---------- 声音 ----------
     // 墙面音效播放间隔的剩余计数。
     private float needSoundTick = 0;
     // 用于选择墙面音效的方块列表。
     private final List<BlockPos> wallBlocks = new ArrayList<>();
-    // 方块音效选择器。
-    // HIT、BREAK、PLACE 的用途待确认。
     public static final Function<SoundType, SoundEvent> STEP = SoundType::getStepSound,
             HIT = SoundType::getHitSound,
             BREAK = SoundType::getBreakSound,
             PLACE = SoundType::getPlaceSound,
             FALL = SoundType::getFallSound;
 
-    // ==================== 三、服务端 + 远程 + 本地 ====================
-    // 此区块同时暂存三类未覆盖的跨端子集，以子组标明范围。
-
-    // ---------- 三方使用：装备与同步 ----------
-    // 是否装备助推器；远程更新来源待确认。
-    private boolean hasJetBooster = false;
-    // 动作附加数据，含义随状态而变；-1 表示无数据。
-    private int transitionExtraData = -1;
-    // bit 0-2: wallNormal 索引；bit 3: inputWallAngle 左右标志；-1=无墙面数据。
-    private byte transitionWallData = -1;
-    // 本 tick 的真实位移（格/tick）；服务端更新来源待确认。
-    private Vec3 speed = Vec3.ZERO;
-
-    // ---------- 待确认：服务端 + 本地的跳跃与运动 ----------
-    // 禁止起跳；服务端处理起跳移动包也会执行跳跃逻辑。
-    private boolean noJump = false;
-    // 水平跳跃加速上限（格/tick）。
-    private double jumpLimitSpeed = 0;
-    // 水平跳跃加速量；与 jumpLimitSpeed 当前都只在本地计算。
-    private double jumpAcceleration = 0;
-    // 上一 tick 的速度向量（DeltaMovement）；服务端更新来源待确认。
-    private Vec3 oldDeltaMovement = Vec3.ZERO;
-    // 滑铲加速冷却（tick）；远程用途待确认。
-    private int slideCooldown = 0;
-    // 蹬墙跳加速冷却（tick）；远程用途待确认。
-    private int wallKickCooldown = 0;
-    // 上一次状态，用于区分蹬墙跳来源；远程用途待确认。
-    private StateType previousStateType = StateType.ORIGINAL;
-
-    // ---------- 待确认：摔落处理的消费范围 ----------
-    // 受身准备剩余 tick；-1 表示未准备，本地摔落事件消费范围待确认。
-    private int breakFallReadyCount = -1;
-    // 以下字段尚未发现使用位置，归属待确认。
+    // ---------- 用途待确认 ----------
+    private int jumpTimer = 0;
+    private int jumpCooldown = 0;
+    private float wallFriction = 0.6f;
+    private int airborneTimer = 0;
     private double lastFallDistance = 0;
     private final int dodgeInvincible = 10;
 
-    // ---------- 待确认：运动效果实际用于服务端 + 本地 ----------
-    // 效果生命周期当前仅在本地更新；static 效果实例跨玩家共享。
-    private final Map<MomentumEffectType, Set<MomentumEffect>> pendingEffectPool = new HashMap<>();
+    // ==================== 功能变量 ====================
 
-    // 机动模式总阻力。
-    public static MomentumEffect DEFAULT_FRICTION = new MomentumEffect(
-            new Vec3(0.9, 0, 0),
-            Vec3.ZERO,
-            MULTIPLIER,
-            -1
-    );
+    // ---------- 滑铲 ----------
+    private int slideCooldown = 0;
+    private boolean slideJumpCooldownJustFinished = false;
+    // 台阶高度变化与坡向单位向量。
+    private double blockStep = 0;
+    private Vec3 slopeUnitVector = Vec3.ZERO;
 
-    // 受身总阻力。
-    public MomentumEffect BREAK_FALL_FRICTION = new MomentumEffect(
-            new Vec3(0.5, 0, 0),
-            Vec3.ZERO,
-            MULTIPLIER,
-            0
-    );
-
-    // 闪避方块摩擦力。
-    public MomentumEffect DODGE_BLOCK_FRICTION = new MomentumEffect(
-            new Vec3(0, 0, 0),
-            Vec3.ZERO,
-            MULTIPLIER,
-            0
-    );
-
-    // 滑铲总阻力。
     public MomentumEffect SLIDE_FRICTION = new MomentumEffect(
             new Vec3(0.1, 0, 0),
             Vec3.ZERO,
             MULTIPLIER,
             -1
     );
-    // 滑铲方块阻力。
+
     public MomentumEffect SLIDE_BLOCK_FRICTION = new MomentumEffect(
             Vec3.ZERO,
             Vec3.ZERO,
@@ -275,7 +231,58 @@ public class PlayerMovementContext {
             0
     );
 
-    // 空中水平操控倍率。
+    public MomentumEffect SLIDE_ACCELERATION = new MomentumEffect(
+            Vec3.ZERO,
+            Vec3.ZERO,
+            COMPOSE,
+            0
+    );
+
+    // ---------- 受身 ----------
+    private boolean toBreakFallState = false;
+    private int breakFallTimer = 0;
+    // 受身准备剩余 tick；-1 表示未准备。
+    private int breakFallReadyCount = -1;
+    // 受身准备提示的彩蛋随机数。
+    private int luckyNumber = 0;
+
+    public MomentumEffect BREAK_FALL_FRICTION = new MomentumEffect(
+            new Vec3(0.5, 0, 0),
+            Vec3.ZERO,
+            MULTIPLIER,
+            0
+    );
+
+    // ---------- 闪避 ----------
+    private int dodgeTimer = 0;
+
+    public MomentumEffect DODGE_BLOCK_FRICTION = new MomentumEffect(
+            new Vec3(0, 0, 0),
+            Vec3.ZERO,
+            MULTIPLIER,
+            0
+    );
+
+    // ---------- 墙跑 ----------
+    // 进入墙跑时的墙面法向量。
+    Vec3 runWallNormal = Vec3.ZERO;
+    // 已应用的重力倍率，用于避免重复更新属性。
+    private float gravityModify = 0;
+    // 蹬墙跳后再次进入墙跑的速度判定宽限（tick）。
+    private int wallRunReentryGraceTicks = 0;
+
+    // ---------- 蹬墙跳 ----------
+    private int wallKickCooldown = 0;
+
+    // ---------- 挂墙 ----------
+    public static MomentumEffect WALL_FRICTION = new MomentumEffect(
+            new Vec3(0.4, 0, 0),
+            Vec3.ZERO,
+            COMPOSE,
+            -1
+    );
+
+    // ---------- 空中移动 ----------
     public MomentumEffect AIR_ACCELERATION = new MomentumEffect(
             new Vec3(1, 1, 1),
             Vec3.ZERO,
@@ -283,21 +290,8 @@ public class PlayerMovementContext {
             -1
     );
 
-    // 空中加速限速。
-    public static MomentumEffect AIR_LIMIT_ACCELERATION = new MomentumEffect(
-            new Vec3(0.3, Float.MAX_VALUE, 0.3),
-            Vec3.ZERO,
-            COMPOSE,
-            -1
-    );
-
-    // 挂墙移动阻力。
-    public static MomentumEffect WALL_FRICTION = new MomentumEffect(
-            new Vec3(0.4, 0, 0),
-            Vec3.ZERO,
-            COMPOSE,
-            -1
-    );
+    // ---------- 水中推进 ----------
+    private int swimPushTimer = 0;
 
     public PlayerMovementContext(Player player) {
         for (MomentumEffectType type : MomentumEffectType.values()) {
@@ -683,26 +677,6 @@ public class PlayerMovementContext {
         }
     }
 
-    // 【远程 + 本地】墙面检测方向。
-    private static final Vec3[] WALL_CARDINALS = {
-            new Vec3(0, 0, -1),  // NORTH
-            new Vec3(0, 0, 1),   // SOUTH
-            new Vec3(1, 0, 0),   // EAST
-            new Vec3(-1, 0, 0),  // WEST
-    };
-    private static final Vec3[] WALL_DIAGONALS = {
-            new Vec3(1, 0, 1).normalize(),
-            new Vec3(1, 0, -1).normalize(),
-            new Vec3(-1, 0, 1).normalize(),
-            new Vec3(-1, 0, -1).normalize(),
-    };
-
-    // 方向顺序对应网络编号，调整顺序会改变协议。
-    private static final Vec3[] ALL_WALL_NORMALS = {
-            WALL_CARDINALS[0], WALL_CARDINALS[1], WALL_CARDINALS[2], WALL_CARDINALS[3],
-            WALL_DIAGONALS[0], WALL_DIAGONALS[1], WALL_DIAGONALS[2], WALL_DIAGONALS[3],
-    };
-
     public static int encodeWallNormal(Vec3 normal) {
         if (normal == null || normal.lengthSqr() < 0.001) return -1;
         for (int i = 0; i < ALL_WALL_NORMALS.length; i++) {
@@ -716,10 +690,10 @@ public class PlayerMovementContext {
         return ALL_WALL_NORMALS[index];
     }
 
-    // 【远程 + 本地】墙面检测候选。
+    // 墙面检测候选。
     private static class WallCandidate {
         Vec3 normal;
-        // 仅本地用于收集墙面音效方块。
+        // 用于收集墙面音效方块。
         AABB expanded;
         boolean hasFaceWall;
         boolean hasLedge;
