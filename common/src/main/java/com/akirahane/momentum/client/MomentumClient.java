@@ -1,8 +1,8 @@
 package com.akirahane.momentum.client;
 
 import com.akirahane.momentum.Constants;
-import com.akirahane.momentum.client.animation.MomentumAnimationController;
 import com.akirahane.momentum.client.config.ClientConfig;
+import com.akirahane.momentum.client.config.MomentumClientConfigHelper;
 import com.akirahane.momentum.client.debug.MomentumDebugEntry;
 import com.akirahane.momentum.client.hud.HintManager;
 import com.akirahane.momentum.core.state.MomentumStateMachine;
@@ -14,8 +14,6 @@ import com.akirahane.momentum.platform.Services;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.logging.LogUtils;
 import com.mojang.math.Axis;
-import com.zigythebird.playeranim.api.PlayerAnimationFactory;
-import com.zigythebird.playeranimcore.enums.PlayState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.debug.DebugScreenEntryStatus;
 import net.minecraft.network.chat.Component;
@@ -34,7 +32,6 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.config.ModConfig;
 import net.neoforged.fml.event.config.ModConfigEvent;
-import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
 import net.neoforged.neoforge.client.event.*;
 import net.neoforged.neoforge.client.gui.ConfigurationScreen;
 import net.neoforged.neoforge.event.entity.player.ItemTooltipEvent;
@@ -43,7 +40,6 @@ import net.neoforged.neoforge.event.tick.PlayerTickEvent;
 import org.slf4j.Logger;
 
 import static com.akirahane.momentum.client.config.ClientConfig.ENABLE_CAMERA_OFFSET;
-import static com.akirahane.momentum.client.config.ClientConfig.ENABLE_KEY_HINTS;
 
 // 此类不会在专用服务器上加载。在此处访问客户端代码是安全的。
 @Mod(value = Constants.MOD_ID, dist = Dist.CLIENT)
@@ -54,8 +50,6 @@ public class MomentumClient {
 
     public static final Identifier MOMENTUM_INFO =
             Identifier.fromNamespaceAndPath(Constants.MOD_ID, "movement_info");
-    public static final Identifier MOMENTUM_ANIM =
-            Identifier.fromNamespaceAndPath(Constants.MOD_ID, "movement_anim");
 
     public MomentumClient(ModContainer modContainer, IEventBus modEventBus) {
         // 注册 mod 的 ModConfigSpec，以便 FML 可以创建和加载配置文件
@@ -64,7 +58,9 @@ public class MomentumClient {
     }
     @SubscribeEvent
     public static void onConfigLoad(ModConfigEvent.Loading event) {
-        HintManager.setVisible(ENABLE_KEY_HINTS.getAsBoolean());
+        if (event.getConfig().getSpec() == ClientConfig.SPEC) {
+            MomentumClientConfigHelper.onConfigLoad();
+        }
     }
 
     // 客户端驱动（用于移动和视觉效果）
@@ -107,25 +103,6 @@ public class MomentumClient {
     public static void onRegisterDebugEntries(RegisterDebugEntriesEvent event) {
         event.register(MOMENTUM_INFO, new MomentumDebugEntry());
         event.includeInProfile(MOMENTUM_INFO, DebugScreenProfile.DEFAULT, DebugScreenEntryStatus.NEVER);
-    }
-
-    // https://docs.zigythebird.com/pal/how_to_play_animations
-    // 继承一个拿moLang方便调试变量
-    @SubscribeEvent
-    public static void onClientSetup(FMLClientSetupEvent event) {
-        event.enqueueWork(() -> {
-            PlayerAnimationFactory.ANIMATION_DATA_FACTORY.registerFactory(
-                    MOMENTUM_ANIM, 1500, // 1500 优先级，gameplay 动画
-                    avatar -> {
-                        if (avatar instanceof Player player) {
-                            return new MomentumAnimationController(player,
-                                    (controller, state, animSetter) -> PlayState.STOP
-                            );
-                        }
-                        return null; // 跳过非 Player 的 Avatar (如 ClientMannequin)
-                    }
-            );
-        });
     }
 
     @SubscribeEvent

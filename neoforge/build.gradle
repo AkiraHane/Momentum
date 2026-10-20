@@ -22,6 +22,13 @@ configurations {
 }
 
 dependencies {
+    implementation("com.zigythebird.playeranim:PlayerAnimationLibNeo:${pal_version}") {
+        exclude group: 'com.google.code.gson', module: 'gson'
+        exclude group: 'io.netty'
+        exclude group: 'it.unimi.dsi', module: 'fastutil'
+        exclude group: 'org.slf4j', module: 'slf4j-api'
+        exclude group: 'org.joml', module: 'joml'
+    }
     compileOnly("top.theillusivec4.curios:curios-neoforge:${curios_version}:api")
     localRuntime("top.theillusivec4.curios:curios-neoforge:${curios_version}")
 }

@@ -14,6 +14,13 @@ neoForge {
 
 dependencies {
     compileOnly("fuzs.forgeconfigapiport:forgeconfigapiport-common-neoforgeapi:${forge_config_api_port_version}")
+    compileOnly("com.zigythebird.playeranim:PlayerAnimationLibCommon:${pal_version}") {
+        exclude group: 'com.google.code.gson', module: 'gson'
+        exclude group: 'io.netty'
+        exclude group: 'it.unimi.dsi', module: 'fastutil'
+        exclude group: 'org.slf4j', module: 'slf4j-api'
+        exclude group: 'org.joml', module: 'joml'
+    }
 
     // Fabric and NeoForge both bundle Fabric Mixin, so it is safe to use it in common
     // If you need to update, check what version they are using to see what is compatible

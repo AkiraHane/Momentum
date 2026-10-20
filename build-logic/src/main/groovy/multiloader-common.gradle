@@ -12,6 +12,15 @@ repositories {
             includeGroup 'fuzs.forgeconfigapiport'
         }
     }
+    maven {
+        name = 'RedlanceMinecraft'
+        url = 'https://repo.redlance.org/public'
+        content {
+            includeGroup 'com.zigythebird.playeranim'
+            includeGroup 'com.zigythebird'
+            includeGroup 'org.redlance.common-utils'
+        }
+    }
 }
 
 dependencies {
@@ -69,7 +78,8 @@ processResources {
             'java_version'                 : java_version,
             'forge_config_api_port_version': forge_config_api_port_version,
             'curios_version'               : curios_version,
-            'trinkets_version'             : trinkets_version
+            'trinkets_version'             : trinkets_version,
+            'pal_version'                  : pal_version
     ]
 
     var jsonExpandProps = expandProps.collectEntries {

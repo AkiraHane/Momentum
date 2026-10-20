@@ -1,7 +1,7 @@
 package com.akirahane.momentum.client.utils;
 
-import com.akirahane.momentum.client.MomentumClient;
 import com.akirahane.momentum.client.animation.MomentumAnimationController;
+import com.akirahane.momentum.client.animation.MomentumAnimationRegistration;
 import com.akirahane.momentum.core.context.PlayerMomentumContext;
 import com.mojang.logging.LogUtils;
 import com.zigythebird.playeranim.api.PlayerAnimationAccess;
@@ -18,7 +18,7 @@ public class AnimationUtils {
 
     public static void initialize(Player player, PlayerMomentumContext context) {
         context.setController((MomentumAnimationController) PlayerAnimationAccess.getPlayerAnimationLayer(
-                player, MomentumClient.MOMENTUM_ANIM
+                player, MomentumAnimationRegistration.MOMENTUM_ANIM
         ));
         if (context.getController() != null) {
             context.setMocha(context.getController().getMolangRuntime());
