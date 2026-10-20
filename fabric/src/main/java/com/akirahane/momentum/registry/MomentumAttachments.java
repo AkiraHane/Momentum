@@ -27,5 +27,6 @@ public class MomentumAttachments {
 
     public static void register() {
         // 入口调用此方法，触发静态字段中的附件注册。
+        // https://docs.fabricmc.net/develop/serialization/data-attachments#creating-a-data-attachment
     }
 }

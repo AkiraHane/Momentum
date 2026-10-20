@@ -113,7 +113,7 @@ public class WallClimbState extends BaseState {
         context.setNeedSoundTick(context.getNeedSoundTick() - speed);
         if (context.getNeedSoundTick() <= 0){
             if (context.isHasJetBooster()){
-                player.playSound(JET3.value(), 0.2F, 1.5F + player.getRandom().nextFloat() * 0.4F - 0.2F);
+                player.playSound(JET3.get(), 0.2F, 1.5F + player.getRandom().nextFloat() * 0.4F - 0.2F);
             }
             WallSoundUtils.playWallSound(player, context, STEP, 0.15F, 1);
             context.setNeedSoundTick(context.getNeedSoundTick() + SOUND_TICK);

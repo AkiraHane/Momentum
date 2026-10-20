@@ -4,6 +4,7 @@ import com.akirahane.momentum.core.state.MomentumStateMachine;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.world.entity.player.Player;
 
+// TODO: 待平台适配范围明确后，按职责拆分接口。
 public interface IPlatformHelper {
 
     MomentumStateMachine getOrCreateStateMachine(Player player);

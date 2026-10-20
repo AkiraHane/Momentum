@@ -142,7 +142,7 @@ public class WallRunState extends BaseState {
         double ySpeed = currentMovement.y > 0 ? currentMovement.y : 0;
         if (context.isHasJetBooster()) {
             ySpeed = dampVerticalSpeed(currentMovement.y);
-            player.playSound(JET2.value(), 1F, 1.0F + player.getRandom().nextFloat() * 0.4F - 0.2F);
+            player.playSound(JET2.get(), 1F, 1.0F + player.getRandom().nextFloat() * 0.4F - 0.2F);
             player.fallDistance = 0;
         }
         double wallRunSpeed = Math.max(currentMovement.horizontalDistance(), context.getJumpLimitSpeed());

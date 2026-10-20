@@ -4,6 +4,8 @@ import com.akirahane.momentum.config.ServerConfig;
 import com.akirahane.momentum.core.utils.MomentumEventHelper;
 import com.akirahane.momentum.network.MomentumNetwork;
 import com.akirahane.momentum.registry.MomentumAttachments;
+import com.akirahane.momentum.registry.MomentumItemRegistration;
+import com.akirahane.momentum.registry.MomentumSoundRegistration;
 import com.akirahane.momentum.platform.Services;
 import fuzs.forgeconfigapiport.fabric.api.v5.ConfigRegistry;
 import net.fabricmc.api.ModInitializer;
@@ -23,6 +25,8 @@ public class Momentum implements ModInitializer {
     @Override
     public void onInitialize() {
         ConfigRegistry.INSTANCE.register(Constants.MOD_ID, ModConfig.Type.SERVER, ServerConfig.SPEC);
+        MomentumItemRegistration.register();
+        MomentumSoundRegistration.register();
         MomentumAttachments.register();
         MomentumNetwork.register();
         ServerPlayConnectionEvents.JOIN.register((listener, sender, server) -> onPlayerLogin(listener.player));

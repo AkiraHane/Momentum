@@ -157,7 +157,7 @@ public class DodgeState extends BaseState {
         context.setNoMoveInput(true);
         context.addEffect(MomentumEffectType.BLOCK_FRICTION, context.DODGE_BLOCK_FRICTION, 3);
         if (context.isHasJetBooster()) {
-            player.playSound(JET2.value(), 1F, 1.0F + player.getRandom().nextFloat() * 0.4F - 0.2F);
+            player.playSound(JET2.get(), 1F, 1.0F + player.getRandom().nextFloat() * 0.4F - 0.2F);
         } else {
             player.playSound(
                     SoundEvents.ARROW_SHOOT,

@@ -95,7 +95,7 @@ public class SwimDashState extends BaseState {
                     direction.z * 0.8);
         }
         if (context.isHasJetBooster()) {
-            player.playSound(JET2.value(), 1F, 1.0F + player.getRandom().nextFloat() * 0.4F - 0.2F);
+            player.playSound(JET2.get(), 1F, 1.0F + player.getRandom().nextFloat() * 0.4F - 0.2F);
         }
         context.setSwimPushTimer(10);
         // 水中推进和闪避共用冷却

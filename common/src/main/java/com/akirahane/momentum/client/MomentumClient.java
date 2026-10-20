@@ -200,7 +200,7 @@ public class MomentumClient {
 
     @SubscribeEvent
     public static void onItemTooltip(ItemTooltipEvent event) {
-        if (event.getItemStack().is(MomentumItems.JET_BOOSTER_ITEM)) {
+        if (event.getItemStack().is(MomentumItems.JET_BOOSTER_ITEM.get())) {
             event.getToolTip().add(Component.translatable("item.momentum.jet_booster.tooltip"));
         }
     }

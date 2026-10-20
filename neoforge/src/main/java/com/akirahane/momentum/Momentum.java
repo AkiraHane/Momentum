@@ -2,8 +2,8 @@ package com.akirahane.momentum;
 
 import com.akirahane.momentum.core.utils.MomentumEventHelper;
 import com.akirahane.momentum.registry.MomentumAttachments;
-import com.akirahane.momentum.registry.MomentumItems;
-import com.akirahane.momentum.registry.MomentumSounds;
+import com.akirahane.momentum.registry.MomentumItemRegistration;
+import com.akirahane.momentum.registry.MomentumSoundRegistration;
 import com.akirahane.momentum.config.ServerConfig;
 import com.akirahane.momentum.platform.Services;
 import net.minecraft.server.level.ServerPlayer;
@@ -30,9 +30,9 @@ public class Momentum {
 
     public Momentum(IEventBus modEventBus, ModContainer modContainer) {
         modContainer.registerConfig(ModConfig.Type.SERVER, ServerConfig.SPEC);
-        MomentumItems.register(modEventBus);
+        MomentumItemRegistration.register(modEventBus);
         MomentumAttachments.register(modEventBus);
-        MomentumSounds.SOUND_EVENTS.register(modEventBus);
+        MomentumSoundRegistration.register(modEventBus);
     }
 
     @SubscribeEvent
