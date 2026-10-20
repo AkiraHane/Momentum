@@ -8,6 +8,7 @@ import com.akirahane.momentum.core.context.PlayerMomentumContext;
 import com.akirahane.momentum.core.state.BaseState;
 import com.akirahane.momentum.core.state.StateType;
 import com.akirahane.momentum.core.state.states.wall.*;
+import com.akirahane.momentum.platform.Services;
 import net.minecraft.client.Minecraft;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.entity.Pose;
@@ -108,7 +109,7 @@ public class SwimDashState extends BaseState {
                 1.0F + player.getRandom().nextFloat() * 0.4F - 0.2F
         );
         context.setMomentumRollIntensity(15F);
-        player.setForcedPose(Pose.SWIMMING);
+        Services.PLATFORM.setForcedPose(player, Pose.SWIMMING);
     }
 
     @Override
@@ -140,7 +141,7 @@ public class SwimDashState extends BaseState {
         super.onExit(player, context);
         context.setNoJump(false);
         context.setNoMoveInput(false);
-        player.setForcedPose(null);
+        Services.PLATFORM.setForcedPose(player, null);
         player.setSwimming(false);
         var instance = player.getAttribute(Attributes.GRAVITY);
         if (instance != null) {

@@ -1,6 +1,7 @@
 package com.akirahane.momentum.core.utils;
 
 import com.akirahane.momentum.core.context.PlayerMomentumContext;
+import com.akirahane.momentum.platform.Services;
 import net.minecraft.core.BlockPos;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.world.entity.player.Player;
@@ -25,7 +26,7 @@ public class WallSoundUtils {
         BlockState state = level.getBlockState(pos);
         if (state.isAir()) return;
 
-        SoundType soundType = state.getSoundType(level, pos, player);
+        SoundType soundType = Services.PLATFORM.getBlockSoundType(state, player, pos);
         player.playSound(
                 kind.apply(soundType),
                 soundType.getVolume() * volumeMultiplier,

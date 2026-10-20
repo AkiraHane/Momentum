@@ -3,6 +3,7 @@ package com.akirahane.momentum.core.state.states.ground;
 import com.akirahane.momentum.core.context.PlayerMomentumContext;
 import com.akirahane.momentum.core.state.StateType;
 import com.akirahane.momentum.core.state.BaseState;
+import com.akirahane.momentum.platform.Services;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.player.Player;
 
@@ -21,7 +22,7 @@ public class WalkState extends BaseState {
     @Override
     public void clientTickRemote(Player player, PlayerMomentumContext context) {
         BlockPos posBelow = player.getBlockPosBelowThatAffectsMyMovement();
-        float blockFriction = player.onGround() ? player.level().getBlockState(posBelow).getFriction(player.level(), posBelow, player) : 0F;
+        float blockFriction = player.onGround() ? Services.PLATFORM.getBlockFriction(player.level().getBlockState(posBelow), player, posBelow) : 0F;
         if (blockFriction > 0.95F && context.getSpeed().horizontalDistance() > 0.1F) {
             float speed = (float) Math.min(context.getSpeed().horizontalDistance() * 1.5 , 1);
             playStateAnimation(player, ICE_SLIDE, context, 6, speed);

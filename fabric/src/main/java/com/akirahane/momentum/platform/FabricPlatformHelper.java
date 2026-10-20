@@ -6,8 +6,13 @@ import com.akirahane.momentum.registry.MomentumAttachments;
 import com.akirahane.momentum.platform.services.IPlatformHelper;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.loader.api.FabricLoader;
+import net.minecraft.core.BlockPos;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.world.entity.Pose;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.block.SoundType;
+import net.minecraft.world.level.block.state.BlockState;
+import org.jetbrains.annotations.Nullable;
 
 public class FabricPlatformHelper implements IPlatformHelper {
 
@@ -34,6 +39,21 @@ public class FabricPlatformHelper implements IPlatformHelper {
     @Override
     public void setMomentumEnabled(Player player, boolean enabled) {
         player.setAttached(MomentumAttachments.MOMENTUM_ENABLED, enabled);
+    }
+
+    @Override
+    public void setForcedPose(Player player, @Nullable Pose pose) {
+        ((ForcedPoseAccess) player).momentum$setForcedPose(pose);
+    }
+
+    @Override
+    public float getBlockFriction(BlockState state, Player player, BlockPos pos) {
+        return state.getBlock().getFriction();
+    }
+
+    @Override
+    public SoundType getBlockSoundType(BlockState state, Player player, BlockPos pos) {
+        return state.getSoundType();
     }
 
     @Override

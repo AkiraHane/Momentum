@@ -6,6 +6,7 @@ import com.akirahane.momentum.core.context.PlayerMomentumContext;
 import com.akirahane.momentum.core.effect.MomentumEffectType;
 import com.akirahane.momentum.core.state.StateType;
 import com.akirahane.momentum.core.state.BaseState;
+import com.akirahane.momentum.platform.Services;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.Pose;
 import net.minecraft.world.entity.player.Player;
@@ -25,7 +26,7 @@ public class BreakFallState extends BaseState {
     @Override
     public void onEnter(Player player, PlayerMomentumContext context) {
         context.setBreakFallTimer(12);
-        player.setForcedPose(Pose.SWIMMING);
+        Services.PLATFORM.setForcedPose(player, Pose.SWIMMING);
         context.setNoJump(true);
         context.setNoMoveInput(true);
         playStateAnimation(player, BREAK_FALL, context, 0, 2f);
@@ -40,7 +41,7 @@ public class BreakFallState extends BaseState {
         BlockPos below = player.blockPosition().below();
         BlockState state = player.level().getBlockState(below);
         if (!state.isAir()) {
-            SoundType soundType = state.getSoundType(player.level(), below, player);
+            SoundType soundType = Services.PLATFORM.getBlockSoundType(state, player, below);
             player.playSound(soundType.getBreakSound(), soundType.getVolume(), soundType.getPitch() * 0.8F);
         }
 
@@ -51,7 +52,7 @@ public class BreakFallState extends BaseState {
         super.onExit(player, context);
         context.setNoJump(false);
         context.setNoMoveInput(false);
-        player.setForcedPose(null);
+        Services.PLATFORM.setForcedPose(player, null);
         context.removeEffect(MomentumEffectType.FRICTION, context.BREAK_FALL_FRICTION);
         context.setBreakFallTimer(0);
     }

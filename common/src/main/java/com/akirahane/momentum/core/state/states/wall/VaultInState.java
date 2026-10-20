@@ -7,6 +7,7 @@ import com.akirahane.momentum.config.ServerConfig;
 import com.akirahane.momentum.core.context.PlayerMomentumContext;
 import com.akirahane.momentum.core.state.BaseState;
 import com.akirahane.momentum.core.state.StateType;
+import com.akirahane.momentum.platform.Services;
 import net.minecraft.client.Minecraft;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Pose;
@@ -44,7 +45,7 @@ public class VaultInState extends BaseState {
 
     @Override
     public void onEnter(Player player, PlayerMomentumContext context) {
-        player.setForcedPose(Pose.SWIMMING);
+        Services.PLATFORM.setForcedPose(player, Pose.SWIMMING);
         context.setVaultTimer(10);
         context.setNoJump(true);
         if (player.onGround()){
@@ -73,7 +74,7 @@ public class VaultInState extends BaseState {
         if (instance != null) {
             instance.removeModifier(UP_SLOPE_ID);
         }
-        player.setForcedPose(null);
+        Services.PLATFORM.setForcedPose(player, null);
         context.setNoJump(false);
     }
 

@@ -30,6 +30,9 @@ import java.util.List;
 import java.util.function.BiPredicate;
 
 import static com.akirahane.momentum.client.animation.MomentumAnimationController.MAX_SAFE_SPEED;
+import static com.akirahane.momentum.config.ServerConfig.BOOSTER_STAMINA_REDUCTION;
+import static com.akirahane.momentum.config.ServerConfig.MANEUVER_CONSUME_HUNGER;
+import static com.akirahane.momentum.config.ServerConfig.MANEUVER_CONSUME_HUNGER_AMOUNT;
 
 public abstract class BaseState {
     // 日志

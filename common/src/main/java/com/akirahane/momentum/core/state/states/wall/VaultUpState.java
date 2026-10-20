@@ -7,6 +7,7 @@ import com.akirahane.momentum.config.ServerConfig;
 import com.akirahane.momentum.core.context.PlayerMomentumContext;
 import com.akirahane.momentum.core.state.StateType;
 import com.akirahane.momentum.core.state.BaseState;
+import com.akirahane.momentum.platform.Services;
 import net.minecraft.world.entity.player.Player;
 
 import static com.akirahane.momentum.core.context.PlayerMomentumContext.JUMP;
@@ -38,7 +39,7 @@ public class VaultUpState extends BaseState {
     @Override
     public void onExit(Player player, PlayerMomentumContext context) {
         super.onExit(player, context);
-        player.setForcedPose(null);
+        Services.PLATFORM.setForcedPose(player, null);
     }
 
     @Override

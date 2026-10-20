@@ -1,8 +1,13 @@
 package com.akirahane.momentum.platform.services;
 
 import com.akirahane.momentum.core.state.MomentumStateMachine;
+import net.minecraft.core.BlockPos;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.world.entity.Pose;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.block.SoundType;
+import net.minecraft.world.level.block.state.BlockState;
+import org.jetbrains.annotations.Nullable;
 
 // TODO: 待平台适配范围明确后，按职责拆分接口。
 public interface IPlatformHelper {
@@ -16,6 +21,13 @@ public interface IPlatformHelper {
     boolean hasAccessoryJetBooster(Player player);
 
     void setMomentumEnabled(Player player, boolean enabled);
+
+    // null 时恢复原版姿态计算。
+    void setForcedPose(Player player, @Nullable Pose pose);
+
+    float getBlockFriction(BlockState state, Player player, BlockPos pos);
+
+    SoundType getBlockSoundType(BlockState state, Player player, BlockPos pos);
 
     void sendToServer(CustomPacketPayload packet);
 

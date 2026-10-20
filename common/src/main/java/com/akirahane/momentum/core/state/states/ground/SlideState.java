@@ -10,6 +10,7 @@ import com.akirahane.momentum.core.state.BaseState;
 import com.akirahane.momentum.core.context.PlayerMomentumContext;
 import com.akirahane.momentum.mixin.LivingEntityAccessor;
 import com.akirahane.momentum.config.ServerConfig;
+import com.akirahane.momentum.platform.Services;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.entity.Pose;
 import net.minecraft.world.entity.player.Player;
@@ -64,7 +65,7 @@ public class SlideState extends BaseState {
 
     @Override
     public void onEnter(Player player, PlayerMomentumContext context) {
-        player.setForcedPose(Pose.SWIMMING);
+        Services.PLATFORM.setForcedPose(player, Pose.SWIMMING);
         context.setNoMoveInput(true);
         context.addPermanentEffect(MomentumEffectType.FRICTION, context.SLIDE_FRICTION);
         context.addEffect(MomentumEffectType.BLOCK_FRICTION, context.SLIDE_BLOCK_FRICTION, JUMP_DECELERATION_WINDOW);
@@ -143,7 +144,7 @@ public class SlideState extends BaseState {
                     5
             );
         }
-        player.setForcedPose(null);
+        Services.PLATFORM.setForcedPose(player, null);
         context.setNoMoveInput(false);
         context.removeEffect(MomentumEffectType.FRICTION, context.SLIDE_FRICTION);
         context.removeEffect(MomentumEffectType.BLOCK_FRICTION, context.SLIDE_BLOCK_FRICTION);

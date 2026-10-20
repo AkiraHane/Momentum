@@ -5,6 +5,7 @@ import com.akirahane.momentum.client.hud.WallHangHints;
 import com.akirahane.momentum.core.context.PlayerMomentumContext;
 import com.akirahane.momentum.core.state.StateType;
 import com.akirahane.momentum.core.state.BaseState;
+import com.akirahane.momentum.platform.Services;
 import net.minecraft.world.entity.Pose;
 import net.minecraft.world.entity.player.Player;
 
@@ -41,13 +42,13 @@ public class ProneState extends BaseState {
     @Override
     public void onEnter(Player player, PlayerMomentumContext context) {
         super.onEnter(player, context);
-        player.setForcedPose(Pose.SWIMMING);
+        Services.PLATFORM.setForcedPose(player, Pose.SWIMMING);
     }
 
     @Override
     public void onExit(Player player, PlayerMomentumContext context) {
         super.onExit(player, context);
-        player.setForcedPose(null);
+        Services.PLATFORM.setForcedPose(player, null);
     }
 
     @Override
