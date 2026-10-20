@@ -4,7 +4,6 @@ import com.akirahane.momentum.Constants;
 import com.akirahane.momentum.client.config.ClientConfig;
 import com.akirahane.momentum.client.config.MomentumClientConfigHelper;
 import com.akirahane.momentum.client.debug.MomentumDebugEntry;
-import com.akirahane.momentum.client.hud.HintManager;
 import com.akirahane.momentum.core.state.MomentumStateMachine;
 import com.akirahane.momentum.registry.MomentumItems;
 import com.akirahane.momentum.core.state.BaseState;
@@ -103,13 +102,6 @@ public class MomentumClient {
     public static void onRegisterDebugEntries(RegisterDebugEntriesEvent event) {
         event.register(MOMENTUM_INFO, new MomentumDebugEntry());
         event.includeInProfile(MOMENTUM_INFO, DebugScreenProfile.DEFAULT, DebugScreenEntryStatus.NEVER);
-    }
-
-    @SubscribeEvent
-    public static void onClientTick(ClientTickEvent.Post event) {
-        Minecraft mc = Minecraft.getInstance();
-        if (mc.player == null || mc.level == null || mc.isPaused()) return;
-        HintManager.clientTick(mc.player);
     }
 
     // 渲染层统一保险：原版模式不施加任何相机/渲染修改
