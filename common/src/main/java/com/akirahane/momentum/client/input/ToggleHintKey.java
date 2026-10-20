@@ -1,5 +1,6 @@
 package com.akirahane.momentum.client.input;
 
+import com.akirahane.momentum.Constants;
 import com.akirahane.momentum.client.hud.HintManager;
 import net.minecraft.client.KeyMapping;
 
@@ -17,6 +18,7 @@ public class ToggleHintKey {
             if (HintManager.isVisible()) {
                 HintManager.forceShow();
             }
+            Constants.LOG.debug("[INPUT] TOGGLE_HINTS side=client visible={}", HintManager.isVisible());
         }
         wasDown = isDown;
     }

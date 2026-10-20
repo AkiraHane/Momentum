@@ -24,8 +24,7 @@ public abstract class KeyBindsListKeyEntryMixin {
     @Inject(method = "refreshEntry", at = @At("TAIL"))
     private void momentum$addFunctionModifierTooltip(CallbackInfo ci) {
         String name = key.getName();
-        if (!hasCollision && (name.equals(MomentumKeyMappingRegistration.FUNCTION_MODIFIER_KEY_NAME)
-                || name.equals(ChangeMomentumKey.KEY_NAME) || name.equals(ToggleHintKey.KEY_NAME))) {
+        if (!hasCollision && (name.equals(MomentumKeyMappingRegistration.FUNCTION_MODIFIER_KEY_NAME))) {
             changeButton.setTooltip(Tooltip.create(Component.translatable("key.momentum.function_modifier.tooltip")));
         }
     }

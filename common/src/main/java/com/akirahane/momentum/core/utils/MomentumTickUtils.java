@@ -81,7 +81,11 @@ public class MomentumTickUtils {
         AttributeInstance speed = player.getAttribute(Attributes.MOVEMENT_SPEED);
         AttributeInstance jump = player.getAttribute(Attributes.JUMP_STRENGTH);
         AttributeInstance step = player.getAttribute(Attributes.STEP_HEIGHT);
-        if (speed == null || jump == null || step == null) return;
+        if (speed == null || jump == null || step == null) {
+            Constants.LOG.debug("[BOOSTER] ATTRIBUTES_SKIPPED side={} player={} equipped={} reason=missing_attribute",
+                    player.level().isClientSide() ? "client" : "server", player.getId(), apply);
+            return;
+        }
 
         speed.removeModifier(BOOSTER_SPEED_ID);
         jump.removeModifier(BOOSTER_JUMP_ID);
@@ -91,6 +95,11 @@ public class MomentumTickUtils {
             speed.addOrReplacePermanentModifier(new AttributeModifier(BOOSTER_SPEED_ID, 0.04, AttributeModifier.Operation.ADD_VALUE));
             jump.addOrReplacePermanentModifier(new AttributeModifier(BOOSTER_JUMP_ID, 0.2, AttributeModifier.Operation.ADD_VALUE));
             step.addOrReplacePermanentModifier(new AttributeModifier(BOOSTER_STEP_ID, 0.4, AttributeModifier.Operation.ADD_VALUE));
+        }
+        if (Constants.LOG.isDebugEnabled()) {
+            Constants.LOG.debug("[BOOSTER] ATTRIBUTES side={} player={} dimension={} equipped={} speed={} jump={} step={}",
+                    player.level().isClientSide() ? "client" : "server", player.getId(), player.level().dimension().identifier(),
+                    apply, speed.getValue(), jump.getValue(), step.getValue());
         }
     }
 

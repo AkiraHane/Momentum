@@ -1,5 +1,6 @@
 package com.akirahane.momentum.client.utils;
 
+import com.akirahane.momentum.Constants;
 import com.akirahane.momentum.client.animation.MomentumAnimationController;
 import com.akirahane.momentum.client.animation.MomentumAnimationRegistration;
 import com.akirahane.momentum.core.context.PlayerMomentumContext;
@@ -23,6 +24,12 @@ public class AnimationUtils {
         if (context.getController() != null) {
             context.setMocha(context.getController().getMolangRuntime());
             bindVariables(context);
+        }
+        if (Constants.LOG.isDebugEnabled()) {
+            Constants.LOG.debug("[ANIM] INITIALIZE side=client player={} name={} dimension={} context={} controller={} mocha={} ready={}",
+                    player.getId(), player.getName().getString(), player.level().dimension().identifier(),
+                    System.identityHashCode(context), System.identityHashCode(context.getController()), System.identityHashCode(context.getMocha()),
+                    context.getController() != null && context.getMocha() != null);
         }
     }
 

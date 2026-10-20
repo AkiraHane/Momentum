@@ -2,10 +2,12 @@ package com.akirahane.momentum;
 
 import com.akirahane.momentum.core.utils.MomentumEventHelper;
 import com.akirahane.momentum.network.MomentumNetworkHelper;
+import com.akirahane.momentum.network.StateBroadcastPacket;
 import com.akirahane.momentum.registry.MomentumAttachments;
 import com.akirahane.momentum.registry.MomentumItemRegistration;
 import com.akirahane.momentum.registry.MomentumSoundRegistration;
 import com.akirahane.momentum.config.ServerConfig;
+import com.akirahane.momentum.config.MomentumConfigHelper;
 import com.akirahane.momentum.platform.Services;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
@@ -16,6 +18,7 @@ import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.config.ModConfig;
+import net.neoforged.fml.event.config.ModConfigEvent;
 import net.neoforged.neoforge.event.entity.living.LivingFallEvent;
 import net.neoforged.neoforge.event.entity.living.LivingIncomingDamageEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
@@ -37,9 +40,23 @@ public class Momentum {
     }
 
     @SubscribeEvent
+    public static void onServerConfigLoad(ModConfigEvent.Loading event) {
+        if (event.getConfig().getSpec() == ServerConfig.SPEC) {
+            MomentumConfigHelper.onServerConfigLoad();
+        }
+    }
+
+    @SubscribeEvent
     public static void onPlayerLogin(PlayerEvent.PlayerLoggedInEvent event) {
         if (event.getEntity() instanceof ServerPlayer player) {
             MomentumEventHelper.onPlayerLogin(player, Services.PLATFORM.isMomentumEnabled(player));
+        }
+    }
+
+    @SubscribeEvent
+    public static void onPlayerRespawn(PlayerEvent.PlayerRespawnEvent event) {
+        if (event.getEntity() instanceof ServerPlayer player) {
+            MomentumEventHelper.onPlayerRespawn(player);
         }
     }
 
@@ -62,7 +79,18 @@ public class Momentum {
     @SubscribeEvent
     public static void onStartTracking(PlayerEvent.StartTracking event) {
         if (event.getEntity() instanceof ServerPlayer observer && event.getTarget() instanceof Player player) {
-            PacketDistributor.sendToPlayer(observer, MomentumNetworkHelper.stateSnapshot(player));
+            StateBroadcastPacket packet = MomentumNetworkHelper.stateSnapshot(player);
+            PacketDistributor.sendToPlayer(observer, packet);
+            Constants.LOG.debug("[NET] TRACK_SNAPSHOT side=server player={} observer={} dimension={} state={} extra={} wall={}",
+                    player.getId(), observer.getId(), player.level().dimension().identifier(), packet.stateType(), packet.extraData(), packet.wallData());
+        }
+    }
+
+    @SubscribeEvent
+    public static void onStopTracking(PlayerEvent.StopTracking event) {
+        if (event.getEntity() instanceof ServerPlayer observer && event.getTarget() instanceof Player player) {
+            Constants.LOG.debug("[NET] TRACK_STOP side=server player={} observer={} dimension={}",
+                    player.getId(), observer.getId(), player.level().dimension().identifier());
         }
     }
 

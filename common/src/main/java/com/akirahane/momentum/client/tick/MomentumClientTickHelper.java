@@ -1,5 +1,6 @@
 package com.akirahane.momentum.client.tick;
 
+import com.akirahane.momentum.Constants;
 import com.akirahane.momentum.core.state.BaseState;
 import com.akirahane.momentum.core.state.MomentumStateMachine;
 import com.akirahane.momentum.network.StateTransitionPacket;
@@ -17,12 +18,16 @@ public class MomentumClientTickHelper {
             BaseState state = stateMachine.clientTick(player);
             if (state != null) {
                 var context = stateMachine.getContext();
-                Services.PLATFORM.sendToServer(new StateTransitionPacket(
+                StateTransitionPacket packet = new StateTransitionPacket(
                         state.getStateType(), context.getTransitionExtraData(), context.getTransitionWallData()
-                ));
+                );
+                Services.PLATFORM.sendToServer(packet);
                 // 附加数据只随本次状态转换发送。
                 context.setTransitionExtraData(-1);
                 context.setTransitionWallData((byte) -1);
+                Constants.LOG.debug("[NET] C2S_SEND side=client player={} dimension={} state={} extra={} wall={} resetExtra={} resetWall={}",
+                        player.getId(), player.level().dimension().identifier(), packet.stateType(), packet.extraData(), packet.wallData(),
+                        context.getTransitionExtraData(), context.getTransitionWallData());
             }
         } else {
             stateMachine.clientTickRemote(player);

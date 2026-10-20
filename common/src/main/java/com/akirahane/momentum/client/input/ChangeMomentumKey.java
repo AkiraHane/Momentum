@@ -1,5 +1,6 @@
 package com.akirahane.momentum.client.input;
 
+import com.akirahane.momentum.Constants;
 import com.akirahane.momentum.network.ToggleMomentumPacket;
 import com.akirahane.momentum.platform.Services;
 import net.minecraft.client.KeyMapping;
@@ -15,6 +16,7 @@ public class ChangeMomentumKey {
     public static void onClientTick(boolean isDown) {
         if (isDown && !wasToggleDown) {
             Services.PLATFORM.sendToServer(new ToggleMomentumPacket());
+            Constants.LOG.debug("[INPUT] TOGGLE_MOMENTUM side=client packet=ToggleMomentumPacket");
         }
         wasToggleDown = isDown;
     }

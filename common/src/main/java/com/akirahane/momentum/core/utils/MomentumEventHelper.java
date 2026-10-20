@@ -1,5 +1,6 @@
 package com.akirahane.momentum.core.utils;
 
+import com.akirahane.momentum.Constants;
 import com.akirahane.momentum.core.state.MomentumStateMachine;
 import com.akirahane.momentum.core.state.StateType;
 import com.akirahane.momentum.network.MomentumNetworkHelper;
@@ -16,6 +17,10 @@ import java.util.function.BiConsumer;
 public class MomentumEventHelper {
 
     public static void onPlayerLogin(ServerPlayer player, boolean enabled) {
+        if (Constants.LOG.isDebugEnabled()) {
+            Constants.LOG.debug("[DATA] LOGIN side=server player={} name={} uuid={} dimension={} enabled={}",
+                    player.getId(), player.getName().getString(), player.getUUID(), player.level().dimension().identifier(), enabled);
+        }
         player.sendSystemMessage(
                 Component.translatable(enabled
                         ? "message.momentum.momentum_enabled"
@@ -33,9 +38,20 @@ public class MomentumEventHelper {
         for (ServerPlayer player : server.getPlayerList().getPlayers()) {
             MomentumStateMachine stateMachine = Services.PLATFORM.getOrCreateStateMachine(player);
             if (stateMachine.isDirty()) {
-                broadcastState.accept(player, MomentumNetworkHelper.stateSnapshot(player));
+                StateBroadcastPacket packet = MomentumNetworkHelper.stateSnapshot(player);
+                broadcastState.accept(player, packet);
                 stateMachine.setDirty(false);
+                Constants.LOG.debug("[NET] BROADCAST side=server player={} dimension={} state={} extra={} wall={} audience=tracking+self dirty={}",
+                        player.getId(), player.level().dimension().identifier(), packet.stateType(), packet.extraData(), packet.wallData(), stateMachine.isDirty());
             }
+        }
+    }
+
+    public static void onPlayerRespawn(ServerPlayer player) {
+        if (Constants.LOG.isDebugEnabled()) {
+            Constants.LOG.debug("[DATA] RESPAWN side=server player={} name={} uuid={} dimension={} enabled={}",
+                    player.getId(), player.getName().getString(), player.getUUID(), player.level().dimension().identifier(),
+                    Services.PLATFORM.isMomentumEnabled(player));
         }
     }
 

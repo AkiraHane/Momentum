@@ -1,5 +1,6 @@
 package com.akirahane.momentum.core.state;
 
+import com.akirahane.momentum.Constants;
 import com.akirahane.momentum.core.context.PlayerMomentumContext;
 import com.akirahane.momentum.core.effect.MomentumEffect;
 import com.akirahane.momentum.core.effect.MomentumEffectType;
@@ -31,6 +32,11 @@ public class MomentumStateMachine {
         this.context = new PlayerMomentumContext(player);
         currentState = ORIGINAL.getState();
         LOGGER.trace("[MovementStateMachine] init");
+        if (Constants.LOG.isDebugEnabled()) {
+            Constants.LOG.debug("[DATA] INITIALIZE side={} player={} name={} uuid={} dimension={} context={}",
+                    player.level().isClientSide() ? "client" : "server", player.getId(), player.getName().getString(),
+                    player.getUUID(), player.level().dimension().identifier(), System.identityHashCode(context));
+        }
     }
 
     // ==================== 生命周期 ====================
@@ -71,6 +77,9 @@ public class MomentumStateMachine {
         currentState.onExit(player, context);
         currentState = next;
         currentState.onEnter(player, context);
+        Constants.LOG.debug("[STATE] TRANSITION side={} player={} dimension={} from={} to={} extra={} wall={}",
+                player.level().isClientSide() ? "client" : "server", player.getId(), player.level().dimension().identifier(),
+                context.getPreviousStateType(), currentState.getStateType(), context.getTransitionExtraData(), context.getTransitionWallData());
     }
 
     // 客户端向服务端同步状态

@@ -1,16 +1,20 @@
 package com.akirahane.momentum;
 
 import com.akirahane.momentum.config.ServerConfig;
+import com.akirahane.momentum.config.MomentumConfigHelper;
 import com.akirahane.momentum.core.utils.MomentumEventHelper;
 import com.akirahane.momentum.network.MomentumNetwork;
 import com.akirahane.momentum.network.MomentumNetworkHelper;
+import com.akirahane.momentum.network.StateBroadcastPacket;
 import com.akirahane.momentum.registry.MomentumAttachments;
 import com.akirahane.momentum.registry.MomentumItemRegistration;
 import com.akirahane.momentum.registry.MomentumSoundRegistration;
 import com.akirahane.momentum.platform.Services;
 import fuzs.forgeconfigapiport.fabric.api.v5.ConfigRegistry;
+import fuzs.forgeconfigapiport.fabric.api.v5.ModConfigEvents;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
+import net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.networking.v1.EntityTrackingEvents;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
@@ -28,13 +32,20 @@ public class Momentum implements ModInitializer {
 
     @Override
     public void onInitialize() {
+        ModConfigEvents.loading(Constants.MOD_ID).register(config -> {
+            if (config.getSpec() == ServerConfig.SPEC) {
+                MomentumConfigHelper.onServerConfigLoad();
+            }
+        });
         ConfigRegistry.INSTANCE.register(Constants.MOD_ID, ModConfig.Type.SERVER, ServerConfig.SPEC);
         MomentumItemRegistration.register();
         MomentumSoundRegistration.register();
         MomentumAttachments.register();
         MomentumNetwork.register();
         ServerPlayConnectionEvents.JOIN.register((listener, sender, server) -> onPlayerLogin(listener.player));
+        ServerPlayerEvents.AFTER_RESPAWN.register((oldPlayer, newPlayer, alive) -> MomentumEventHelper.onPlayerRespawn(newPlayer));
         EntityTrackingEvents.START_TRACKING.register(Momentum::onStartTracking);
+        EntityTrackingEvents.STOP_TRACKING.register(Momentum::onStopTracking);
         ServerTickEvents.END_SERVER_TICK.register(Momentum::onServerTick);
         ServerLivingEntityEvents.ALLOW_DAMAGE.register(Momentum::onPlayerHurt);
     }
@@ -57,7 +68,17 @@ public class Momentum implements ModInitializer {
 
     public static void onStartTracking(Entity entity, ServerPlayer observer) {
         if (entity instanceof Player player) {
-            ServerPlayNetworking.send(observer, MomentumNetworkHelper.stateSnapshot(player));
+            StateBroadcastPacket packet = MomentumNetworkHelper.stateSnapshot(player);
+            ServerPlayNetworking.send(observer, packet);
+            Constants.LOG.debug("[NET] TRACK_SNAPSHOT side=server player={} observer={} dimension={} state={} extra={} wall={}",
+                    player.getId(), observer.getId(), player.level().dimension().identifier(), packet.stateType(), packet.extraData(), packet.wallData());
+        }
+    }
+
+    public static void onStopTracking(Entity entity, ServerPlayer observer) {
+        if (entity instanceof Player player) {
+            Constants.LOG.debug("[NET] TRACK_STOP side=server player={} observer={} dimension={}",
+                    player.getId(), observer.getId(), player.level().dimension().identifier());
         }
     }
 
