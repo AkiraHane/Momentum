@@ -6,6 +6,8 @@
   "key.momentum.change_momentum": "change momentum",
   "key.category.momentum.category": "Momentum",
   "key.momentum.toggle_hint": "change hint",
+  "key.momentum.function_modifier": "Function Modifier",
+  "key.momentum.function_modifier.tooltip": "Hold this key when toggling maneuver mode or key hints. Leave it unbound to toggle them directly.",
   "message.momentum.momentum_disabled": "Momentum disabled",
   "message.momentum.momentum_enabled": "Momentum enabled",
   "state.momentum.original": "Go Back Original",

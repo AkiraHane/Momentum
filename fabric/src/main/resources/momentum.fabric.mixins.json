@@ -6,6 +6,9 @@
     "PlayerMixin",
     "LivingEntityFallMixin"
   ],
+  "client": [
+    "KeyBindsListKeyEntryMixin"
+  ],
   "injectors": {
     "defaultRequire": 1
   }

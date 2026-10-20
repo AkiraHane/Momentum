@@ -27,6 +27,10 @@ The bindings below are defaults. Forward, jump, sneak, and sprint use your Minec
 | `Shift + M` | Toggle maneuver mode |
 | `Shift + N` | Toggle key hints |
 
+On Fabric, the action keys are bound to `M` and `N`, with a separate Function Modifier bound to Left Shift by default. It applies only to these two toggles. Press the modifier and action key in either order; releasing and pressing the modifier again while holding the action key triggers another toggle. Unbind the modifier in Key Binds to use `M` and `N` alone. `C` and vanilla movement keys remain independent. Left Shift also retains its vanilla sneak action.
+
+NeoForge continues to use its own modifier settings.
+
 | Movement | Controls and effect |
 |---|---|
 | Prone | Hold `C` on the ground to crawl through 1-block-high gaps |

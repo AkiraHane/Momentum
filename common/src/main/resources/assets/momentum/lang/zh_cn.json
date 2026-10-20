@@ -5,6 +5,8 @@
   "key.momentum.lower_center": "降低重心",
   "key.momentum.change_momentum": "切换启用/关闭动量",
   "key.momentum.toggle_hint": "切换按键提示",
+  "key.momentum.function_modifier": "功能组合键",
+  "key.momentum.function_modifier.tooltip": "切换机动模式或按键提示时，需要同时按住此键。未绑定此键时，可以直接切换。",
   "key.category.momentum.category": "动量",
   "message.momentum.momentum_disabled": "禁用机动",
   "message.momentum.momentum_enabled": "启用机动",
