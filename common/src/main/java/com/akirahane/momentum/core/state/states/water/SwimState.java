@@ -20,8 +20,8 @@ public class SwimState extends BaseState {
                 HintManager.add(WallHangHints.SWIM_HOLD);
                 return Minecraft.getInstance().options.keyUp.isDown();
             } else {
-                HintManager.add(WallHangHints.SWIM);
-                return false;
+                HintManager.add(WallHangHints.SWIM_ACTIVE);
+                return LOWER_CENTER.get().isDown() && Minecraft.getInstance().options.keyUp.isDown();
             }
         } else if (player.isInWater()) {
             HintManager.add(WallHangHints.SWIM_ACTIVE);
