@@ -19,6 +19,9 @@ import static com.akirahane.momentum.Constants.MOD_ID;
 
 public class MomentumDebugEntry implements DebugScreenEntry {
 
+    public static final Identifier ENTRY_ID =
+            Identifier.fromNamespaceAndPath(MOD_ID, "movement_info");
+
     private static final Identifier group =
             Identifier.fromNamespaceAndPath(MOD_ID, "movement");
 

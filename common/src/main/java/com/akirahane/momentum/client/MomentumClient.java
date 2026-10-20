@@ -3,7 +3,6 @@ package com.akirahane.momentum.client;
 import com.akirahane.momentum.Constants;
 import com.akirahane.momentum.client.config.ClientConfig;
 import com.akirahane.momentum.client.config.MomentumClientConfigHelper;
-import com.akirahane.momentum.client.debug.MomentumDebugEntry;
 import com.akirahane.momentum.core.state.MomentumStateMachine;
 import com.akirahane.momentum.registry.MomentumItems;
 import com.akirahane.momentum.core.state.BaseState;
@@ -14,12 +13,9 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.logging.LogUtils;
 import com.mojang.math.Axis;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.components.debug.DebugScreenEntryStatus;
 import net.minecraft.network.chat.Component;
-import net.minecraft.client.gui.components.debug.DebugScreenProfile;
 import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.client.player.LocalPlayer;
-import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.api.distmarker.Dist;
@@ -46,9 +42,6 @@ import static com.akirahane.momentum.client.config.ClientConfig.ENABLE_CAMERA_OF
 @EventBusSubscriber(modid = Constants.MOD_ID, value = Dist.CLIENT)
 public class MomentumClient {
     protected static final Logger LOGGER = LogUtils.getLogger();
-
-    public static final Identifier MOMENTUM_INFO =
-            Identifier.fromNamespaceAndPath(Constants.MOD_ID, "movement_info");
 
     public MomentumClient(ModContainer modContainer, IEventBus modEventBus) {
         // 注册 mod 的 ModConfigSpec，以便 FML 可以创建和加载配置文件
@@ -96,12 +89,6 @@ public class MomentumClient {
             ));
             sm.getContext().setOldDeltaMovement(player.getDeltaMovement());
         }
-    }
-
-    @SubscribeEvent
-    public static void onRegisterDebugEntries(RegisterDebugEntriesEvent event) {
-        event.register(MOMENTUM_INFO, new MomentumDebugEntry());
-        event.includeInProfile(MOMENTUM_INFO, DebugScreenProfile.DEFAULT, DebugScreenEntryStatus.NEVER);
     }
 
     // 渲染层统一保险：原版模式不施加任何相机/渲染修改
