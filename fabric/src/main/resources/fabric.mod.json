@@ -23,6 +23,7 @@
             "com.akirahane.momentum.client.animation.MomentumClientAnimation",
             "com.akirahane.momentum.client.config.MomentumClientConfig",
             "com.akirahane.momentum.client.hud.MomentumClientHud",
+            "com.akirahane.momentum.client.item.MomentumClientItems",
             "com.akirahane.momentum.client.network.MomentumClientNetwork"
         ]
     },

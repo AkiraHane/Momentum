@@ -7,6 +7,8 @@
     "LivingEntityFallMixin"
   ],
   "client": [
+    "CameraMixin",
+    "ClientPlayerTickMixin",
     "DebugScreenEntriesMixin",
     "KeyBindsListKeyEntryMixin"
   ],
