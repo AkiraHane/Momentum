@@ -1,7 +1,7 @@
 package com.akirahane.momentum.mixin;
 
 import com.akirahane.momentum.core.state.StateType;
-import com.akirahane.momentum.init.InitAttachments;
+import com.akirahane.momentum.platform.Services;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GameRenderer;
@@ -20,9 +20,9 @@ public class GameRendererMixin {
     private void momentum$cancelBobView(CameraRenderState cameraState, PoseStack poseStack, CallbackInfo ci) {
         Minecraft mc = Minecraft.getInstance();
         if (mc.player == null) return;
-        if (!mc.player.hasData(InitAttachments.MOMENTUM_STATE)) return;
+        if (!Services.PLATFORM.hasStateMachine(mc.player)) return;
 
-        var machine = mc.player.getData(InitAttachments.MOMENTUM_STATE);
+        var machine = Services.PLATFORM.getOrCreateStateMachine(mc.player);
         if (StateType.SLIDE.equals(machine.getCurrentState().getStateType())) {
             ci.cancel();
         }

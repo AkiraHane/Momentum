@@ -1,7 +1,7 @@
 package com.akirahane.momentum.client.debug;
 
 import com.akirahane.momentum.core.context.PlayerMomentumContext;
-import com.akirahane.momentum.init.InitAttachments;
+import com.akirahane.momentum.platform.Services;
 import com.akirahane.momentum.mixin.LivingEntityAccessor;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.debug.DebugScreenDisplayer;
@@ -15,18 +15,18 @@ import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
 
-import static com.akirahane.momentum.Momentum.MODID;
+import static com.akirahane.momentum.Constants.MOD_ID;
 
 public class MomentumDebugEntry implements DebugScreenEntry {
 
     private static final Identifier group =
-            Identifier.fromNamespaceAndPath(MODID, "movement");
+            Identifier.fromNamespaceAndPath(MOD_ID, "movement");
 
     @Override
     public void display(@NotNull DebugScreenDisplayer displayer, @Nullable Level level, @Nullable LevelChunk clientChunk, @Nullable LevelChunk serverChunk) {
         Minecraft mc = Minecraft.getInstance();
         if (mc.player == null) return;
-        PlayerMomentumContext context = mc.player.getData(InitAttachments.MOMENTUM_STATE).getContext();
+        PlayerMomentumContext context = Services.PLATFORM.getOrCreateStateMachine(mc.player).getContext();
         Vec3 vel = context.getSpeed().multiply(20, 20, 20);
         displayer.addToGroup(group, String.format("[Momentum] H Speed * 20: %.4f", vel.horizontalDistance()));
         displayer.addToGroup(group, String.format("[Momentum] Y Vel * 20: %.4f", vel.y));

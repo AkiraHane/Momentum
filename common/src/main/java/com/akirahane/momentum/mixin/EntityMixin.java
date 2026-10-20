@@ -2,7 +2,7 @@ package com.akirahane.momentum.mixin;
 
 import com.akirahane.momentum.core.state.MomentumStateMachine;
 import com.akirahane.momentum.core.state.StateType;
-import com.akirahane.momentum.init.InitAttachments;
+import com.akirahane.momentum.platform.Services;
 import com.google.common.collect.ImmutableList;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
@@ -69,7 +69,7 @@ public abstract class EntityMixin {
         if (!player.level().isClientSide()) {
             return original;
         }
-        MomentumStateMachine stateMachine = player.getData(InitAttachments.MOMENTUM_STATE);
+        MomentumStateMachine stateMachine = Services.PLATFORM.getOrCreateStateMachine(player);
         if (stateMachine.getCurrentState().getStateType().equals(StateType.ORIGINAL)) {
             return original;
         }
@@ -89,7 +89,7 @@ public abstract class EntityMixin {
         if (!player.level().isClientSide()) {
             return original.call(boundingBox, colliders, maxStepHeight, stepHeightToSkip);
         }
-        MomentumStateMachine stateMachine = player.getData(InitAttachments.MOMENTUM_STATE);
+        MomentumStateMachine stateMachine = Services.PLATFORM.getOrCreateStateMachine(player);
         if (stateMachine.getCurrentState().getStateType().equals(StateType.ORIGINAL)) {
             return original.call(boundingBox, colliders, maxStepHeight, stepHeightToSkip);
         }
@@ -180,7 +180,7 @@ public abstract class EntityMixin {
         if (player.isInLiquid()) {
             return;
         }
-        MomentumStateMachine stateMachine = player.getData(InitAttachments.MOMENTUM_STATE);
+        MomentumStateMachine stateMachine = Services.PLATFORM.getOrCreateStateMachine(player);
         if (stateMachine.getCurrentState().getStateType().equals(StateType.ORIGINAL)) {
             return;
         }

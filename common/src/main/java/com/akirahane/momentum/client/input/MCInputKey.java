@@ -1,8 +1,8 @@
 package com.akirahane.momentum.client.input;
 
-import com.akirahane.momentum.Momentum;
+import com.akirahane.momentum.Constants;
 import com.akirahane.momentum.core.state.MomentumStateMachine;
-import com.akirahane.momentum.init.InitAttachments;
+import com.akirahane.momentum.platform.Services;
 import com.mojang.logging.LogUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
@@ -16,7 +16,7 @@ import java.util.HashSet;
 
 import static com.akirahane.momentum.core.context.PlayerMomentumContext.*;
 
-@EventBusSubscriber(modid = Momentum.MODID, value = Dist.CLIENT)
+@EventBusSubscriber(modid = Constants.MOD_ID, value = Dist.CLIENT)
 public class MCInputKey {
 
     protected static final Logger LOGGER = LogUtils.getLogger();
@@ -35,7 +35,7 @@ public class MCInputKey {
         Minecraft mc = Minecraft.getInstance();
         LocalPlayer player = mc.player;
         if (player == null) return;
-        MomentumStateMachine machine = player.getData(InitAttachments.MOMENTUM_STATE);
+        MomentumStateMachine machine = Services.PLATFORM.getOrCreateStateMachine(player);
         HashSet<Integer>[] list = machine.getContext().getInputBuffer();
         machine.getContext().setInputBufferIndex(
                 (machine.getContext().getInputBufferIndex() + 1) % machine.getContext().getInputBufferSize()

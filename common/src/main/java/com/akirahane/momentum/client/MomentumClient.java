@@ -1,16 +1,16 @@
 package com.akirahane.momentum.client;
 
-import com.akirahane.momentum.Momentum;
+import com.akirahane.momentum.Constants;
 import com.akirahane.momentum.client.animation.MomentumAnimationController;
 import com.akirahane.momentum.client.config.ClientConfig;
 import com.akirahane.momentum.client.debug.MomentumDebugEntry;
 import com.akirahane.momentum.client.hud.HintManager;
 import com.akirahane.momentum.core.state.MomentumStateMachine;
-import com.akirahane.momentum.init.InitItems;
+import com.akirahane.momentum.registry.MomentumItems;
 import com.akirahane.momentum.core.state.BaseState;
 import com.akirahane.momentum.core.state.StateType;
-import com.akirahane.momentum.init.InitAttachments;
 import com.akirahane.momentum.network.StateTransitionPacket;
+import com.akirahane.momentum.platform.Services;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.logging.LogUtils;
 import com.mojang.math.Axis;
@@ -39,7 +39,6 @@ import net.neoforged.neoforge.client.event.*;
 import net.neoforged.neoforge.client.gui.ConfigurationScreen;
 import net.neoforged.neoforge.event.entity.player.ItemTooltipEvent;
 import net.neoforged.neoforge.client.gui.IConfigScreenFactory;
-import net.neoforged.neoforge.client.network.ClientPacketDistributor;
 import net.neoforged.neoforge.event.tick.PlayerTickEvent;
 import org.slf4j.Logger;
 
@@ -47,16 +46,16 @@ import static com.akirahane.momentum.client.config.ClientConfig.ENABLE_CAMERA_OF
 import static com.akirahane.momentum.client.config.ClientConfig.ENABLE_KEY_HINTS;
 
 // 此类不会在专用服务器上加载。在此处访问客户端代码是安全的。
-@Mod(value = Momentum.MODID, dist = Dist.CLIENT)
+@Mod(value = Constants.MOD_ID, dist = Dist.CLIENT)
 // 可以使用 EventBusSubscriber 来自动注册类中所有带有 @SubscribeEvent 注解的静态方法
-@EventBusSubscriber(modid = Momentum.MODID, value = Dist.CLIENT)
+@EventBusSubscriber(modid = Constants.MOD_ID, value = Dist.CLIENT)
 public class MomentumClient {
     protected static final Logger LOGGER = LogUtils.getLogger();
 
     public static final Identifier MOMENTUM_INFO =
-            Identifier.fromNamespaceAndPath(Momentum.MODID, "movement_info");
+            Identifier.fromNamespaceAndPath(Constants.MOD_ID, "movement_info");
     public static final Identifier MOMENTUM_ANIM =
-            Identifier.fromNamespaceAndPath(Momentum.MODID, "movement_anim");
+            Identifier.fromNamespaceAndPath(Constants.MOD_ID, "movement_anim");
 
     public MomentumClient(ModContainer modContainer, IEventBus modEventBus) {
         // 注册 mod 的 ModConfigSpec，以便 FML 可以创建和加载配置文件
@@ -73,10 +72,10 @@ public class MomentumClient {
     public static void onClientPlayerTick(PlayerTickEvent.Pre event) {
         if (event.getEntity() instanceof LocalPlayer player) {
             // 本地玩家
-            MomentumStateMachine sm = player.getData(InitAttachments.MOMENTUM_STATE);
+            MomentumStateMachine sm = Services.PLATFORM.getOrCreateStateMachine(player);
             BaseState state = sm.clientTick(player);
             if (state != null) {
-                ClientPacketDistributor.sendToServer(
+                Services.PLATFORM.sendToServer(
                     new StateTransitionPacket(state.getStateType(), sm.getContext().getTransitionExtraData(), sm.getContext().getTransitionWallData())
                 );
                 sm.getContext().setTransitionExtraData(-1); // 重置
@@ -84,7 +83,7 @@ public class MomentumClient {
             }
         } else if (event.getEntity() instanceof AbstractClientPlayer otherPlayer) {
             // 其他联机玩家
-            MomentumStateMachine sm = otherPlayer.getData(InitAttachments.MOMENTUM_STATE);
+            MomentumStateMachine sm = Services.PLATFORM.getOrCreateStateMachine(otherPlayer);
             sm.clientTickRemote(otherPlayer);
         }
     }
@@ -93,7 +92,7 @@ public class MomentumClient {
     @SubscribeEvent(priority = EventPriority.LOWEST)
     public static void onClientPlayerTick(PlayerTickEvent.Post event) {
         if (event.getEntity() instanceof Player player) {
-            MomentumStateMachine sm = player.getData(InitAttachments.MOMENTUM_STATE);
+            MomentumStateMachine sm = Services.PLATFORM.getOrCreateStateMachine(player);
             sm.getContext().setOldSpeed(sm.getContext().getSpeed());
             sm.getContext().setSpeed(new Vec3(
                     player.getX() - player.xOld,
@@ -139,8 +138,8 @@ public class MomentumClient {
     // 渲染层统一保险：原版模式不施加任何相机/渲染修改
     private static boolean isOriginal(Minecraft mc) {
         if (mc.player == null) return true;
-        if (!mc.player.hasData(InitAttachments.MOMENTUM_STATE)) return true;
-        return mc.player.getData(InitAttachments.MOMENTUM_STATE).getCurrentState().getStateType() == StateType.ORIGINAL;
+        if (!Services.PLATFORM.hasStateMachine(mc.player)) return true;
+        return Services.PLATFORM.getOrCreateStateMachine(mc.player).getCurrentState().getStateType() == StateType.ORIGINAL;
     }
 
     @SubscribeEvent
@@ -153,7 +152,7 @@ public class MomentumClient {
         LocalPlayer player = Minecraft.getInstance().player;
         if (player == null) return;
 
-        var context = player.getData(InitAttachments.MOMENTUM_STATE).getContext();
+        var context = Services.PLATFORM.getOrCreateStateMachine(player).getContext();
 
         float partialTick = (float) event.getPartialTick();
         float roll = context.getRenderCameraRoll(partialTick);
@@ -175,7 +174,7 @@ public class MomentumClient {
         LocalPlayer player = Minecraft.getInstance().player;
         if (player == null) return;
 
-        var context = player.getData(InitAttachments.MOMENTUM_STATE).getContext();
+        var context = Services.PLATFORM.getOrCreateStateMachine(player).getContext();
         float bonus = context.getRenderFovBonus((float) event.getPartialTick());
 
         if (bonus != 0F) {
@@ -190,7 +189,7 @@ public class MomentumClient {
         LocalPlayer player = Minecraft.getInstance().player;
         if (player == null) return;
 
-        var machine = player.getData(InitAttachments.MOMENTUM_STATE);
+        var machine = Services.PLATFORM.getOrCreateStateMachine(player);
         var context = machine.getContext();
         float pt = event.getPartialTick();
 
@@ -201,7 +200,7 @@ public class MomentumClient {
 
     @SubscribeEvent
     public static void onItemTooltip(ItemTooltipEvent event) {
-        if (event.getItemStack().is(InitItems.JET_BOOSTER_ITEM)) {
+        if (event.getItemStack().is(MomentumItems.JET_BOOSTER_ITEM)) {
             event.getToolTip().add(Component.translatable("item.momentum.jet_booster.tooltip"));
         }
     }

@@ -4,7 +4,7 @@ import com.akirahane.momentum.client.config.ClientConfig;
 import com.akirahane.momentum.core.context.PlayerMomentumContext;
 import com.akirahane.momentum.core.state.MomentumStateMachine;
 import com.akirahane.momentum.core.state.StateType;
-import com.akirahane.momentum.init.InitAttachments;
+import com.akirahane.momentum.platform.Services;
 import net.minecraft.client.Minecraft;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Player;
@@ -32,7 +32,7 @@ public class CameraUtils {
     }
 
     public static void computeTargetFovBonus(Player player, PlayerMomentumContext context) {
-        MomentumStateMachine sm = player.getData(InitAttachments.MOMENTUM_STATE);
+        MomentumStateMachine sm = Services.PLATFORM.getOrCreateStateMachine(player);
         if (sm.getCurrentState().getStateType() == StateType.ORIGINAL) {
             context.setTargetFovBonus(0F);
             return;

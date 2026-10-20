@@ -1,8 +1,7 @@
 package com.akirahane.momentum.client.input;
 
-import com.akirahane.momentum.Momentum;
+import com.akirahane.momentum.Constants;
 import com.akirahane.momentum.client.hud.HintManager;
-import com.akirahane.momentum.network.ToggleMomentumPacket;
 import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.logging.LogUtils;
 import net.minecraft.client.KeyMapping;
@@ -12,7 +11,6 @@ import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
-import net.neoforged.neoforge.client.network.ClientPacketDistributor;
 import net.neoforged.neoforge.client.settings.KeyConflictContext;
 import net.neoforged.neoforge.client.settings.KeyModifier;
 import net.neoforged.neoforge.common.util.Lazy;
@@ -20,9 +18,9 @@ import org.jetbrains.annotations.NotNull;
 import org.lwjgl.glfw.GLFW;
 import org.slf4j.Logger;
 
-import static com.akirahane.momentum.client.init.InitKeyMappings.MOMENTUM_CATEGORY;
+import static com.akirahane.momentum.client.registry.MomentumKeyMappings.MOMENTUM_CATEGORY;
 
-@EventBusSubscriber(modid = Momentum.MODID, value = Dist.CLIENT)
+@EventBusSubscriber(modid = Constants.MOD_ID, value = Dist.CLIENT)
 public class ToggleHintKey {
     protected static final Logger LOGGER = LogUtils.getLogger();
 

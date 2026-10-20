@@ -16,7 +16,10 @@
     "environment": "*",
     "entrypoints": {
         "main": [
-            "com.example.examplemod.ExampleMod"
+            "com.akirahane.momentum.Momentum"
+        ],
+        "client": [
+            "com.akirahane.momentum.client.network.MomentumClientNetwork"
         ]
     },
     "mixins": [
@@ -26,6 +29,7 @@
     "depends": {
         "fabricloader": ">=${fabric_loader_version}",
         "fabric-api": "*",
+        "forgeconfigapiport": ">=${forge_config_api_port_version}",
         "minecraft": "~${minecraft_version}",
         "java": ">=${java_version}"
     },

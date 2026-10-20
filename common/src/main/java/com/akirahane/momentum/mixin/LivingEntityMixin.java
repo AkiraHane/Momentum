@@ -4,7 +4,7 @@ import com.akirahane.momentum.config.ServerConfig;
 import com.akirahane.momentum.core.context.PlayerMomentumContext;
 import com.akirahane.momentum.core.state.MomentumStateMachine;
 import com.akirahane.momentum.core.state.StateType;
-import com.akirahane.momentum.init.InitAttachments;
+import com.akirahane.momentum.platform.Services;
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
@@ -48,7 +48,7 @@ public abstract class LivingEntityMixin extends Entity implements Attackable, Wa
         if (!(self instanceof Player player)) {
             return original;
         }
-        MomentumStateMachine stateMachine = player.getData(InitAttachments.MOMENTUM_STATE);
+        MomentumStateMachine stateMachine = Services.PLATFORM.getOrCreateStateMachine(player);
         if (stateMachine.getCurrentState().getStateType().equals(StateType.ORIGINAL)) {
             return original;
         }
@@ -63,7 +63,7 @@ public abstract class LivingEntityMixin extends Entity implements Attackable, Wa
         if (!(self instanceof Player player)) {
             return original;
         }
-        MomentumStateMachine stateMachine = player.getData(InitAttachments.MOMENTUM_STATE);
+        MomentumStateMachine stateMachine = Services.PLATFORM.getOrCreateStateMachine(player);
         if (stateMachine.getCurrentState().getStateType() == StateType.ORIGINAL) {
             return original;
         }
@@ -86,7 +86,7 @@ public abstract class LivingEntityMixin extends Entity implements Attackable, Wa
         if (!(self instanceof Player player)) {
             return original;
         }
-        MomentumStateMachine stateMachine = player.getData(InitAttachments.MOMENTUM_STATE);
+        MomentumStateMachine stateMachine = Services.PLATFORM.getOrCreateStateMachine(player);
         if (stateMachine.getCurrentState().getStateType().equals(StateType.ORIGINAL)) {
             return original;
         }
@@ -103,7 +103,7 @@ public abstract class LivingEntityMixin extends Entity implements Attackable, Wa
         if (!(self instanceof Player player)) {
             return original;
         }
-        MomentumStateMachine stateMachine = player.getData(InitAttachments.MOMENTUM_STATE);
+        MomentumStateMachine stateMachine = Services.PLATFORM.getOrCreateStateMachine(player);
         if (stateMachine.getCurrentState().getStateType().equals(StateType.ORIGINAL)) {
             return original;
         }
@@ -118,7 +118,7 @@ public abstract class LivingEntityMixin extends Entity implements Attackable, Wa
         if (!(self instanceof Player player)) {
             return original;
         }
-        MomentumStateMachine stateMachine = player.getData(InitAttachments.MOMENTUM_STATE);
+        MomentumStateMachine stateMachine = Services.PLATFORM.getOrCreateStateMachine(player);
         if (stateMachine.getCurrentState().getStateType().equals(StateType.ORIGINAL)) {
             return original;
         }
@@ -136,7 +136,7 @@ public abstract class LivingEntityMixin extends Entity implements Attackable, Wa
         if (!(self instanceof Player player)) {
             return original;
         }
-        MomentumStateMachine stateMachine = player.getData(InitAttachments.MOMENTUM_STATE);
+        MomentumStateMachine stateMachine = Services.PLATFORM.getOrCreateStateMachine(player);
         if (stateMachine.getCurrentState().getStateType().equals(StateType.ORIGINAL)) {
             return original;
         }
@@ -150,7 +150,7 @@ public abstract class LivingEntityMixin extends Entity implements Attackable, Wa
         if (!(self instanceof Player player)) {
             return original;
         }
-        MomentumStateMachine stateMachine = player.getData(InitAttachments.MOMENTUM_STATE);
+        MomentumStateMachine stateMachine = Services.PLATFORM.getOrCreateStateMachine(player);
         if (stateMachine.getCurrentState().getStateType().equals(StateType.ORIGINAL)) {
             return original;
         }
@@ -198,7 +198,7 @@ public abstract class LivingEntityMixin extends Entity implements Attackable, Wa
             original.call(self, originalBoost);
             return;
         }
-        MomentumStateMachine stateMachine = player.getData(InitAttachments.MOMENTUM_STATE);
+        MomentumStateMachine stateMachine = Services.PLATFORM.getOrCreateStateMachine(player);
         if (stateMachine.getCurrentState().getStateType().equals(StateType.ORIGINAL)) {
             original.call(self, originalBoost);
             return;
@@ -232,7 +232,7 @@ public abstract class LivingEntityMixin extends Entity implements Attackable, Wa
         if (!(self instanceof Player player)) {
             return;
         }
-        MomentumStateMachine stateMachine = player.getData(InitAttachments.MOMENTUM_STATE);
+        MomentumStateMachine stateMachine = Services.PLATFORM.getOrCreateStateMachine(player);
         if (stateMachine.getCurrentState().getStateType().equals(StateType.ORIGINAL)) {
             return;
         }
@@ -251,7 +251,7 @@ public abstract class LivingEntityMixin extends Entity implements Attackable, Wa
             return;
         }
 
-        MomentumStateMachine stateMachine = player.getData(InitAttachments.MOMENTUM_STATE);
+        MomentumStateMachine stateMachine = Services.PLATFORM.getOrCreateStateMachine(player);
         if (stateMachine.getCurrentState().getStateType().equals(StateType.ORIGINAL)) {
             return;
         }
@@ -298,7 +298,7 @@ public abstract class LivingEntityMixin extends Entity implements Attackable, Wa
         if (!self.onClimbable()) return original;
         if (!Minecraft.getInstance().options.keySprint.isDown()) return original;
 
-        MomentumStateMachine stateMachine = player.getData(InitAttachments.MOMENTUM_STATE);
+        MomentumStateMachine stateMachine = Services.PLATFORM.getOrCreateStateMachine(player);
         if (stateMachine.getCurrentState().getStateType().equals(StateType.ORIGINAL)) {
             return original;
         }

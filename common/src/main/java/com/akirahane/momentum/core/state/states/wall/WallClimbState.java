@@ -17,7 +17,7 @@ import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
 
-import static com.akirahane.momentum.client.init.InitSounds.JET3;
+import static com.akirahane.momentum.registry.MomentumSounds.JET3;
 import static com.akirahane.momentum.core.utils.WallSoundUtils.STEP;
 import static com.akirahane.momentum.core.context.PlayerMomentumContext.*;
 

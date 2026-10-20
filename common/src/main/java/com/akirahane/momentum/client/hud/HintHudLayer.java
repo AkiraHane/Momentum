@@ -1,6 +1,6 @@
 package com.akirahane.momentum.client.hud;
 
-import com.akirahane.momentum.Momentum;
+import com.akirahane.momentum.Constants;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
@@ -14,14 +14,14 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.RegisterGuiLayersEvent;
 import net.neoforged.neoforge.client.gui.VanillaGuiLayers;
 
-@EventBusSubscriber(modid = Momentum.MODID, value = Dist.CLIENT)
+@EventBusSubscriber(modid = Constants.MOD_ID, value = Dist.CLIENT)
 public class HintHudLayer {
 
     public static final Identifier LAYER_ID = Identifier.fromNamespaceAndPath(
-            Momentum.MODID, "hint_overlay");
+            Constants.MOD_ID, "hint_overlay");
 
     private static final Identifier KEY_BUTTON_SPRITE = Identifier.fromNamespaceAndPath(
-            Momentum.MODID, "widget/button16");
+            Constants.MOD_ID, "widget/button16");
 
     // 整体缩放
     private static final float SCALE = 1F;

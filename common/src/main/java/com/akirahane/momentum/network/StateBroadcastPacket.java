@@ -8,11 +8,11 @@ import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.Identifier;
 import org.jetbrains.annotations.NotNull;
 
-import static com.akirahane.momentum.Momentum.MODID;
+import static com.akirahane.momentum.Constants.MOD_ID;
 
 public record StateBroadcastPacket(int playerId, StateType stateType, int extraData, byte wallData) implements CustomPacketPayload {
     public static final CustomPacketPayload.Type<@NotNull StateBroadcastPacket> TYPE =
-            new CustomPacketPayload.Type<>(Identifier.fromNamespaceAndPath(MODID, "broadcast_state"));
+            new CustomPacketPayload.Type<>(Identifier.fromNamespaceAndPath(MOD_ID, "broadcast_state"));
 
     public static final StreamCodec<@NotNull FriendlyByteBuf, @NotNull StateBroadcastPacket> STREAM_CODEC =
             StreamCodec.composite(

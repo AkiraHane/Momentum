@@ -3,7 +3,7 @@ package com.akirahane.momentum.core.state.states;
 import com.akirahane.momentum.core.context.PlayerMomentumContext;
 import com.akirahane.momentum.core.state.StateType;
 import com.akirahane.momentum.core.state.BaseState;
-import com.akirahane.momentum.init.InitAttachments;
+import com.akirahane.momentum.platform.Services;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
 
@@ -13,7 +13,7 @@ import static com.akirahane.momentum.core.effect.MomentumEffectType.FRICTION;
 
 public class OriginalState extends BaseState {
     public static boolean canOriginal(Player player, PlayerMomentumContext context) {
-        return !(player.getData(InitAttachments.MOMENTUM_ENABLED) && context.isCanMomentum())
+        return !(Services.PLATFORM.isMomentumEnabled(player) && context.isCanMomentum())
                 || player.getAbilities().flying    // 飞行
                 || player.isFallFlying()           // 鞘翅
                 || player.isPassenger()            // 骑乘

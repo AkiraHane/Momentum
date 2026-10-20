@@ -1,6 +1,6 @@
 package com.akirahane.momentum.core.utils;
 
-import com.akirahane.momentum.Momentum;
+import com.akirahane.momentum.Constants;
 import com.akirahane.momentum.client.utils.CameraUtils;
 import com.akirahane.momentum.client.utils.AnimationUtils;
 import com.akirahane.momentum.client.utils.MomentumInputUtils;
@@ -9,7 +9,7 @@ import com.akirahane.momentum.compat.curios.handler.CuriosHandler;
 import com.akirahane.momentum.config.ServerConfig;
 import com.akirahane.momentum.core.context.PlayerMomentumContext;
 import com.akirahane.momentum.core.state.states.ground.SlideState;
-import com.akirahane.momentum.init.InitItems;
+import com.akirahane.momentum.registry.MomentumItems;
 import net.minecraft.resources.Identifier;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.util.Mth;
@@ -22,9 +22,9 @@ import net.minecraft.world.entity.player.Player;
 import static com.akirahane.momentum.core.context.PlayerMomentumContext.*;
 
 public class MomentumTickUtils {
-    private static final Identifier BOOSTER_SPEED_ID = Identifier.fromNamespaceAndPath(Momentum.MODID, "booster_speed");
-    private static final Identifier BOOSTER_JUMP_ID = Identifier.fromNamespaceAndPath(Momentum.MODID, "booster_jump");
-    private static final Identifier BOOSTER_STEP_ID = Identifier.fromNamespaceAndPath(Momentum.MODID, "booster_step");
+    private static final Identifier BOOSTER_SPEED_ID = Identifier.fromNamespaceAndPath(Constants.MOD_ID, "booster_speed");
+    private static final Identifier BOOSTER_JUMP_ID = Identifier.fromNamespaceAndPath(Constants.MOD_ID, "booster_jump");
+    private static final Identifier BOOSTER_STEP_ID = Identifier.fromNamespaceAndPath(Constants.MOD_ID, "booster_step");
 
     public static void serverTick(Player player, PlayerMomentumContext context) {
         context.tickTimers();
@@ -96,7 +96,7 @@ public class MomentumTickUtils {
     }
 
     private static boolean checkBoosterEquipped(Player player) {
-        if (player.getItemBySlot(EquipmentSlot.LEGS).is(InitItems.JET_BOOSTER_ITEM.get())) {
+        if (player.getItemBySlot(EquipmentSlot.LEGS).is(MomentumItems.JET_BOOSTER_ITEM.get())) {
             return true;
         }
         if (CuriosCompat.isLoaded() && CuriosHandler.hasJetBooster(player)) {

@@ -1,6 +1,6 @@
 package com.akirahane.momentum.core.state;
 
-import com.akirahane.momentum.Momentum;
+import com.akirahane.momentum.Constants;
 import com.akirahane.momentum.client.hud.HintManager;
 import com.akirahane.momentum.client.hud.WallHangHints;
 import com.akirahane.momentum.core.context.PlayerMomentumContext;
@@ -30,20 +30,19 @@ import java.util.List;
 import java.util.function.BiPredicate;
 
 import static com.akirahane.momentum.client.animation.MomentumAnimationController.MAX_SAFE_SPEED;
-import static com.akirahane.momentum.config.ServerConfig.*;
 
 public abstract class BaseState {
     // 日志
     protected static final Logger LOGGER = LogUtils.getLogger();
 
     protected static final Identifier WALL_GRAVITY_ID =
-            Identifier.fromNamespaceAndPath(Momentum.MODID, "wall_gravity");
+            Identifier.fromNamespaceAndPath(Constants.MOD_ID, "wall_gravity");
     // 海豚跳重力
     protected static final Identifier DOLPHIN_GRAVITY_ID =
-            Identifier.fromNamespaceAndPath(Momentum.MODID, "dolphin_gravity");
+            Identifier.fromNamespaceAndPath(Constants.MOD_ID, "dolphin_gravity");
     // 上坡高度ID
     protected static final Identifier UP_SLOPE_ID =
-            Identifier.fromNamespaceAndPath(Momentum.MODID, "up_slope");
+            Identifier.fromNamespaceAndPath(Constants.MOD_ID, "up_slope");
     // 跳跃
     public static String JUMP_LEFT = "jump_left";
     public static String JUMP_RIGHT = "jump_right";
@@ -214,7 +213,7 @@ public abstract class BaseState {
         context.getController().removeModifierIf(m -> m instanceof AbstractFadeModifier);
         context.getController().replaceAnimationWithFade(
                 AbstractFadeModifier.standardFadeIn(fadeInTime, EasingType.EASE_IN_OUT_SINE),
-                Identifier.fromNamespaceAndPath(Momentum.MODID, animName)
+                Identifier.fromNamespaceAndPath(Constants.MOD_ID, animName)
         );
         context.setCurrentAnimationName(animName);
     }
