@@ -21,7 +21,10 @@ public class WallKickState extends BaseState {
     private static final int WALL_KICK_STATE_TICKS = 5;
     private static final int WALL_RUN_REENTRY_GRACE_TICKS = 8;
     private static final double HORIZONTAL_EPSILON = 1.0E-6;
-    private static final double WALL_RUN_KICK_NORMAL_MULTIPLIER = 1;
+    private static final double WALL_KICK_UPWARD_BIAS_DEGREES = 30;
+    private static final double WALL_KICK_PITCH_LIMIT_DEGREES = 60;
+    private static final double WALL_KICK_FULL_VERTICAL_ANGLE_DEGREES = 45;
+    private static final double WALL_KICK_MAX_VERTICAL_MULTIPLIER = 1.5;
 
     public static boolean canWallKick(Player player, PlayerMomentumContext context) {
         return ServerConfig.ENABLE_WALL_KICK.getAsBoolean() && ClientConfig.ENABLE_WALL_KICK.getAsBoolean() &&
@@ -45,10 +48,8 @@ public class WallKickState extends BaseState {
 
     @Override
     protected java.util.List<Transition> transitionChain() {
-        // 蹬墙跳持续期自保持（替代 canWallKick 入口检查）
         return withPredicate(DEFAULT_CHAIN, StateType.WALL_KICK, (p, c) -> c.getWallJumpTimer() > 0);
     }
-
 
     @Override
     public void onEnter(Player player, PlayerMomentumContext context) {
@@ -72,30 +73,12 @@ public class WallKickState extends BaseState {
         context.setLeftFootJump(!context.isLeftFootJump());
         float jumpPower = ((LivingEntityAccessor) player).invokeGetJumpPower();
         boolean fromWallRun = context.getPreviousStateType() == StateType.WALL_RUN;
-        boolean inputDirected = Mth.abs(context.getInputWallAngle()) >= 120;
+        applyInputDirectedKick(player, context, jumpPower);
         if (fromWallRun) {
-            // 墙跑保持条件允许玩家先转向墙外再起跳。此时沿用修改前的输入导向，
-            // 避免固定墙面法线覆盖玩家当前视角/移动输入。
-            if (inputDirected) {
-                applyInputDirectedKick(player, context, jumpPower);
-            } else {
-                applyWallRunKick(player, context, jumpPower);
-            }
             context.setWallRunReentryGraceTicks(WALL_RUN_REENTRY_GRACE_TICKS);
-            if (inputDirected) {
-                player.fallDistance = 0;
-            }
-        } else if (inputDirected) {
-            applyInputDirectedKick(player, context, jumpPower);
+        }
+        if (Mth.abs(context.getInputWallAngle()) >= 120) {
             player.fallDistance = 0;
-        } else {
-            player.addDeltaMovement(
-                    new Vec3(
-                            -context.getWallNormal().x * jumpPower,
-                            0,
-                            -context.getWallNormal().z * jumpPower
-                    )
-            );
         }
         WallSoundUtils.playWallSound(player, context, WallSoundUtils.FALL, 0.15F, 1);
         player.playSound(
@@ -106,54 +89,57 @@ public class WallKickState extends BaseState {
         context.setWallJumpTimer(WALL_KICK_STATE_TICKS);
     }
 
-    /**
-     * 墙跑派生的墙面导向蹬墙跳：保留完整水平动量，并把方向转向墙外。
-     * 冷却只禁止增加水平总速度，不再删除已有速度分量。
-     */
-    private static void applyWallRunKick(Player player, PlayerMomentumContext context, float jumpPower) {
-        Vec3 normal = context.getRunWallNormal();
-        if (normal.horizontalDistanceSqr() < HORIZONTAL_EPSILON) {
-            normal = context.getWallNormal();
-        }
-        normal = new Vec3(normal.x, 0, normal.z).normalize();
+    /** 直接墙跳与跑墙墙跳共用输入方向、俯仰和角度衰减。 */
+    private static void applyInputDirectedKick(Player player, PlayerMomentumContext context, float jumpPower) {
+        double angle = Mth.abs(context.getInputWallAngle());
+        // 360 表示没有有效墙面或输入方向。
+        if (angle <= 90 || angle > 180) return;
+
+        Vec3 input = new Vec3(context.getInputVec().x, 0, context.getInputVec().z);
+        double inputLength = input.horizontalDistance();
+        if (inputLength <= HORIZONTAL_EPSILON) return;
+
+        // 90° 无力度，180° 满力度；120° 约有 70% 的力度。
+        double progress = (angle - 90) / 90;
+        double remaining = 1 - progress;
+        double angleFactor = 1 - remaining * remaining * remaining;
+        double strength = jumpPower * angleFactor;
+
+        double yaw = Math.toRadians(player.getYRot());
+        double alignment = Mth.clamp(
+                (-input.x * Math.sin(yaw) + input.z * Math.cos(yaw)) / inputLength,
+                -1.0,
+                1.0
+        );
+        // 前进保留俯仰，侧移归零，后退反转；限幅后统一向上补正。
+        double weightedPitch = Mth.clamp(
+                player.getXRot() * alignment,
+                -WALL_KICK_PITCH_LIMIT_DEGREES,
+                WALL_KICK_PITCH_LIMIT_DEGREES
+        );
+        double pitchDegrees = weightedPitch - WALL_KICK_UPWARD_BIAS_DEGREES;
+        double pitch = Math.toRadians(pitchDegrees);
 
         Vec3 current = player.getDeltaMovement();
         Vec3 currentHorizontal = new Vec3(current.x, 0, current.z);
-        Vec3 awayFromWall = normal.scale(-jumpPower * WALL_RUN_KICK_NORMAL_MULTIPLIER);
-        double ySpeed = Mth.abs(context.getInputWallAngle()) >= 100
-                ? jumpPower * 1.5
-                : current.y;
+        double horizontalFactor = (1 + Math.cos(pitch)) * 0.5;
+        Vec3 horizontalImpulse = input.scale(horizontalFactor * strength / inputLength);
+        Vec3 desiredHorizontal = currentHorizontal.add(horizontalImpulse);
 
+        // 最终向上 45° 达到目标 Y 速度上限；墙面力度越弱，越接近原 Y 速度。
+        double verticalFactor = Mth.clamp(-pitchDegrees / WALL_KICK_FULL_VERTICAL_ANGLE_DEGREES, -1.0, 1.0);
+        double targetYSpeed = jumpPower * WALL_KICK_MAX_VERTICAL_MULTIPLIER * verticalFactor;
+        double ySpeed = Mth.lerp(angleFactor, current.y, targetYSpeed);
         setMomentumPreservingHorizontalVelocity(
                 player,
                 context,
-                currentHorizontal.add(awayFromWall),
+                desiredHorizontal,
                 ySpeed,
                 jumpPower
         );
     }
 
-    /** 输入型蹬墙跳仍按输入转向，但不再分别重写世界坐标 X/Z。 */
-    private static void applyInputDirectedKick(Player player, PlayerMomentumContext context, float jumpPower) {
-        Vec3 current = player.getDeltaMovement();
-        Vec3 currentHorizontal = new Vec3(current.x, 0, current.z);
-        Vec3 input = new Vec3(context.getInputVec().x, 0, context.getInputVec().z);
-        if (input.horizontalDistance() > 1.0) {
-            input = input.normalize();
-        }
-        Vec3 desiredHorizontal = currentHorizontal.add(input.scale(jumpPower * 0.5));
-        setMomentumPreservingHorizontalVelocity(
-                player,
-                context,
-                desiredHorizontal,
-                jumpPower * 1.5,
-                jumpPower
-        );
-    }
-
-    /**
-     * 使用向量总长度限制水平加速。冷却中可以转向但不降速；非冷却时只获得软上限允许的增量。
-     */
+    /** 使用向量总长度限制水平加速，冷却期间线性恢复加速收益。 */
     private static void setMomentumPreservingHorizontalVelocity(
             Player player,
             PlayerMomentumContext context,
@@ -177,12 +163,14 @@ public class WallKickState extends BaseState {
 
         // 墙跳拥有独立于普通跳跃的速度余量；超过上限时只保速，不强制减速。
         double wallKickSpeedLimit = context.getJumpLimitSpeed() + jumpPower * 0.5;
-        double acceleration = context.getWallKickCooldown() == 0
-                ? Math.min(
-                        Math.max(0, desiredSpeed - currentSpeed),
-                        Math.max(0, wallKickSpeedLimit - currentSpeed)
-                )
-                : 0;
+        int cooldownTicks = ServerConfig.WALL_KICK_ACCELERATION_COOLDOWN.getAsInt();
+        double recoveryFactor = cooldownTicks > 0
+                ? Mth.clamp(1.0 - (double) context.getWallKickCooldown() / cooldownTicks, 0.0, 1.0)
+                : 1.0;
+        double acceleration = Math.min(
+                Math.max(0, desiredSpeed - currentSpeed),
+                Math.max(0, wallKickSpeedLimit - currentSpeed)
+        ) * recoveryFactor;
         double targetSpeed = currentSpeed + acceleration;
         player.setDeltaMovement(direction.x * targetSpeed, ySpeed, direction.z * targetSpeed);
     }
