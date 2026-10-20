@@ -1,6 +1,6 @@
 package com.akirahane.momentum.platform;
 
-import com.example.examplemod.Constants;
+import com.akirahane.momentum.Constants;
 import com.akirahane.momentum.platform.services.IPlatformHelper;
 
 import java.util.ServiceLoader;
