@@ -13,6 +13,8 @@ public interface IPlatformHelper {
 
     boolean isMomentumEnabled(Player player);
 
+    boolean hasAccessoryJetBooster(Player player);
+
     void setMomentumEnabled(Player player, boolean enabled);
 
     void sendToServer(CustomPacketPayload packet);

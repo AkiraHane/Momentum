@@ -4,12 +4,11 @@ import com.akirahane.momentum.Constants;
 import com.akirahane.momentum.client.utils.CameraUtils;
 import com.akirahane.momentum.client.utils.AnimationUtils;
 import com.akirahane.momentum.client.utils.MomentumInputUtils;
-import com.akirahane.momentum.compat.curios.CuriosCompat;
-import com.akirahane.momentum.compat.curios.handler.CuriosHandler;
 import com.akirahane.momentum.config.ServerConfig;
 import com.akirahane.momentum.core.context.PlayerMomentumContext;
 import com.akirahane.momentum.core.state.states.ground.SlideState;
 import com.akirahane.momentum.registry.MomentumItems;
+import com.akirahane.momentum.platform.Services;
 import net.minecraft.resources.Identifier;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.util.Mth;
@@ -99,10 +98,7 @@ public class MomentumTickUtils {
         if (player.getItemBySlot(EquipmentSlot.LEGS).is(MomentumItems.JET_BOOSTER_ITEM.get())) {
             return true;
         }
-        if (CuriosCompat.isLoaded() && CuriosHandler.hasJetBooster(player)) {
-            return true;
-        }
-        return false;
+        return Services.PLATFORM.hasAccessoryJetBooster(player);
     }
 
     private static boolean checkMomentum(boolean hasJetBooster) {

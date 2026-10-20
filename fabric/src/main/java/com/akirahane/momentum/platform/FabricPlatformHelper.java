@@ -1,5 +1,6 @@
 package com.akirahane.momentum.platform;
 
+import com.akirahane.momentum.compat.trinkets.TrinketsHandler;
 import com.akirahane.momentum.core.state.MomentumStateMachine;
 import com.akirahane.momentum.registry.MomentumAttachments;
 import com.akirahane.momentum.platform.services.IPlatformHelper;
@@ -23,6 +24,11 @@ public class FabricPlatformHelper implements IPlatformHelper {
     @Override
     public boolean isMomentumEnabled(Player player) {
         return player.getAttachedOrCreate(MomentumAttachments.MOMENTUM_ENABLED);
+    }
+
+    @Override
+    public boolean hasAccessoryJetBooster(Player player) {
+        return isModLoaded("trinkets_updated") && TrinketsHandler.hasJetBooster(player);
     }
 
     @Override

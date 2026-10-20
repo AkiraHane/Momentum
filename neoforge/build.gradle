@@ -3,6 +3,29 @@ plugins {
     id 'net.neoforged.moddev'
 }
 
+repositories {
+    maven {
+        name = 'Illusive Soulworks'
+        url = 'https://maven.theillusivec4.top/'
+        content {
+            includeGroup 'top.theillusivec4.curios'
+        }
+    }
+}
+
+configurations {
+    localRuntime {
+        canBeConsumed = false
+        canBeResolved = false
+    }
+    runtimeClasspath.extendsFrom(localRuntime)
+}
+
+dependencies {
+    compileOnly("top.theillusivec4.curios:curios-neoforge:${curios_version}:api")
+    localRuntime("top.theillusivec4.curios:curios-neoforge:${curios_version}")
+}
+
 neoForge {
     version = neoforge_version
     // Automatically enable neoforge AccessTransformers if the file exists

@@ -1,5 +1,7 @@
 package com.akirahane.momentum.platform;
 
+import com.akirahane.momentum.compat.curios.CuriosCompat;
+import com.akirahane.momentum.compat.curios.handler.CuriosHandler;
 import com.akirahane.momentum.core.state.MomentumStateMachine;
 import com.akirahane.momentum.registry.MomentumAttachments;
 import com.akirahane.momentum.platform.services.IPlatformHelper;
@@ -24,6 +26,11 @@ public class NeoForgePlatformHelper implements IPlatformHelper {
     @Override
     public boolean isMomentumEnabled(Player player) {
         return player.getData(MomentumAttachments.MOMENTUM_ENABLED);
+    }
+
+    @Override
+    public boolean hasAccessoryJetBooster(Player player) {
+        return CuriosCompat.isLoaded() && CuriosHandler.hasJetBooster(player);
     }
 
     @Override

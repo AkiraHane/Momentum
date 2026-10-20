@@ -34,7 +34,7 @@
         "java": ">=${java_version}"
     },
     "suggests": {
-        "another-mod": "*"
+        "trinkets_updated": ">=${trinkets_version}"
     }
 }
   
