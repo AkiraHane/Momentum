@@ -2,18 +2,20 @@
 
 [中文版本](README_CN.md)
 
-A NeoForge mod that adds parkour actions such as sliding, wall climbing, wall running, and dodging to Minecraft. Maneuver mode also adjusts movement friction, acceleration, and speed limits, with automatic step-down and faster ladder climbing while holding sprint.
+A Fabric / NeoForge mod that adds parkour actions such as sliding, wall climbing, wall running, and dodging to Minecraft. Maneuver mode also adjusts movement friction, acceleration, and speed limits, with automatic step-down and faster ladder climbing while holding sprint.
 
 ## Installation
 
-This branch uses Minecraft `26.1.2` and NeoForge `26.1.2.64-beta`.
+This branch targets Minecraft `26.1.2` with Fabric Loader `0.19.2` or NeoForge `26.1.2.64-beta`.
 
-Place the mod and required dependencies in `mods/`:
+Place the mod and required dependencies for your loader in `mods/`:
 
-| Dependency | Version | Purpose |
-|---|---|---|
-| PlayerAnimationLib (NeoForge edition) | `1.2.3+mc.26.1` | Required for player animations |
-| Curios | `15.0.0-beta.2+26.1.2` | Optional belt slot for the Jet Booster |
+| Platform | Dependency | Version | Purpose |
+|---|---|---|---|
+| Both | Player Animation Library (matching loader edition) | `1.2.8+mc.26.1` | Required for player animations |
+| Fabric | Fabric API | `0.149.1+26.1.2` | Required platform APIs |
+| NeoForge | Curios | `15.0.0-beta.2+26.1.2` | Optional belt slot for the Jet Booster |
+| Fabric | Trinkets Updated | `4.0.1+26.1` | Optional belt slot for the Jet Booster |
 
 This version of PlayerAnimationLib includes MochaFloats.
 
@@ -52,7 +54,7 @@ Dodge and Swim Dash share a cooldown. Dodge controls can be changed in the clien
 
 ## Jet Booster
 
-Equip it in the leggings slot, or the belt slot with Curios installed. It increases movement speed, jump height, and step height, enables mid-air dodging, slows descent during wall runs, and reduces fall damage.
+Equip it in the leggings slot, or the belt slot with Curios (NeoForge) or Trinkets Updated (Fabric) installed. It increases movement speed, jump height, and step height, enables mid-air dodging, slows descent during wall runs, and reduces fall damage.
 
 ## Configuration
 
@@ -63,13 +65,14 @@ Most actions require the corresponding toggles in both configs to be enabled.
 
 ## Building
 
-Requires JDK 25. The PlayerAnimationLib Core, Neo, and MochaFloats jars used for development are in `libs/`.
+Requires JDK 25. Gradle retrieves dependencies from Maven repositories.
 
 | Command | Purpose |
 |---|---|
-| `./gradlew build` | Build the mod |
-| `./gradlew runClient` | Launch the development client |
-| `./gradlew runData` | Generate data and resources |
+| `./gradlew build` | Build both loaders; artifacts are in each module's `build/libs/` |
+| `./gradlew :fabric:runClient` | Launch the Fabric development client |
+| `./gradlew :neoforge:runClient` | Launch the NeoForge development client |
+| `./gradlew :neoforge:runData` | Run NeoForge data generation |
 
 In Windows PowerShell, use `.\gradlew.bat` instead of `./gradlew`.
 

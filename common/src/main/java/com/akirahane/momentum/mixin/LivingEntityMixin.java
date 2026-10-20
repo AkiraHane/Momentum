@@ -19,7 +19,6 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.waypoints.WaypointTransmitter;
-import net.neoforged.neoforge.common.extensions.ILivingEntityExtension;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.*;
@@ -29,7 +28,7 @@ import static com.akirahane.momentum.config.ServerConfig.CLIMB_BOOST_MULTIPLIER;
 import static com.akirahane.momentum.core.effect.MomentumEffectType.*;
 
 @Mixin(LivingEntity.class)
-public abstract class LivingEntityMixin extends Entity implements Attackable, WaypointTransmitter, ILivingEntityExtension {
+public abstract class LivingEntityMixin extends Entity implements Attackable, WaypointTransmitter {
 
     // 日志
     @Shadow

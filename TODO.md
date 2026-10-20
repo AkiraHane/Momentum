@@ -11,9 +11,8 @@
 
 ## 待讨论
 
-- [ ] 决定项目许可，并统一 [LICENSE](LICENSE) 与 [gradle.properties](gradle.properties) 的 `mod_license`；当前分别为 MIT 和 All Rights Reserved。
 - [ ] 考虑扒墙、单手抓墙相关的特殊动作。
 
 ## 后续计划
 
-- [ ] 完成手感优化后，移植到 Fabric。
+- [ ] 完成 Fabric / NeoForge 游戏内回归，记录到 [TESTING.md](TESTING.md)。

@@ -2,18 +2,20 @@
 
 [English Version](README.md)
 
-为 Minecraft 增加滑铲、爬墙、墙跑和闪避等跑酷动作的 NeoForge 模组。机动模式还会调整移动阻力、加速度和速度上限，支持自动下坡和疾跑爬梯。
+为 Minecraft 增加滑铲、爬墙、墙跑和闪避等跑酷动作的 Fabric / NeoForge 模组。机动模式还会调整移动阻力、加速度和速度上限，支持自动下坡和疾跑爬梯。
 
 ## 安装
 
-当前分支使用 Minecraft `26.1.2`、NeoForge `26.1.2.64-beta`。
+当前分支面向 Minecraft `26.1.2`，使用 Fabric Loader `0.19.2` 或 NeoForge `26.1.2.64-beta`。
 
-将模组和必需依赖放入 `mods/`：
+将对应加载器的模组和必需依赖放入 `mods/`：
 
-| 依赖 | 版本 | 用途 |
-|---|---|---|
-| PlayerAnimationLib（NeoForge 版） | `1.2.3+mc.26.1` | 必需，提供玩家动画 |
-| Curios | `15.0.0-beta.2+26.1.2` | 可选，提供助推器腰带槽位 |
+| 平台 | 依赖 | 版本 | 用途 |
+|---|---|---|---|
+| 两端 | Player Animation Library（对应加载器版本） | `1.2.8+mc.26.1` | 必需，提供玩家动画 |
+| Fabric | Fabric API | `0.149.1+26.1.2` | 必需，提供平台接口 |
+| NeoForge | Curios | `15.0.0-beta.2+26.1.2` | 可选，提供助推器腰带槽位 |
+| Fabric | Trinkets Updated | `4.0.1+26.1` | 可选，提供助推器腰带槽位 |
 
 此版本的 PlayerAnimationLib 已内置 MochaFloats。
 
@@ -52,7 +54,7 @@ NeoForge 继续使用自身的组合键设置。
 
 ## 喷气助推器
 
-可装备在护腿槽；安装 Curios 后也可使用腰带槽。助推器提高移动速度、跳跃高度和上台阶高度，支持空中闪避，减缓墙跑下坠并降低摔落伤害。
+可装备在护腿槽；安装 Curios（NeoForge）或 Trinkets Updated（Fabric）后也可使用腰带槽。助推器提高移动速度、跳跃高度和上台阶高度，支持空中闪避，减缓墙跑下坠并降低摔落伤害。
 
 ## 配置
 
@@ -63,13 +65,14 @@ NeoForge 继续使用自身的组合键设置。
 
 ## 构建
 
-需要 JDK 25。开发所用的 PlayerAnimationLib Core、Neo 和 MochaFloats jar 位于 `libs/`。
+需要 JDK 25，依赖由 Gradle 从 Maven 仓库获取。
 
 | 命令 | 用途 |
 |---|---|
-| `./gradlew build` | 构建模组 |
-| `./gradlew runClient` | 启动开发客户端 |
-| `./gradlew runData` | 生成数据和资源 |
+| `./gradlew build` | 构建两端模组，产物位于各模块的 `build/libs/` |
+| `./gradlew :fabric:runClient` | 启动 Fabric 开发客户端 |
+| `./gradlew :neoforge:runClient` | 启动 NeoForge 开发客户端 |
+| `./gradlew :neoforge:runData` | 运行 NeoForge 数据生成 |
 
 Windows PowerShell 使用 `.\gradlew.bat` 替代 `./gradlew`。
 

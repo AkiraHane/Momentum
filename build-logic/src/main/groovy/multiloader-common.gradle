@@ -3,6 +3,8 @@ plugins {
     id 'maven-publish'
 }
 
+version = "${mod_version}.${mod_build}-${mod_prerelease}"
+
 repositories {
     mavenCentral()
     maven {
