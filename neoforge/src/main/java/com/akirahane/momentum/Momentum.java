@@ -1,6 +1,7 @@
 package com.akirahane.momentum;
 
 import com.akirahane.momentum.core.utils.MomentumEventHelper;
+import com.akirahane.momentum.network.MomentumNetworkHelper;
 import com.akirahane.momentum.registry.MomentumAttachments;
 import com.akirahane.momentum.registry.MomentumItemRegistration;
 import com.akirahane.momentum.registry.MomentumSoundRegistration;
@@ -54,8 +55,15 @@ public class Momentum {
     public static void onServerTick(ServerTickEvent.Post event) {
         MomentumEventHelper.onServerTick(
                 event.getServer(),
-                PacketDistributor::sendToPlayer
+                PacketDistributor::sendToPlayersTrackingEntityAndSelf
         );
+    }
+
+    @SubscribeEvent
+    public static void onStartTracking(PlayerEvent.StartTracking event) {
+        if (event.getEntity() instanceof ServerPlayer observer && event.getTarget() instanceof Player player) {
+            PacketDistributor.sendToPlayer(observer, MomentumNetworkHelper.stateSnapshot(player));
+        }
     }
 
     @SubscribeEvent

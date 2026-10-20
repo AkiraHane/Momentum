@@ -2,6 +2,7 @@ package com.akirahane.momentum.core.utils;
 
 import com.akirahane.momentum.core.state.MomentumStateMachine;
 import com.akirahane.momentum.core.state.StateType;
+import com.akirahane.momentum.network.MomentumNetworkHelper;
 import com.akirahane.momentum.network.StateBroadcastPacket;
 import com.akirahane.momentum.platform.Services;
 import net.minecraft.network.chat.Component;
@@ -28,20 +29,11 @@ public class MomentumEventHelper {
         stateMachine.serverTick(player);
     }
 
-    public static void onServerTick(MinecraftServer server, BiConsumer<ServerPlayer, StateBroadcastPacket> sendPacket) {
+    public static void onServerTick(MinecraftServer server, BiConsumer<ServerPlayer, StateBroadcastPacket> broadcastState) {
         for (ServerPlayer player : server.getPlayerList().getPlayers()) {
             MomentumStateMachine stateMachine = Services.PLATFORM.getOrCreateStateMachine(player);
             if (stateMachine.isDirty()) {
-                StateBroadcastPacket packet = new StateBroadcastPacket(
-                        player.getId(),
-                        stateMachine.getCurrentState().getStateType(),
-                        stateMachine.getContext().getTransitionExtraData(),
-                        stateMachine.getContext().getTransitionWallData()
-                );
-                // 包含玩家自身，供 Replay Mod 录制状态转换。
-                for (ServerPlayer observer : player.level().players()) {
-                    sendPacket.accept(observer, packet);
-                }
+                broadcastState.accept(player, MomentumNetworkHelper.stateSnapshot(player));
                 stateMachine.setDirty(false);
             }
         }

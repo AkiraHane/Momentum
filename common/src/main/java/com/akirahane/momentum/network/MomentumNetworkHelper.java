@@ -8,6 +8,16 @@ import net.minecraft.world.entity.player.Player;
 
 public class MomentumNetworkHelper {
 
+    public static StateBroadcastPacket stateSnapshot(Player player) {
+        MomentumStateMachine stateMachine = Services.PLATFORM.getOrCreateStateMachine(player);
+        return new StateBroadcastPacket(
+                player.getId(),
+                stateMachine.getCurrentState().getStateType(),
+                stateMachine.getContext().getTransitionExtraData(),
+                stateMachine.getContext().getTransitionWallData()
+        );
+    }
+
     public static void onToggleMomentum(Player player) {
         boolean enabled = !Services.PLATFORM.isMomentumEnabled(player);
         Services.PLATFORM.setMomentumEnabled(player, enabled);
