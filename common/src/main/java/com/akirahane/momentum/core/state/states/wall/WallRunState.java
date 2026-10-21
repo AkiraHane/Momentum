@@ -7,7 +7,7 @@ import com.akirahane.momentum.config.ServerConfig;
 import com.akirahane.momentum.core.context.PlayerMomentumContext;
 import com.akirahane.momentum.core.state.StateType;
 import com.akirahane.momentum.core.state.BaseState;
-import com.akirahane.momentum.core.utils.WallDetectionUtils;
+import com.akirahane.momentum.core.utils.WallInteractionUtils;
 import com.akirahane.momentum.core.utils.WallSoundUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.util.Mth;
@@ -31,12 +31,11 @@ public class WallRunState extends BaseState {
 
     public static boolean canWallRun(Player player, PlayerMomentumContext context) {
         return ServerConfig.ENABLE_WALL_RUN.getAsBoolean() && ClientConfig.ENABLE_WALL_RUN.getAsBoolean() &&
-                !Vec3.ZERO.equals(context.getWallNormal()) &&
                 !Vec3.ZERO.equals(context.getInputVec()) &&
-                context.isHasFaceWall() &&
-                isLookAndSpeedSameSide(player, context) &&
-                Mth.abs(context.getLookWallAngle()) >= 30 &&
-                Mth.abs(context.getInputWallAngle()) >= 30 && Mth.abs(context.getInputWallAngle()) < 100 &&
+                WallInteractionUtils.selectWall(context, StateType.WALL_RUN, 0,
+                        wall -> wall.hasFaceWall() && isLookAndSpeedSameSide(player, wall.normal()) &&
+                                Mth.abs(wall.lookAngle()) >= 30 &&
+                                Mth.abs(wall.inputAngle()) >= 30 && Mth.abs(wall.inputAngle()) < 100) &&
                 canWallRunSpeedCheck(player, context) &&
                 checkKey(player, context) &&
                 !player.onGround();
@@ -45,16 +44,13 @@ public class WallRunState extends BaseState {
     // 维持
     public static boolean canWallRunHold(Player player, PlayerMomentumContext context) {
         return ServerConfig.ENABLE_WALL_RUN.getAsBoolean() && ClientConfig.ENABLE_WALL_RUN.getAsBoolean() &&
-                !Vec3.ZERO.equals(context.getWallNormal()) &&
-                context.getWallNormal().equals(context.getRunWallNormal()) &&
-                isLookAndSpeedSameSide(player, context) &&
-                Mth.abs(context.getLookWallAngle()) >= 30 &&
+                WallInteractionUtils.selectWall(context, StateType.WALL_RUN, 0,
+                        wall -> isLookAndSpeedSameSide(player, wall.normal()) && Mth.abs(wall.lookAngle()) >= 30) &&
                 canWallRunSpeedCheck(player, context) &&
                 checkKeyHold(player, context) &&
                 !player.onGround();
     }
-    public static boolean isLookAndSpeedSameSide(Player player, PlayerMomentumContext context) {
-        Vec3 wallNormal = context.getWallNormal();
+    public static boolean isLookAndSpeedSameSide(Player player, Vec3 wallNormal) {
         if (Vec3.ZERO.equals(wallNormal)) return false;
 
         Vec3 speed = player.getDeltaMovement();
@@ -116,7 +112,6 @@ public class WallRunState extends BaseState {
     @Override
     public void onEnter(Player player, PlayerMomentumContext context) {
         Vec3 wallNormal = context.getWallNormal();
-        context.setRunWallNormal(wallNormal);
         float inputWallAngle = context.getInputWallAngle();
         Vec3 currentMovement = player.getDeltaMovement();
         context.setNoMoveInput(true);
@@ -127,11 +122,9 @@ public class WallRunState extends BaseState {
         }
         boolean useLeft;
         if (player.level().isClientSide() && Minecraft.getInstance().player == player) {
-            // 本地玩家: 编码左右方向 + wallNormal → 通过网络同步
+            // 本地玩家编码左右方向，墙面由状态机统一同步。
             useLeft = inputWallAngle > 0;
             context.setTransitionExtraData(useLeft ? 1 : 0);
-            int wallIndex = WallDetectionUtils.encodeWallNormal(wallNormal);
-            context.setTransitionWallData((byte)(wallIndex >= 0 ? wallIndex : -1));
         } else {
             // 服务端/远程玩家: 从网络包恢复
             int extra = context.getTransitionExtraData();
@@ -183,7 +176,7 @@ public class WallRunState extends BaseState {
     @Override
     public void clientTick(Player player, PlayerMomentumContext context) {
         super.clientTick(player, context);
-        Vec3 wallNormal = context.getRunWallNormal();
+        Vec3 wallNormal = context.getWallNormal();
         Vec3 currentMovement = player.getDeltaMovement();
         context.setNoMoveInput(true);
         Vec3 tangent = new Vec3(-wallNormal.z, 0, wallNormal.x);

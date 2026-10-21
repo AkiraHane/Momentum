@@ -7,6 +7,7 @@ import com.akirahane.momentum.config.ServerConfig;
 import com.akirahane.momentum.core.context.PlayerMomentumContext;
 import com.akirahane.momentum.core.state.StateType;
 import com.akirahane.momentum.core.state.BaseState;
+import com.akirahane.momentum.core.utils.WallInteractionUtils;
 import com.akirahane.momentum.platform.Services;
 import net.minecraft.world.entity.player.Player;
 
@@ -16,7 +17,7 @@ public class VaultUpState extends BaseState {
 
     public static boolean canVaultUp(Player player, PlayerMomentumContext context) {
         return ServerConfig.ENABLE_VAULT_UP.getAsBoolean() && ClientConfig.ENABLE_VAULT_UP.getAsBoolean() &&
-                context.isHasLedge() &&
+                WallInteractionUtils.selectWall(context, StateType.VAULT_UP, 0, wall -> wall.hasLedge()) &&
                 checkKey(player, context);
     }
 

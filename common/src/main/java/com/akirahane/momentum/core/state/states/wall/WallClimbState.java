@@ -8,7 +8,7 @@ import com.akirahane.momentum.core.context.PlayerMomentumContext;
 import com.akirahane.momentum.core.effect.MomentumEffectType;
 import com.akirahane.momentum.core.state.StateType;
 import com.akirahane.momentum.core.state.BaseState;
-import com.akirahane.momentum.core.utils.WallDetectionUtils;
+import com.akirahane.momentum.core.utils.WallInteractionUtils;
 import com.akirahane.momentum.core.utils.WallSoundUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.util.Mth;
@@ -30,26 +30,22 @@ public class WallClimbState extends BaseState {
     public static boolean canWallClimb(Player player, PlayerMomentumContext context) {
         return  ServerConfig.ENABLE_WALL_CLIMB.getAsBoolean() && ClientConfig.ENABLE_WALL_CLIMB.getAsBoolean() &&
                 !Minecraft.getInstance().options.keyShift.isDown() &&
-                (!Vec3.ZERO.equals(context.getWallNormal()) &&
-                        context.isHasFaceWall() &&
-                        !Vec3.ZERO.equals(context.getInputVec()) && Mth.abs(context.getInputWallAngle()) < 30 &&
-                        Mth.abs(context.getLookWallAngle()) < 30 &&
-                        (context.getSpeed().y >= 0 || context.isHasJetBooster()) &&
-                        checkKey(player, context)
-        );
+                !Vec3.ZERO.equals(context.getInputVec()) &&
+                WallInteractionUtils.selectWall(context, StateType.WALL_CLIMB, 0,
+                        wall -> wall.hasFaceWall() && Mth.abs(wall.inputAngle()) < 30 && Mth.abs(wall.lookAngle()) < 30) &&
+                (context.getSpeed().y >= 0 || context.isHasJetBooster()) &&
+                checkKey(player, context);
     }
 
     // 维持
     public static boolean canWallClimbHold(Player player, PlayerMomentumContext context) {
         return ServerConfig.ENABLE_WALL_CLIMB.getAsBoolean() && ClientConfig.ENABLE_WALL_CLIMB.getAsBoolean() &&
                 !Minecraft.getInstance().options.keyShift.isDown() &&
-                (!Vec3.ZERO.equals(context.getWallNormal()) &&
-                context.isHasFaceWall() &&
-                !Vec3.ZERO.equals(context.getInputVec()) && Mth.abs(context.getInputWallAngle()) < 60 &&
-                Mth.abs(context.getLookWallAngle()) < 60 &&
+                !Vec3.ZERO.equals(context.getInputVec()) &&
+                WallInteractionUtils.selectWall(context, StateType.WALL_CLIMB, 0,
+                        wall -> wall.hasFaceWall() && Mth.abs(wall.inputAngle()) < 60 && Mth.abs(wall.lookAngle()) < 60) &&
                 (context.getSpeed().y >= 0 || context.isHasJetBooster()) &&
-                checkKey(player, context)
-        );
+                checkKey(player, context);
     }
 
     public static boolean checkKey(Player player, PlayerMomentumContext context) {
@@ -71,11 +67,6 @@ public class WallClimbState extends BaseState {
 
     @Override
     public void onEnter(Player player, PlayerMomentumContext context) {
-        // 同步 wallNormal 给远程玩家
-        if (player.level().isClientSide() && Minecraft.getInstance().player == player) {
-            int wallIndex = WallDetectionUtils.encodeWallNormal(context.getWallNormal());
-            context.setTransitionWallData((byte)(wallIndex >= 0 ? wallIndex : -1));
-        }
         playStateAnimation(player, WALL_CLIMB, context);
         if (!player.onClimbable()){
             context.addPermanentEffect(MomentumEffectType.LIMIT_ACCELERATION_SPEED, AIR_LIMIT_ACCELERATION);

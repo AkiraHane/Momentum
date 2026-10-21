@@ -9,6 +9,7 @@ import com.akirahane.momentum.core.state.BaseState;
 import com.akirahane.momentum.core.state.StateType;
 import com.akirahane.momentum.mixin.LivingEntityAccessor;
 import com.akirahane.momentum.core.utils.WallSoundUtils;
+import com.akirahane.momentum.core.utils.WallInteractionUtils;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Player;
@@ -29,15 +30,16 @@ public class WallKickState extends BaseState {
     public static boolean canWallKick(Player player, PlayerMomentumContext context) {
         return ServerConfig.ENABLE_WALL_KICK.getAsBoolean() && ClientConfig.ENABLE_WALL_KICK.getAsBoolean() &&
                 !player.onGround() &&
-                !Vec3.ZERO.equals(context.getWallNormal()) &&
-                context.getInputVec().horizontalDistance() > 0.01 && Mth.abs(context.getInputWallAngle()) >= 120 &&
+                context.getInputVec().horizontalDistance() > 0.01 &&
+                WallInteractionUtils.selectWall(context, StateType.WALL_KICK, 180,
+                        wall -> Mth.abs(wall.inputAngle()) >= 120) &&
                 checkKey(player, context);
     }
 
     // 跑墙特殊进入条件
     public static boolean canWallKickRun(Player player, PlayerMomentumContext context) {
         return ServerConfig.ENABLE_WALL_KICK.getAsBoolean() && ClientConfig.ENABLE_WALL_KICK.getAsBoolean() &&
-                !Vec3.ZERO.equals(context.getWallNormal()) &&
+                WallInteractionUtils.selectWall(context, StateType.WALL_KICK, 180, wall -> true) &&
                 checkKey(player, context);
     }
 

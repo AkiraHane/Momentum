@@ -57,15 +57,14 @@ public class PlayerMomentumContext {
     private double jumpAcceleration = 0;
 
     // ---------- 墙面检测 ----------
-    private boolean hasFaceWall = false;
-    private boolean hasLedge = false;
-    // 指向墙面的法向量。
-    Vec3 wallNormal = Vec3.ZERO;
-    // 有符号夹角（度）；360 表示无墙面或无输入方向。
-    float lookWallAngle = 360F;
-    float inputWallAngle = 360F;
-    // 快速下落时的抓边高度补偿。
-    private double ledgeOffsetY = 0;
+    // 本 tick 检测到的全部有效墙面，已排除冲突斜向并按通用优先级排序，供各动作筛选。
+    private List<WallContact> wallCandidates = List.of();
+    // 当前动作已绑定的墙面；检测时刷新同一方向的数据，动作退出时清除。
+    private WallContact activeWall;
+    // 当前墙面所属的动作，用于区分“原动作保持墙面”和“新动作重新选墙”。
+    private StateType activeWallState;
+    // 当前候选动作试选的墙面。每次判断下一个动作前清除，动作确定后才提交为 activeWall。
+    private WallContact pendingWall;
 
     // ---------- 装备与机动条件 ----------
     private boolean hasJetBooster = false;
@@ -145,8 +144,6 @@ public class PlayerMomentumContext {
     // ---------- 声音 ----------
     // 墙面音效播放间隔的剩余计数。
     private float needSoundTick = 0;
-    // 用于选择墙面音效的方块列表。
-    private final List<BlockPos> wallBlocks = new ArrayList<>();
 
     // ---------- 用途待确认 ----------
     private int jumpTimer = 0;
@@ -212,8 +209,6 @@ public class PlayerMomentumContext {
     );
 
     // ---------- 墙跑 ----------
-    // 进入墙跑时的墙面法向量。
-    Vec3 runWallNormal = Vec3.ZERO;
     // 已应用的重力倍率，用于避免重复更新属性。
     private float gravityModify = 0;
     // 蹬墙跳后再次进入墙跑的速度判定宽限（tick）。
@@ -272,6 +267,34 @@ public class PlayerMomentumContext {
         if (this.wallRunReentryGraceTicks > 0) this.wallRunReentryGraceTicks--;
         if (this.swimPushTimer > 0) this.swimPushTimer--;
         if (this.wallKickCooldown > 0) this.wallKickCooldown--;
+    }
+
+    public Vec3 getWallNormal() {
+        return activeWall == null ? Vec3.ZERO : activeWall.normal();
+    }
+
+    public boolean isHasFaceWall() {
+        return activeWall != null && activeWall.hasFaceWall();
+    }
+
+    public boolean isHasLedge() {
+        return activeWall != null && activeWall.hasLedge();
+    }
+
+    public float getLookWallAngle() {
+        return activeWall == null ? 360F : activeWall.lookAngle();
+    }
+
+    public float getInputWallAngle() {
+        return activeWall == null ? 360F : activeWall.inputAngle();
+    }
+
+    public double getLedgeOffsetY() {
+        return activeWall == null ? 0 : activeWall.ledgeOffsetY();
+    }
+
+    public List<BlockPos> getWallBlocks() {
+        return activeWall == null ? List.of() : activeWall.blocks();
     }
 
     public float getRenderArmOffsetY(float partialTick) {

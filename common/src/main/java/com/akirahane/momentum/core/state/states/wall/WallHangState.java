@@ -8,7 +8,7 @@ import com.akirahane.momentum.core.context.PlayerMomentumContext;
 import com.akirahane.momentum.core.effect.MomentumEffectType;
 import com.akirahane.momentum.core.state.StateType;
 import com.akirahane.momentum.core.state.BaseState;
-import com.akirahane.momentum.core.utils.WallDetectionUtils;
+import com.akirahane.momentum.core.utils.WallInteractionUtils;
 import com.akirahane.momentum.core.utils.WallSoundUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.util.Mth;
@@ -34,10 +34,8 @@ public class WallHangState extends BaseState {
     public static boolean canWallHang(Player player, PlayerMomentumContext context) {
         return ServerConfig.ENABLE_WALL_HANG.getAsBoolean() && ClientConfig.ENABLE_WALL_HANG.getAsBoolean() &&
                 !player.onGround() &&
-                context.isHasLedge() &&
-                !Vec3.ZERO.equals(context.getWallNormal()) &&
-                (!LOWER_CENTER.get().isDown() || Mth.abs(context.getInputWallAngle()) < 90) &&
-//                (Mth.abs(context.getLookWallAngle()) < 60 || Mth.abs(context.getInputWallAngle()) < 60) &&
+                WallInteractionUtils.selectWall(context, StateType.WALL_HANG, 0,
+                        wall -> wall.hasLedge() && (!LOWER_CENTER.get().isDown() || Mth.abs(wall.inputAngle()) < 90)) &&
                 player.fallDistance <= player.getAttributeValue(Attributes.SAFE_FALL_DISTANCE) * 2 &&
                 player.getDeltaMovement().y <= 0.1 &&
                 !checkKey(player, context);
@@ -51,19 +49,17 @@ public class WallHangState extends BaseState {
     @Override
     protected java.util.List<Transition> transitionChain() {
         // 挂墙用更宽松的自保持检查（去掉 onGround/fallDistance/下落速度限制）
-        return withPredicate(DEFAULT_CHAIN, StateType.WALL_HANG,
-                (p, c) -> (!LOWER_CENTER.get().isDown() || Mth.abs(c.getInputWallAngle()) < 90)
-                        && c.isHasLedge() && !Vec3.ZERO.equals(c.getWallNormal())
-                        && !checkKey(p, c));
+        return withPredicate(DEFAULT_CHAIN, StateType.WALL_HANG, WallHangState::canWallHangHold);
+    }
+
+    public static boolean canWallHangHold(Player player, PlayerMomentumContext context) {
+        return WallInteractionUtils.selectWall(context, StateType.WALL_HANG, 0,
+                wall -> wall.hasLedge() && (!LOWER_CENTER.get().isDown() || Mth.abs(wall.inputAngle()) < 90),
+                WallInteractionUtils.hasSidewaysInput(player, context)) && !checkKey(player, context);
     }
 
     @Override
     public void onEnter(Player player, PlayerMomentumContext context) {
-        // 同步 wallNormal 给远程玩家
-        if (player.level().isClientSide() && Minecraft.getInstance().player == player) {
-            int wallIndex = WallDetectionUtils.encodeWallNormal(context.getWallNormal());
-            context.setTransitionWallData((byte)(wallIndex >= 0 ? wallIndex : -1));
-        }
         playStateAnimation(player, WALL_HANG, context, 1, 1);
         var instance = player.getAttribute(Attributes.GRAVITY);
         if (instance != null && instance.getModifier(WALL_GRAVITY_ID) == null) {
@@ -76,7 +72,6 @@ public class WallHangState extends BaseState {
         // 速降补偿: 如果在更上方找到了ledge, 把玩家拉回正确位置
         if (context.getLedgeOffsetY() > 0) {
             player.setPos(player.getX(), player.getY() + context.getLedgeOffsetY(), player.getZ());
-            context.setLedgeOffsetY(0);
         }
         player.setDeltaMovement(player.getDeltaMovement().x, 0, player.getDeltaMovement().z);
         player.fallDistance = 0;

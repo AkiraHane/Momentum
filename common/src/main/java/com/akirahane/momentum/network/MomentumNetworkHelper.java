@@ -2,6 +2,7 @@ package com.akirahane.momentum.network;
 
 import com.akirahane.momentum.Constants;
 import com.akirahane.momentum.core.state.MomentumStateMachine;
+import com.akirahane.momentum.core.utils.WallInteractionUtils;
 import com.akirahane.momentum.platform.Services;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
@@ -15,7 +16,7 @@ public class MomentumNetworkHelper {
                 player.getId(),
                 stateMachine.getCurrentState().getStateType(),
                 stateMachine.getContext().getTransitionExtraData(),
-                stateMachine.getContext().getTransitionWallData()
+                WallInteractionUtils.wallData(stateMachine.getContext())
         );
     }
 

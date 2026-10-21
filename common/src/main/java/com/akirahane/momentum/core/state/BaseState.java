@@ -112,6 +112,8 @@ public abstract class BaseState {
     // 状态转换规则：目标状态 + 进入条件。tryTransition 返回满足条件的下一状态，否则 null
     protected record Transition(StateType target, BiPredicate<Player, PlayerMomentumContext> can) {
         BaseState tryTransition(Player player, PlayerMomentumContext context) {
+            // 每个候选动作独立选墙，丢弃上一失败判定的临时结果。
+            context.setPendingWall(null);
             return can.test(player, context) ? target.getState() : null;
         }
     }

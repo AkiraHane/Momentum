@@ -5,8 +5,10 @@ import com.akirahane.momentum.client.hud.HintManager;
 import com.akirahane.momentum.client.hud.WallHangHints;
 import com.akirahane.momentum.config.ServerConfig;
 import com.akirahane.momentum.core.context.PlayerMomentumContext;
+import com.akirahane.momentum.core.context.WallContact;
 import com.akirahane.momentum.core.state.BaseState;
 import com.akirahane.momentum.core.state.StateType;
+import com.akirahane.momentum.core.utils.WallInteractionUtils;
 import com.akirahane.momentum.platform.Services;
 import net.minecraft.client.Minecraft;
 import net.minecraft.util.Mth;
@@ -24,14 +26,14 @@ public class VaultInState extends BaseState {
 
     public static boolean canVaultIn(Player player, PlayerMomentumContext context) {
         return ServerConfig.ENABLE_VAULT_IN.getAsBoolean() && ClientConfig.ENABLE_VAULT_IN.getAsBoolean() &&
-                (context.isHasLedge() || player.onGround() && !context.isHasFaceWall()) &&
-                !Vec3.ZERO.equals(context.getInputVec()) && Mth.abs(context.getInputWallAngle()) < 90 &&
-                checkKey(player, context)
-                ;
+                !Vec3.ZERO.equals(context.getInputVec()) &&
+                WallInteractionUtils.selectWall(context, StateType.VAULT_IN, 0,
+                        wall -> (wall.hasLedge() || player.onGround() && !wall.hasFaceWall()) &&
+                                Mth.abs(wall.inputAngle()) < 90 && checkKey(player, wall));
     }
 
-    public static boolean checkKey(Player player, PlayerMomentumContext context) {
-        if (player.onGround() && !context.isHasFaceWall()){
+    public static boolean checkKey(Player player, WallContact wall) {
+        if (player.onGround() && !wall.hasFaceWall()){
             HintManager.add(WallHangHints.VAULT_IN_STAND);
             return Minecraft.getInstance().options.keyUp.isDown() &&
                     LOWER_CENTER.get().isDown()

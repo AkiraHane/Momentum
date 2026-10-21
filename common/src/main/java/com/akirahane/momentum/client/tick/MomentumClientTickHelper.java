@@ -22,7 +22,7 @@ public class MomentumClientTickHelper {
                         state.getStateType(), context.getTransitionExtraData(), context.getTransitionWallData()
                 );
                 Services.PLATFORM.sendToServer(packet);
-                // 附加数据只随本次状态转换发送。
+                // 状态转换或互动墙面变化时发送一次。
                 context.setTransitionExtraData(-1);
                 context.setTransitionWallData((byte) -1);
                 Constants.LOG.debug("[NET] C2S_SEND side=client player={} dimension={} state={} extra={} wall={} resetExtra={} resetWall={}",

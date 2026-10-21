@@ -8,7 +8,7 @@ import com.akirahane.momentum.core.context.PlayerMomentumContext;
 import com.akirahane.momentum.core.effect.MomentumEffectType;
 import com.akirahane.momentum.core.state.StateType;
 import com.akirahane.momentum.core.state.BaseState;
-import com.akirahane.momentum.core.utils.WallDetectionUtils;
+import com.akirahane.momentum.core.utils.WallInteractionUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
@@ -31,13 +31,12 @@ public class WallSlideState extends BaseState {
             HintManager.add(WallHangHints.CLIMB_ACCELERATION);
         }
         return !player.onGround() &&
-                !Vec3.ZERO.equals(context.getWallNormal()) &&
                 context.getSpeed().y < 0 &&
-                Mth.abs(context.getLookWallAngle()) < 30 &&
-                (player.onClimbable() ||
-                        !Vec3.ZERO.equals(context.getInputVec()) && Mth.abs(context.getInputWallAngle()) < 30 ||
-                        checkKey(player, context)
-                );
+                WallInteractionUtils.selectWall(context, StateType.WALL_SLIDE, 0,
+                        wall -> Mth.abs(wall.lookAngle()) < 30 &&
+                                (player.onClimbable() ||
+                                        !Vec3.ZERO.equals(context.getInputVec()) && Mth.abs(wall.inputAngle()) < 30 ||
+                                        checkKey(player, context)));
     }
 
     // 维持
@@ -49,12 +48,11 @@ public class WallSlideState extends BaseState {
             HintManager.add(WallHangHints.CLIMB_ACCELERATION);
         }
         return !player.onGround() &&
-                !Vec3.ZERO.equals(context.getWallNormal()) &&
-                Mth.abs(context.getLookWallAngle()) < 60 &&
-                (player.onClimbable() ||
-                        !Vec3.ZERO.equals(context.getInputVec()) && Mth.abs(context.getInputWallAngle()) < 60 ||
-                        checkKey(player, context)
-                );
+                WallInteractionUtils.selectWall(context, StateType.WALL_SLIDE, 0,
+                        wall -> Mth.abs(wall.lookAngle()) < 60 &&
+                                (player.onClimbable() ||
+                                        !Vec3.ZERO.equals(context.getInputVec()) && Mth.abs(wall.inputAngle()) < 60 ||
+                                        checkKey(player, context)));
     }
 
     public static boolean checkKey(Player player, PlayerMomentumContext context) {
@@ -72,11 +70,6 @@ public class WallSlideState extends BaseState {
 
     @Override
     public void onEnter(Player player, PlayerMomentumContext context) {
-        // 同步 wallNormal 给远程玩家
-        if (player.level().isClientSide() && Minecraft.getInstance().player == player) {
-            int wallIndex = WallDetectionUtils.encodeWallNormal(context.getWallNormal());
-            context.setTransitionWallData((byte)(wallIndex >= 0 ? wallIndex : -1));
-        }
         context.addPermanentEffect(MomentumEffectType.LIMIT_ACCELERATION_SPEED, AIR_LIMIT_ACCELERATION);
         playStateAnimation(player, WALL_SLIDE, context, 4, 1);
         context.setTargetArmTransform(-0.15F, 5F);

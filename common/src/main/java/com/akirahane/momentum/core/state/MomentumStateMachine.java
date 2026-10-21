@@ -2,9 +2,11 @@ package com.akirahane.momentum.core.state;
 
 import com.akirahane.momentum.Constants;
 import com.akirahane.momentum.core.context.PlayerMomentumContext;
+import com.akirahane.momentum.core.context.WallContact;
 import com.akirahane.momentum.core.effect.MomentumEffect;
 import com.akirahane.momentum.core.effect.MomentumEffectType;
 import com.akirahane.momentum.core.utils.MomentumTickUtils;
+import com.akirahane.momentum.core.utils.WallInteractionUtils;
 import com.mojang.logging.LogUtils;
 import lombok.Getter;
 import lombok.Setter;
@@ -44,6 +46,7 @@ public class MomentumStateMachine {
     public BaseState clientTick(Player player) {
         handleEffect();
         BaseState org = currentState;
+        Vec3 previousWall = context.getWallNormal();
         MomentumTickUtils.clientTick(player, context);
         currentState.clientTick(player, context);
         BaseState next = currentState.evaluate(player, context);
@@ -51,7 +54,9 @@ public class MomentumStateMachine {
         if (!StateType.SLIDE.equals(currentState.getStateType())){
             context.setSlopeUnitVector(Vec3.ZERO);
         }
-        if (!org.equals(next)) {
+        // 同一挂墙状态切换墙面时，也要返回动作供客户端上报。
+        if (!org.equals(next) || !previousWall.equals(context.getWallNormal())) {
+            context.setTransitionWallData(WallInteractionUtils.wallData(context));
             return next;
         }
         return null;
@@ -71,11 +76,27 @@ public class MomentumStateMachine {
 
     // 状态转换
     private void transition(BaseState next, Player player) {
-        if (next.equals(currentState)) return;
+        WallContact selectedWall = context.getPendingWall();
+        if (next.equals(currentState)) {
+            // 持续挂墙只更新目标，保持进入效果和动作计时连续。
+            if (selectedWall != null) {
+                Vec3 previousWall = context.getWallNormal();
+                WallInteractionUtils.activateWall(context, next.getStateType(), selectedWall);
+                if (!previousWall.equals(selectedWall.normal())) {
+                    Constants.LOG.debug("[WALL] SWITCH side={} player={} from={} to={}",
+                            player.level().isClientSide() ? "client" : "server", player.getId(),
+                            previousWall, selectedWall.normal());
+                }
+            }
+            return;
+        }
         LOGGER.trace("[MovementStateMachine] {} to {}", currentState.getStateType(), next.getStateType());
         context.setPreviousStateType(currentState.getStateType());
+        // 退出钩子使用旧墙；清理绑定后，再让进入钩子使用本次选中的墙。
         currentState.onExit(player, context);
+        WallInteractionUtils.clearActiveWall(context);
         currentState = next;
+        WallInteractionUtils.activateWall(context, next.getStateType(), selectedWall);
         currentState.onEnter(player, context);
         Constants.LOG.debug("[STATE] TRANSITION side={} player={} dimension={} from={} to={} extra={} wall={}",
                 player.level().isClientSide() ? "client" : "server", player.getId(), player.level().dimension().identifier(),
@@ -84,6 +105,14 @@ public class MomentumStateMachine {
 
     // 客户端向服务端同步状态
     public void setStateFromClient(StateType newStateType, Player player) {
+        byte wallData = context.getTransitionWallData();
+        if (currentState.getStateType() == newStateType) {
+            // 挂墙切墙只更新目标，不重复执行进入动作和附加效果。
+            WallInteractionUtils.applySyncedWall(player, context, newStateType, wallData);
+            dirty = true;
+            return;
+        }
+        context.setPendingWall(WallInteractionUtils.wallFromData(player, wallData));
         transition(newStateType.getState(), player);
         dirty = true;
     }

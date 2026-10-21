@@ -1,6 +1,7 @@
 package com.akirahane.momentum.client.debug;
 
 import com.akirahane.momentum.core.context.PlayerMomentumContext;
+import com.akirahane.momentum.core.context.WallContact;
 import com.akirahane.momentum.platform.Services;
 import com.akirahane.momentum.mixin.LivingEntityAccessor;
 import net.minecraft.client.Minecraft;
@@ -48,9 +49,10 @@ public class MomentumDebugEntry implements DebugScreenEntry {
         // getLookAngleToWall
         float lookAngleToWall = context.getLookWallAngle();
         displayer.addToGroup(group, String.format("[Momentum] LookAngleToWall: %.4f", lookAngleToWall));
-        // wallNormal
+        displayer.addToGroup(group, String.format("[Momentum] WallCandidates: %s",
+                context.getWallCandidates().stream().map(WallContact::normal).toList()));
         Vec3 wallNormal = context.getWallNormal();
-        displayer.addToGroup(group, String.format("[Momentum] WallNormal: %s", wallNormal));
+        displayer.addToGroup(group, String.format("[Momentum] ActiveWall: %s %s", context.getActiveWallState(), wallNormal));
         boolean hasLedge = context.isHasLedge();
         displayer.addToGroup(group, String.format("[Momentum] HasLedge: %s", hasLedge));
         Player player = mc.player;
