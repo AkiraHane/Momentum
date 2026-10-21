@@ -3,6 +3,7 @@ package com.akirahane.momentum.core.state.states.wall;
 import com.akirahane.momentum.client.config.ClientConfig;
 import com.akirahane.momentum.client.hud.HintManager;
 import com.akirahane.momentum.client.hud.WallHangHints;
+import com.akirahane.momentum.client.input.WallInteractionKey;
 import com.akirahane.momentum.config.ServerConfig;
 import com.akirahane.momentum.core.context.PlayerMomentumContext;
 import com.akirahane.momentum.core.effect.MomentumEffectType;
@@ -24,7 +25,8 @@ public class WallSlideState extends BaseState {
     public static String WALL_SLIDE = "wall_slide";
 
     public static boolean canWallSlide(Player player, PlayerMomentumContext context) {
-        if (!ServerConfig.ENABLE_WALL_SLIDE.getAsBoolean() || !ClientConfig.ENABLE_WALL_SLIDE.getAsBoolean()){
+        if (!WallInteractionKey.isActive() ||
+                !ServerConfig.ENABLE_WALL_SLIDE.getAsBoolean() || !ClientConfig.ENABLE_WALL_SLIDE.getAsBoolean()){
             return false;
         }
         if (player.onClimbable()){
@@ -41,7 +43,8 @@ public class WallSlideState extends BaseState {
 
     // 维持
     public static boolean canWallSlideHold(Player player, PlayerMomentumContext context) {
-        if (!ServerConfig.ENABLE_WALL_SLIDE.getAsBoolean() || !ClientConfig.ENABLE_WALL_SLIDE.getAsBoolean()){
+        if (!WallInteractionKey.isActive() ||
+                !ServerConfig.ENABLE_WALL_SLIDE.getAsBoolean() || !ClientConfig.ENABLE_WALL_SLIDE.getAsBoolean()){
             return false;
         }
         if (player.onClimbable()){

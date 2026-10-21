@@ -4,6 +4,7 @@ import com.akirahane.momentum.Constants;
 import com.akirahane.momentum.client.input.ChangeMomentumKey;
 import com.akirahane.momentum.client.input.LowerCenterKey;
 import com.akirahane.momentum.client.input.ToggleHintKey;
+import com.akirahane.momentum.client.input.WallInteractionKey;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.KeyMapping;
 import net.neoforged.api.distmarker.Dist;
@@ -24,6 +25,10 @@ public class MomentumKeyMappingRegistration {
         event.register(new KeyMapping(
                 LowerCenterKey.KEY_NAME, KeyConflictContext.IN_GAME,
                 InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_C, category
+        ));
+        event.register(new KeyMapping(
+                WallInteractionKey.KEY_NAME, KeyConflictContext.IN_GAME,
+                InputConstants.Type.KEYSYM, InputConstants.UNKNOWN.getValue(), category
         ));
         event.register(new KeyMapping(
                 ChangeMomentumKey.KEY_NAME, KeyConflictContext.IN_GAME, KeyModifier.SHIFT,

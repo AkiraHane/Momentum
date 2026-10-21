@@ -3,6 +3,7 @@ package com.akirahane.momentum.core.state.states.wall;
 import com.akirahane.momentum.client.config.ClientConfig;
 import com.akirahane.momentum.client.hud.HintManager;
 import com.akirahane.momentum.client.hud.WallHangHints;
+import com.akirahane.momentum.client.input.WallInteractionKey;
 import com.akirahane.momentum.config.ServerConfig;
 import com.akirahane.momentum.core.context.PlayerMomentumContext;
 import com.akirahane.momentum.core.context.WallContact;
@@ -38,7 +39,8 @@ public class WallHangState extends BaseState {
     public static final String WALL_HANG_LEFT = "wall_hang_left";
 
     public static boolean canWallHang(Player player, PlayerMomentumContext context) {
-        return ServerConfig.ENABLE_WALL_HANG.getAsBoolean() && ClientConfig.ENABLE_WALL_HANG.getAsBoolean() &&
+        return WallInteractionKey.isActive() &&
+                ServerConfig.ENABLE_WALL_HANG.getAsBoolean() && ClientConfig.ENABLE_WALL_HANG.getAsBoolean() &&
                 !player.onGround() &&
                 WallInteractionUtils.selectWall(context, StateType.WALL_HANG, 0,
                         WallHangState::isHangableWall) &&
@@ -59,9 +61,10 @@ public class WallHangState extends BaseState {
     }
 
     public static boolean canWallHangHold(Player player, PlayerMomentumContext context) {
-        return WallInteractionUtils.selectWall(context, StateType.WALL_HANG, 0,
-                WallHangState::isHangableWall,
-                WallInteractionUtils.hasSidewaysInput(player, context)) && !checkKey(player, context);
+        return WallInteractionKey.isActive() &&
+                WallInteractionUtils.selectWall(context, StateType.WALL_HANG, 0,
+                        WallHangState::isHangableWall,
+                        WallInteractionUtils.hasSidewaysInput(player, context)) && !checkKey(player, context);
     }
 
     private static boolean isHangableWall(WallContact wall) {

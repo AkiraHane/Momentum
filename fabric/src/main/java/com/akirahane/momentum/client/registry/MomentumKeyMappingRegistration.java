@@ -3,6 +3,7 @@ package com.akirahane.momentum.client.registry;
 import com.akirahane.momentum.client.input.ChangeMomentumKey;
 import com.akirahane.momentum.client.input.LowerCenterKey;
 import com.akirahane.momentum.client.input.ToggleHintKey;
+import com.akirahane.momentum.client.input.WallInteractionKey;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper;
 import net.minecraft.client.KeyMapping;
@@ -18,6 +19,9 @@ public class MomentumKeyMappingRegistration {
         KeyMapping.Category category = KeyMapping.Category.register(MomentumKeyMappings.MOMENTUM_CATEGORY_ID);
         KeyMappingHelper.registerKeyMapping(new KeyMapping(
                 LowerCenterKey.KEY_NAME, InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_C, category
+        ));
+        KeyMappingHelper.registerKeyMapping(new KeyMapping(
+                WallInteractionKey.KEY_NAME, InputConstants.Type.KEYSYM, InputConstants.UNKNOWN.getValue(), category
         ));
         KeyMappingHelper.registerKeyMapping(new KeyMapping(
                 ChangeMomentumKey.KEY_NAME, InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_M, category

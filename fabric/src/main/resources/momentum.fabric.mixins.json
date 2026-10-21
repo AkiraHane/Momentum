@@ -9,8 +9,7 @@
   "client": [
     "CameraMixin",
     "ClientPlayerTickMixin",
-    "DebugScreenEntriesMixin",
-    "KeyBindsListKeyEntryMixin"
+    "DebugScreenEntriesMixin"
   ],
   "injectors": {
     "defaultRequire": 1

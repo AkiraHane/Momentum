@@ -3,6 +3,7 @@ package com.akirahane.momentum.core.state.states.wall;
 import com.akirahane.momentum.client.config.ClientConfig;
 import com.akirahane.momentum.client.hud.HintManager;
 import com.akirahane.momentum.client.hud.WallHangHints;
+import com.akirahane.momentum.client.input.WallInteractionKey;
 import com.akirahane.momentum.config.ServerConfig;
 import com.akirahane.momentum.core.context.PlayerMomentumContext;
 import com.akirahane.momentum.core.effect.MomentumEffectType;
@@ -28,7 +29,8 @@ public class WallClimbState extends BaseState {
     private static final int SOUND_TICK = 10;
 
     public static boolean canWallClimb(Player player, PlayerMomentumContext context) {
-        return  ServerConfig.ENABLE_WALL_CLIMB.getAsBoolean() && ClientConfig.ENABLE_WALL_CLIMB.getAsBoolean() &&
+        return WallInteractionKey.isActive() &&
+                ServerConfig.ENABLE_WALL_CLIMB.getAsBoolean() && ClientConfig.ENABLE_WALL_CLIMB.getAsBoolean() &&
                 !Minecraft.getInstance().options.keyShift.isDown() &&
                 !Vec3.ZERO.equals(context.getInputVec()) &&
                 WallInteractionUtils.selectWall(context, StateType.WALL_CLIMB, 0,
@@ -39,7 +41,8 @@ public class WallClimbState extends BaseState {
 
     // 维持
     public static boolean canWallClimbHold(Player player, PlayerMomentumContext context) {
-        return ServerConfig.ENABLE_WALL_CLIMB.getAsBoolean() && ClientConfig.ENABLE_WALL_CLIMB.getAsBoolean() &&
+        return WallInteractionKey.isActive() &&
+                ServerConfig.ENABLE_WALL_CLIMB.getAsBoolean() && ClientConfig.ENABLE_WALL_CLIMB.getAsBoolean() &&
                 !Minecraft.getInstance().options.keyShift.isDown() &&
                 !Vec3.ZERO.equals(context.getInputVec()) &&
                 WallInteractionUtils.selectWall(context, StateType.WALL_CLIMB, 0,

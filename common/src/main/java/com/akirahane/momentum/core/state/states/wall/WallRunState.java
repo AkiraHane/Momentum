@@ -3,6 +3,7 @@ package com.akirahane.momentum.core.state.states.wall;
 import com.akirahane.momentum.client.config.ClientConfig;
 import com.akirahane.momentum.client.hud.HintManager;
 import com.akirahane.momentum.client.hud.WallHangHints;
+import com.akirahane.momentum.client.input.WallInteractionKey;
 import com.akirahane.momentum.config.ServerConfig;
 import com.akirahane.momentum.core.context.PlayerMomentumContext;
 import com.akirahane.momentum.core.state.StateType;
@@ -30,7 +31,8 @@ public class WallRunState extends BaseState {
     private static final double VERTICAL_SPEED_EPSILON = 0.01;
 
     public static boolean canWallRun(Player player, PlayerMomentumContext context) {
-        return ServerConfig.ENABLE_WALL_RUN.getAsBoolean() && ClientConfig.ENABLE_WALL_RUN.getAsBoolean() &&
+        return WallInteractionKey.isActive() &&
+                ServerConfig.ENABLE_WALL_RUN.getAsBoolean() && ClientConfig.ENABLE_WALL_RUN.getAsBoolean() &&
                 !Vec3.ZERO.equals(context.getInputVec()) &&
                 WallInteractionUtils.selectWall(context, StateType.WALL_RUN, 0,
                         wall -> wall.hasFaceWall() && isLookAndSpeedSameSide(player, wall.normal()) &&
@@ -43,7 +45,8 @@ public class WallRunState extends BaseState {
 
     // 维持
     public static boolean canWallRunHold(Player player, PlayerMomentumContext context) {
-        return ServerConfig.ENABLE_WALL_RUN.getAsBoolean() && ClientConfig.ENABLE_WALL_RUN.getAsBoolean() &&
+        return WallInteractionKey.isActive() &&
+                ServerConfig.ENABLE_WALL_RUN.getAsBoolean() && ClientConfig.ENABLE_WALL_RUN.getAsBoolean() &&
                 WallInteractionUtils.selectWall(context, StateType.WALL_RUN, 0,
                         wall -> isLookAndSpeedSameSide(player, wall.normal()) && Mth.abs(wall.lookAngle()) >= 30) &&
                 canWallRunSpeedCheck(player, context) &&
