@@ -2,7 +2,8 @@ name: Build and Publish
 
 on:
   push:
-    tags: ['v*']
+    # Full build tags only; aggregate tags such as v2.0.2 do not trigger builds.
+    tags: ['v*-*-*']
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
@@ -13,12 +14,14 @@ concurrency:
 
 jobs:
   build:
-    name: Build and create GitHub Release
+    name: Build release files
     runs-on: ubuntu-latest
     permissions:
       contents: write
     outputs:
       mod_version: ${{ steps.mod-info.outputs.mod_version }}
+      base_version: ${{ steps.mod-info.outputs.base_version }}
+      github_release_tag: ${{ steps.mod-info.outputs.github_release_tag }}
       release_version: ${{ steps.mod-info.outputs.release_version }}
       minecraft_version: ${{ steps.mod-info.outputs.minecraft_version }}
       publish_type: ${{ steps.mod-info.outputs.publish_type }}
@@ -56,9 +59,10 @@ jobs:
           MOD_PRERELEASE=$(grep -m1 '^mod_prerelease' gradle.properties | sed 's/.*=\s*//')
           MINECRAFT_VERSION=$(grep -m1 '^minecraft_version' gradle.properties | sed 's/.*=\s*//')
 
-          FULL_VERSION="${MOD_VERSION}.${MOD_BUILD}-${MOD_PRERELEASE}"
+          BASE_VERSION="${MOD_VERSION}.${MOD_BUILD}"
+          FULL_VERSION="${BASE_VERSION}-${MOD_PRERELEASE}"
           RELEASE_VERSION="${FULL_VERSION}+mc${MINECRAFT_VERSION}"
-          EXPECTED_TAG="v${FULL_VERSION}"
+          EXPECTED_TAG="v${BASE_VERSION}-${MINECRAFT_VERSION}-${MOD_PRERELEASE}"
 
           if [[ "$GITHUB_REF_NAME" != "$EXPECTED_TAG" ]]; then
             echo "::error title=Version mismatch::Tag must be $EXPECTED_TAG, but got $GITHUB_REF_NAME"
@@ -75,8 +79,9 @@ jobs:
 
           echo "mod_id=$MOD_ID" >> "$GITHUB_OUTPUT"
           echo "mod_version=$FULL_VERSION" >> "$GITHUB_OUTPUT"
+          echo "base_version=$BASE_VERSION" >> "$GITHUB_OUTPUT"
+          echo "github_release_tag=v${BASE_VERSION}" >> "$GITHUB_OUTPUT"
           echo "release_version=$RELEASE_VERSION" >> "$GITHUB_OUTPUT"
-          echo "mod_prerelease=$MOD_PRERELEASE" >> "$GITHUB_OUTPUT"
           echo "minecraft_version=$MINECRAFT_VERSION" >> "$GITHUB_OUTPUT"
           echo "publish_type=$PUBLISH_TYPE" >> "$GITHUB_OUTPUT"
           echo "neoforge_file=${MOD_ID}-neoforge-${MINECRAFT_VERSION}-${FULL_VERSION}.jar" >> "$GITHUB_OUTPUT"
@@ -95,24 +100,24 @@ jobs:
           cp "neoforge/build/libs/$NEOFORGE_FILE" release/
           cp "fabric/build/libs/$FABRIC_FILE" release/
 
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
-        with:
-          name: Momentum ${{ steps.mod-info.outputs.mod_version }} for Minecraft ${{ steps.mod-info.outputs.minecraft_version }}
-          tag_name: ${{ github.ref_name }}
-          draft: false
-          prerelease: ${{ steps.mod-info.outputs.mod_prerelease != '' && steps.mod-info.outputs.mod_prerelease != 'release' }}
-          files: release/*.jar
-          fail_on_unmatched_files: true
-          generate_release_notes: true
-
-      - name: Export GitHub release notes
+      - name: Generate notes for this build
+        shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release view "$GITHUB_REF_NAME" \
-            --json body \
-            --jq .body > release/release-notes.md
+          # Compare against an ancestor build tag, excluding aggregate tags.
+          PREVIOUS_TAG=$(git describe --tags --abbrev=0 --match 'v*-*' "${GITHUB_SHA}^" 2>/dev/null || true)
+          NOTE_ARGS=(-f "tag_name=$GITHUB_REF_NAME")
+          if [[ -n "$PREVIOUS_TAG" ]]; then
+            NOTE_ARGS+=(-f "previous_tag_name=$PREVIOUS_TAG")
+          fi
+          gh api --method POST "repos/$GITHUB_REPOSITORY/releases/generate-notes" \
+            "${NOTE_ARGS[@]}" --jq .body > "$RUNNER_TEMP/generated-release-notes.md"
+          {
+            printf '## [%s](%s/%s/tree/%s)\n\n' \
+              "$GITHUB_REF_NAME" "$GITHUB_SERVER_URL" "$GITHUB_REPOSITORY" "$GITHUB_REF_NAME"
+            sed 's/^#/##/' "$RUNNER_TEMP/generated-release-notes.md"
+          } > release/release-notes.md
 
       - name: Upload release files
         uses: actions/upload-artifact@v4
@@ -121,9 +126,82 @@ jobs:
           path: release/
           if-no-files-found: error
 
+  github-release:
+    name: Update aggregate GitHub Release
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    # Serialize only the shared Release update; builds and approvals remain independent.
+    concurrency:
+      group: github-release-${{ needs.build.outputs.github_release_tag }}
+      cancel-in-progress: false
+      queue: max
+    steps:
+      - name: Download release files
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ needs.build.outputs.artifact_name }}
+          path: release
+
+      - name: Create or update aggregate Release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ needs.build.outputs.github_release_tag }}
+          BASE_VERSION: ${{ needs.build.outputs.base_version }}
+          PUBLISH_TYPE: ${{ needs.build.outputs.publish_type }}
+        run: |
+          # A failed API request must stop the job rather than look like a missing Release.
+          gh api --paginate "repos/$GITHUB_REPOSITORY/releases?per_page=100" \
+            --jq ".[] | select(.tag_name == \"$RELEASE_TAG\")" > "$RUNNER_TEMP/existing-release.json"
+          ENTRY_MARKER="<!-- momentum-release:$GITHUB_REF_NAME -->"
+
+          if [[ ! -s "$RUNNER_TEMP/existing-release.json" ]]; then
+            {
+              printf '%s\n' "$ENTRY_MARKER"
+              cat release/release-notes.md
+            } > "$RUNNER_TEMP/aggregate-notes.md"
+            CREATE_ARGS=(--target "$GITHUB_SHA" --title "Momentum $BASE_VERSION"
+              --notes-file "$RUNNER_TEMP/aggregate-notes.md")
+            if [[ "$PUBLISH_TYPE" != "release" ]]; then
+              CREATE_ARGS+=(--prerelease)
+            fi
+            # The aggregate tag is created at this first build's commit and stays fixed.
+            gh release create "$RELEASE_TAG" release/*.jar "${CREATE_ARGS[@]}"
+          else
+            if [[ $(jq -r '.immutable' "$RUNNER_TEMP/existing-release.json") == "true" ]]; then
+              echo "::error::Release $RELEASE_TAG is immutable; aggregate releases require editable assets."
+              exit 1
+            fi
+
+            # Keep previous Minecraft versions and test builds; retries reuse existing assets.
+            jq -r '.assets[].name' "$RUNNER_TEMP/existing-release.json" > "$RUNNER_TEMP/existing-assets.txt"
+            for FILE in release/*.jar; do
+              if ! grep -Fxq "$(basename "$FILE")" "$RUNNER_TEMP/existing-assets.txt"; then
+                gh release upload "$RELEASE_TAG" "$FILE"
+              fi
+            done
+
+            jq -r '.body // ""' "$RUNNER_TEMP/existing-release.json" > "$RUNNER_TEMP/aggregate-notes.md"
+            if ! grep -Fxq "$ENTRY_MARKER" "$RUNNER_TEMP/aggregate-notes.md"; then
+              {
+                printf '\n%s\n' "$ENTRY_MARKER"
+                cat release/release-notes.md
+              } >> "$RUNNER_TEMP/aggregate-notes.md"
+            fi
+            EDIT_ARGS=(--notes-file "$RUNNER_TEMP/aggregate-notes.md" --draft=false)
+            # Promote on the first stable build; later test builds never downgrade the Release.
+            if [[ "$PUBLISH_TYPE" == "release" ]]; then
+              EDIT_ARGS+=(--prerelease=false)
+            fi
+            gh release edit "$RELEASE_TAG" "${EDIT_ARGS[@]}"
+          fi
+
   publish:
     name: Publish to Modrinth and CurseForge
-    needs: build
+    needs: [build, github-release]
     runs-on: ubuntu-latest
     permissions:
       contents: read
