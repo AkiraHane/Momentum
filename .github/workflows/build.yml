@@ -17,7 +17,7 @@ jobs:
     name: Build release files
     runs-on: ubuntu-latest
     permissions:
-      contents: write
+      contents: read
     outputs:
       mod_version: ${{ steps.mod-info.outputs.mod_version }}
       base_version: ${{ steps.mod-info.outputs.base_version }}
@@ -88,6 +88,29 @@ jobs:
           echo "fabric_file=${MOD_ID}-fabric-${MINECRAFT_VERSION}-${FULL_VERSION}.jar" >> "$GITHUB_OUTPUT"
           echo "artifact_name=${MOD_ID}-${MINECRAFT_VERSION}-${FULL_VERSION}" >> "$GITHUB_OUTPUT"
 
+      - name: Read handwritten release notes
+        shell: bash
+        env:
+          BASE_VERSION: ${{ steps.mod-info.outputs.base_version }}
+          MINECRAFT_VERSION: ${{ steps.mod-info.outputs.minecraft_version }}
+        run: |
+          CHANGELOG_DIR="changelogs/$BASE_VERSION"
+          NOTE_FILES=()
+          for FILE in "$CHANGELOG_DIR/common.md" "$CHANGELOG_DIR/$MINECRAFT_VERSION.md"; do
+            if [[ -f "$FILE" ]] && grep -q '[^[:space:]]' "$FILE"; then
+              NOTE_FILES+=("$FILE")
+            fi
+          done
+          if [[ ${#NOTE_FILES[@]} -eq 0 ]]; then
+            echo "::error::Add release notes under $CHANGELOG_DIR before publishing. See changelogs/README.md."
+            exit 1
+          fi
+          mkdir -p release
+          for FILE in "${NOTE_FILES[@]}"; do
+            cat "$FILE"
+            printf '\n\n'
+          done > release/release-notes.md
+
       - name: Build with Gradle
         run: ./gradlew build
 
@@ -99,25 +122,6 @@ jobs:
           mkdir -p release
           cp "neoforge/build/libs/$NEOFORGE_FILE" release/
           cp "fabric/build/libs/$FABRIC_FILE" release/
-
-      - name: Generate notes for this build
-        shell: bash
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          # Compare against an ancestor build tag, excluding aggregate tags.
-          PREVIOUS_TAG=$(git describe --tags --abbrev=0 --match 'v*-*' "${GITHUB_SHA}^" 2>/dev/null || true)
-          NOTE_ARGS=(-f "tag_name=$GITHUB_REF_NAME")
-          if [[ -n "$PREVIOUS_TAG" ]]; then
-            NOTE_ARGS+=(-f "previous_tag_name=$PREVIOUS_TAG")
-          fi
-          gh api --method POST "repos/$GITHUB_REPOSITORY/releases/generate-notes" \
-            "${NOTE_ARGS[@]}" --jq .body > "$RUNNER_TEMP/generated-release-notes.md"
-          {
-            printf '## [%s](%s/%s/tree/%s)\n\n' \
-              "$GITHUB_REF_NAME" "$GITHUB_SERVER_URL" "$GITHUB_REPOSITORY" "$GITHUB_REF_NAME"
-            sed 's/^#/##/' "$RUNNER_TEMP/generated-release-notes.md"
-          } > release/release-notes.md
 
       - name: Upload release files
         uses: actions/upload-artifact@v4
@@ -152,16 +156,27 @@ jobs:
           RELEASE_TAG: ${{ needs.build.outputs.github_release_tag }}
           BASE_VERSION: ${{ needs.build.outputs.base_version }}
           PUBLISH_TYPE: ${{ needs.build.outputs.publish_type }}
+          MINECRAFT_VERSION: ${{ needs.build.outputs.minecraft_version }}
+          MOD_VERSION: ${{ needs.build.outputs.mod_version }}
         run: |
           # A failed API request must stop the job rather than look like a missing Release.
           gh api --paginate "repos/$GITHUB_REPOSITORY/releases?per_page=100" \
             --jq ".[] | select(.tag_name == \"$RELEASE_TAG\")" > "$RUNNER_TEMP/existing-release.json"
           ENTRY_MARKER="<!-- momentum-release:$GITHUB_REF_NAME -->"
+          START_MARKER="<!-- momentum-minecraft:$MINECRAFT_VERSION:start -->"
+          END_MARKER="<!-- momentum-minecraft:$MINECRAFT_VERSION:end -->"
+          {
+            printf '%s\n## Minecraft %s — %s\n\n' "$START_MARKER" "$MINECRAFT_VERSION" "$MOD_VERSION"
+            printf '[%s](%s/%s/tree/%s)\n\n' \
+              "$GITHUB_REF_NAME" "$GITHUB_SERVER_URL" "$GITHUB_REPOSITORY" "$GITHUB_REF_NAME"
+            sed 's/^#/##/' release/release-notes.md
+            printf '\n%s\n' "$END_MARKER"
+          } > "$RUNNER_TEMP/minecraft-notes.md"
 
           if [[ ! -s "$RUNNER_TEMP/existing-release.json" ]]; then
             {
+              cat "$RUNNER_TEMP/minecraft-notes.md"
               printf '%s\n' "$ENTRY_MARKER"
-              cat release/release-notes.md
             } > "$RUNNER_TEMP/aggregate-notes.md"
             CREATE_ARGS=(--target "$GITHUB_SHA" --title "Momentum $BASE_VERSION"
               --notes-file "$RUNNER_TEMP/aggregate-notes.md")
@@ -185,11 +200,28 @@ jobs:
             done
 
             jq -r '.body // ""' "$RUNNER_TEMP/existing-release.json" > "$RUNNER_TEMP/aggregate-notes.md"
+            # Keep processed tag markers outside replaceable sections, so an old retry cannot restore old notes.
             if ! grep -Fxq "$ENTRY_MARKER" "$RUNNER_TEMP/aggregate-notes.md"; then
-              {
-                printf '\n%s\n' "$ENTRY_MARKER"
-                cat release/release-notes.md
-              } >> "$RUNNER_TEMP/aggregate-notes.md"
+              if grep -Fxq "$START_MARKER" "$RUNNER_TEMP/aggregate-notes.md"; then
+                # Replace this Minecraft version's section and preserve all other sections and manual notes.
+                awk -v start="$START_MARKER" -v end="$END_MARKER" \
+                    -v replacement="$RUNNER_TEMP/minecraft-notes.md" '
+                  $0 == start {
+                    skipping = 1
+                    while ((getline line < replacement) > 0) print line
+                    close(replacement)
+                    next
+                  }
+                  $0 == end { skipping = 0; next }
+                  !skipping { print }
+                  END { if (skipping) exit 1 }
+                ' "$RUNNER_TEMP/aggregate-notes.md" > "$RUNNER_TEMP/updated-notes.md"
+                mv "$RUNNER_TEMP/updated-notes.md" "$RUNNER_TEMP/aggregate-notes.md"
+              else
+                printf '\n' >> "$RUNNER_TEMP/aggregate-notes.md"
+                cat "$RUNNER_TEMP/minecraft-notes.md" >> "$RUNNER_TEMP/aggregate-notes.md"
+              fi
+              printf '\n%s\n' "$ENTRY_MARKER" >> "$RUNNER_TEMP/aggregate-notes.md"
             fi
             EDIT_ARGS=(--notes-file "$RUNNER_TEMP/aggregate-notes.md" --draft=false)
             # Promote on the first stable build; later test builds never downgrade the Release.
