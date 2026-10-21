@@ -60,10 +60,21 @@ public class WallDetectionUtils {
     }
 
     private static List<WallContact> collectWalls(Player player, Vec3 input, boolean allowSweep) {
+        // 常规检测使用当前位置，与提前探测共用方向筛选和碰撞规则。
+        return collectWalls(player, input, allowSweep, Vec3.ZERO);
+    }
+
+    public static List<WallContact> detectWallsAtOffset(Player player, Vec3 input, Vec3 offset) {
+        // 平移检测区域来预判移动后的墙面，保持玩家位置及上下文中的实际选墙结果不变。
+        // 预测挂墙延续性只检查该位置的边缘，关闭快速下落时的向上回查。
+        return collectWalls(player, input, false, offset);
+    }
+
+    private static List<WallContact> collectWalls(Player player, Vec3 input, boolean allowSweep, Vec3 offset) {
         // 1. 先检测四个正方向，为斜向排除提供依据，同时保留所有命中的墙面。
         List<WallContact> walls = new ArrayList<>();
         for (int i = 0; i < 4; i++) {
-            WallContact wall = inspectWall(player, WALL_NORMALS[i], input, true, allowSweep);
+            WallContact wall = inspectWall(player, WALL_NORMALS[i], input, true, allowSweep, offset);
             if (wall != null) walls.add(wall);
         }
 
@@ -73,7 +84,7 @@ public class WallDetectionUtils {
             Vec3 normal = WALL_NORMALS[i];
             // 相邻正方向与斜向的点积约为 0.707，其余为负；任一相邻墙存在就排除斜向。
             if (cardinals.stream().anyMatch(wall -> wall.normal().dot(normal) > 0.5)) continue;
-            WallContact wall = inspectWall(player, normal, input, true, allowSweep);
+            WallContact wall = inspectWall(player, normal, input, true, allowSweep, offset);
             if (wall != null) walls.add(wall);
         }
         // 3. 按通用的面朝优先顺序排序，返回只读快照，供本 tick 的动作判定共享。
@@ -124,16 +135,22 @@ public class WallDetectionUtils {
 
     private static @Nullable WallContact inspectWall(
             Player player, Vec3 normal, Vec3 input, boolean requireCollision, boolean allowSweep) {
+        // 现有动作与同步还原均从玩家当前位置检测。
+        return inspectWall(player, normal, input, requireCollision, allowSweep, Vec3.ZERO);
+    }
+
+    private static @Nullable WallContact inspectWall(
+            Player player, Vec3 normal, Vec3 input, boolean requireCollision, boolean allowSweep, Vec3 offset) {
         // 1. 沿给定方向扩展玩家碰撞箱，常规检测要求该范围确实存在碰撞。
         // 同步还原允许目标暂时离开范围，仍按指定方向生成角度和环境数据。
-        AABB box = player.getBoundingBox();
+        AABB box = player.getBoundingBox().move(offset);
         Level level = player.level();
         double reach = 0.5;
         AABB expanded = box.expandTowards(normal.x * reach, 0, normal.z * reach);
         if (requireCollision && level.noCollision(player, expanded)) return null;
 
         // 2. 按眼睛高度划分上下检测区域，分别检查墙体支撑和可抓握边缘。
-        double eyeY = player.getEyeY();
+        double eyeY = player.getEyeY() + offset.y;
         double topY = box.maxY;
         double headHalf = topY - eyeY;
         double chinY = eyeY - headHalf * 2;

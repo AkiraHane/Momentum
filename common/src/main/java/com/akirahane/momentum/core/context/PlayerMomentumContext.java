@@ -224,6 +224,20 @@ public class PlayerMomentumContext {
             COMPOSE,
             -1
     );
+    // 临近挂墙边缘时，水平移动加速度减少；原速度由挂墙摩擦逐渐衰减。
+    public static final MomentumEffect WALL_HANG_EDGE_ACCELERATION = new MomentumEffect(
+            new Vec3(0.1, 1, 0.1),
+            Vec3.ZERO,
+            MULTIPLIER,
+            -1
+    );
+    // 边缘减速期间额外增加的摩擦，与普通挂墙摩擦叠加。
+    public static final MomentumEffect WALL_HANG_EDGE_FRICTION = new MomentumEffect(
+            new Vec3(0.4, 0, 0),
+            Vec3.ZERO,
+            COMPOSE,
+            -1
+    );
 
     // ---------- 空中移动 ----------
     public MomentumEffect AIR_ACCELERATION = new MomentumEffect(

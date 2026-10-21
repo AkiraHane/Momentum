@@ -5,9 +5,11 @@ import com.akirahane.momentum.client.hud.HintManager;
 import com.akirahane.momentum.client.hud.WallHangHints;
 import com.akirahane.momentum.config.ServerConfig;
 import com.akirahane.momentum.core.context.PlayerMomentumContext;
+import com.akirahane.momentum.core.context.WallContact;
 import com.akirahane.momentum.core.effect.MomentumEffectType;
 import com.akirahane.momentum.core.state.StateType;
 import com.akirahane.momentum.core.state.BaseState;
+import com.akirahane.momentum.core.utils.WallDetectionUtils;
 import com.akirahane.momentum.core.utils.WallInteractionUtils;
 import com.akirahane.momentum.core.utils.WallSoundUtils;
 import net.minecraft.client.Minecraft;
@@ -20,10 +22,14 @@ import net.minecraft.world.phys.Vec3;
 import static com.akirahane.momentum.client.input.LowerCenterKey.LOWER_CENTER;
 import static com.akirahane.momentum.core.utils.WallSoundUtils.STEP;
 import static com.akirahane.momentum.core.context.PlayerMomentumContext.WALL_FRICTION;
+import static com.akirahane.momentum.core.context.PlayerMomentumContext.WALL_HANG_EDGE_ACCELERATION;
+import static com.akirahane.momentum.core.context.PlayerMomentumContext.WALL_HANG_EDGE_FRICTION;
 
 public class WallHangState extends BaseState {
 
     private static final int SOUND_TICK = 10;
+    // 沿墙横移的提前检测距离（格）。
+    private static final double EDGE_LOOKAHEAD_DISTANCE = 0.5;
     // 动画名称
     public static final String WALL_HANG = "wall_hang";
     public static final String WALL_HANG_LOOK_RIGHT = "wall_hang_look_right";
@@ -35,7 +41,7 @@ public class WallHangState extends BaseState {
         return ServerConfig.ENABLE_WALL_HANG.getAsBoolean() && ClientConfig.ENABLE_WALL_HANG.getAsBoolean() &&
                 !player.onGround() &&
                 WallInteractionUtils.selectWall(context, StateType.WALL_HANG, 0,
-                        wall -> wall.hasLedge() && (!LOWER_CENTER.get().isDown() || Mth.abs(wall.inputAngle()) < 90)) &&
+                        WallHangState::isHangableWall) &&
                 player.fallDistance <= player.getAttributeValue(Attributes.SAFE_FALL_DISTANCE) * 2 &&
                 player.getDeltaMovement().y <= 0.1 &&
                 !checkKey(player, context);
@@ -54,8 +60,32 @@ public class WallHangState extends BaseState {
 
     public static boolean canWallHangHold(Player player, PlayerMomentumContext context) {
         return WallInteractionUtils.selectWall(context, StateType.WALL_HANG, 0,
-                wall -> wall.hasLedge() && (!LOWER_CENTER.get().isDown() || Mth.abs(wall.inputAngle()) < 90),
+                WallHangState::isHangableWall,
                 WallInteractionUtils.hasSidewaysInput(player, context)) && !checkKey(player, context);
+    }
+
+    private static boolean isHangableWall(WallContact wall) {
+        // 进入、保持和提前探测使用同一份边缘条件，避免预测与实际挂墙判定不一致。
+        return wall.hasLedge() && (!LOWER_CENTER.get().isDown() || Mth.abs(wall.inputAngle()) < 90);
+    }
+
+    private static boolean isApproachingEdge(Player player, PlayerMomentumContext context) {
+        Vec3 normal = context.getWallNormal();
+        if (normal.lengthSqr() < 0.001) return false;
+
+        // 1. 去掉输入中朝墙或离墙的分量，沿真正的横移方向提前检测。
+        Vec3 input = context.getInputVec();
+        Vec3 alongWall = input.subtract(normal.scale(input.dot(normal)));
+        if (alongWall.horizontalDistanceSqr() < 0.001) return false;
+        Vec3 offset = alongWall.normalize().scale(EDGE_LOOKAHEAD_DISTANCE);
+
+        // 2. 在预测位置复用八方向检测；能保持原墙，或能按现有侧移规则衔接其他墙，就继续正常移动。
+        boolean allowSwitch = WallInteractionUtils.hasSidewaysInput(player, context);
+        for (WallContact wall : WallDetectionUtils.detectWallsAtOffset(player, input, offset)) {
+            if (isHangableWall(wall) && (allowSwitch || wall.normal().equals(normal))) return false;
+        }
+        // 3. 前方没有可延续的挂墙目标时降低加速度，仍保留持续输入后移出边缘的能力。
+        return true;
     }
 
     @Override
@@ -84,11 +114,18 @@ public class WallHangState extends BaseState {
     @Override
     public void clientTick(Player player, PlayerMomentumContext context) {
         super.clientTick(player, context);
-        // 如果没有按后键, 给个向墙的速度防止失误掉落
-        if (Minecraft.getInstance().options.keyDown.isDown() ||
+        boolean movingAway = Minecraft.getInstance().options.keyDown.isDown() ||
                 Mth.abs(context.getInputWallAngle()) > 150 && Mth.abs(context.getInputWallAngle()) < 360 &&
-                        Mth.abs(context.getLookWallAngle()) > 150
-        ) {
+                        Mth.abs(context.getLookWallAngle()) > 150;
+        // 临近横移边缘时削弱输入加速，并增加摩擦消耗已有速度；离开该区域后恢复普通挂墙效果。
+        if (!movingAway && isApproachingEdge(player, context)) {
+            context.addPermanentEffect(MomentumEffectType.ACCELERATION, WALL_HANG_EDGE_ACCELERATION);
+            context.addPermanentEffect(MomentumEffectType.FRICTION, WALL_HANG_EDGE_FRICTION);
+        } else {
+            context.removeEffect(MomentumEffectType.ACCELERATION, WALL_HANG_EDGE_ACCELERATION);
+            context.removeEffect(MomentumEffectType.FRICTION, WALL_HANG_EDGE_FRICTION);
+        }
+        if (movingAway) {
             return;
         }
         Vec3 wallNormal = context.getWallNormal();
@@ -146,6 +183,8 @@ public class WallHangState extends BaseState {
             instance.removeModifier(WALL_GRAVITY_ID);
         }
         context.removeEffect(MomentumEffectType.FRICTION, WALL_FRICTION);
+        context.removeEffect(MomentumEffectType.ACCELERATION, WALL_HANG_EDGE_ACCELERATION);
+        context.removeEffect(MomentumEffectType.FRICTION, WALL_HANG_EDGE_FRICTION);
     }
 
     @Override
