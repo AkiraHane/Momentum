@@ -3,13 +3,13 @@
   "package": "com.akirahane.momentum.mixin",
   "compatibilityLevel": "JAVA_25",
   "mixins": [
-    "PlayerMixin",
-    "LivingEntityFallMixin"
+    "com.linqiyinya.momentum.mixin.PlayerMixin",
+    "com.linqiyinya.momentum.mixin.LivingEntityFallMixin"
   ],
   "client": [
-    "CameraMixin",
-    "ClientPlayerTickMixin",
-    "DebugScreenEntriesMixin"
+    "com.linqiyinya.momentum.mixin.CameraMixin",
+    "com.linqiyinya.momentum.mixin.ClientPlayerTickMixin",
+    "com.linqiyinya.momentum.mixin.DebugScreenEntriesMixin"
   ],
   "injectors": {
     "defaultRequire": 1

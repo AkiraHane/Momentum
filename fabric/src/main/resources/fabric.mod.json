@@ -14,15 +14,15 @@
     "environment": "*",
     "entrypoints": {
         "main": [
-            "com.akirahane.momentum.Momentum"
+          "com.linqiyinya.momentum.Momentum"
         ],
         "client": [
-            "com.akirahane.momentum.client.input.MomentumClientInput",
-            "com.akirahane.momentum.client.animation.MomentumClientAnimation",
-            "com.akirahane.momentum.client.config.MomentumClientConfig",
-            "com.akirahane.momentum.client.hud.MomentumClientHud",
-            "com.akirahane.momentum.client.item.MomentumClientItems",
-            "com.akirahane.momentum.client.network.MomentumClientNetwork"
+          "com.linqiyinya.momentum.client.input.MomentumClientInput",
+          "com.linqiyinya.momentum.client.animation.MomentumClientAnimation",
+          "com.linqiyinya.momentum.client.config.MomentumClientConfig",
+          "com.linqiyinya.momentum.client.hud.MomentumClientHud",
+          "com.linqiyinya.momentum.client.item.MomentumClientItems",
+          "com.linqiyinya.momentum.client.network.MomentumClientNetwork"
         ]
     },
     "mixins": [

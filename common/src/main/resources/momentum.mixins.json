@@ -3,9 +3,9 @@
   "package": "com.akirahane.momentum.mixin",
   "compatibilityLevel": "JAVA_25",
   "mixins": [
-    "EntityMixin",
-    "LivingEntityAccessor",
-    "LivingEntityMixin"
+    "com.linqiyinya.momentum.mixin.EntityMixin",
+    "com.linqiyinya.momentum.mixin.LivingEntityAccessor",
+    "com.linqiyinya.momentum.mixin.LivingEntityMixin"
   ],
   "injectors": {
     "defaultRequire": 1
@@ -14,8 +14,8 @@
     "requireAnnotations": true
   },
   "client": [
-    "AvatarRendererMixin",
-    "GameRendererMixin",
-    "ItemInHandRendererMixin"
+    "com.linqiyinya.momentum.mixin.AvatarRendererMixin",
+    "com.linqiyinya.momentum.mixin.GameRendererMixin",
+    "com.linqiyinya.momentum.mixin.ItemInHandRendererMixin"
   ]
 }

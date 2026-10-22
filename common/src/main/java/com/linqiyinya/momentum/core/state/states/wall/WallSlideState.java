@@ -1,0 +1,130 @@
+package com.linqiyinya.momentum.core.state.states.wall;
+
+import com.linqiyinya.momentum.client.config.ClientConfig;
+import com.linqiyinya.momentum.client.hud.HintManager;
+import com.linqiyinya.momentum.client.hud.WallHangHints;
+import com.linqiyinya.momentum.client.input.WallInteractionKey;
+import com.linqiyinya.momentum.config.ServerConfig;
+import com.linqiyinya.momentum.core.context.PlayerMomentumContext;
+import com.linqiyinya.momentum.core.effect.MomentumEffectType;
+import com.linqiyinya.momentum.core.state.StateType;
+import com.linqiyinya.momentum.core.state.BaseState;
+import com.linqiyinya.momentum.core.utils.WallInteractionUtils;
+import net.minecraft.client.Minecraft;
+import net.minecraft.util.Mth;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.phys.Vec3;
+
+import static com.linqiyinya.momentum.core.context.PlayerMomentumContext.*;
+import static net.minecraft.world.level.block.SoundType.*;
+
+public class WallSlideState extends BaseState {
+    // 动画名称
+    public static String WALL_SLIDE = "wall_slide";
+
+    public static boolean canWallSlide(Player player, PlayerMomentumContext context) {
+        if (!WallInteractionKey.isActive() ||
+                !ServerConfig.ENABLE_WALL_SLIDE.getAsBoolean() || !ClientConfig.ENABLE_WALL_SLIDE.getAsBoolean()){
+            return false;
+        }
+        if (player.onClimbable()){
+            HintManager.add(WallHangHints.CLIMB_ACCELERATION);
+        }
+        return !player.onGround() &&
+                context.getSpeed().y < 0 &&
+                WallInteractionUtils.selectWall(context, StateType.WALL_SLIDE, 0,
+                        wall -> Mth.abs(wall.lookAngle()) < 30 &&
+                                (player.onClimbable() ||
+                                        !Vec3.ZERO.equals(context.getInputVec()) && Mth.abs(wall.inputAngle()) < 30 ||
+                                        checkKey(player, context)));
+    }
+
+    // 维持
+    public static boolean canWallSlideHold(Player player, PlayerMomentumContext context) {
+        if (!WallInteractionKey.isActive() ||
+                !ServerConfig.ENABLE_WALL_SLIDE.getAsBoolean() || !ClientConfig.ENABLE_WALL_SLIDE.getAsBoolean()){
+            return false;
+        }
+        if (player.onClimbable()){
+            HintManager.add(WallHangHints.CLIMB_ACCELERATION);
+        }
+        return !player.onGround() &&
+                WallInteractionUtils.selectWall(context, StateType.WALL_SLIDE, 0,
+                        wall -> Mth.abs(wall.lookAngle()) < 60 &&
+                                (player.onClimbable() ||
+                                        !Vec3.ZERO.equals(context.getInputVec()) && Mth.abs(wall.inputAngle()) < 60 ||
+                                        checkKey(player, context)));
+    }
+
+    public static boolean checkKey(Player player, PlayerMomentumContext context) {
+        HintManager.add(WallHangHints.WALL_SLIDE);
+        return Minecraft.getInstance().options.keyJump.isDown();
+    }
+
+    @Override
+    protected java.util.List<Transition> transitionChain() {
+        // 爬墙/滑墙用更宽松的保持检查
+        return withPredicate(
+                withPredicate(DEFAULT_CHAIN, StateType.WALL_CLIMB, WallClimbState::canWallClimbHold),
+                StateType.WALL_SLIDE, WallSlideState::canWallSlideHold);
+    }
+
+    @Override
+    public void onEnter(Player player, PlayerMomentumContext context) {
+        context.addPermanentEffect(MomentumEffectType.LIMIT_ACCELERATION_SPEED, AIR_LIMIT_ACCELERATION);
+        playStateAnimation(player, WALL_SLIDE, context, 4, 1);
+        context.setTargetArmTransform(-0.15F, 5F);
+    }
+
+    @Override
+    public void serverTick(Player player, PlayerMomentumContext context) {
+        super.serverTick(player, context);
+        // 按照重力倍率衰减掉落伤害
+        player.fallDistance *= 0.9;
+    }
+
+    @Override
+    public void clientTick(Player player, PlayerMomentumContext context) {
+        super.clientTick(player, context);
+        // 按照重力倍率衰减掉落伤害
+        player.fallDistance *= 0.9;
+        var instance = player.getAttribute(Attributes.GRAVITY);
+        if (context.getSpeed().y > 0 && instance != null) {
+            instance.removeModifier(WALL_GRAVITY_ID);
+        } else if (instance != null && instance.getModifier(WALL_GRAVITY_ID) == null) {
+            instance.addOrReplacePermanentModifier(new AttributeModifier(
+                    WALL_GRAVITY_ID,
+                    -0.9,
+                    AttributeModifier.Operation.ADD_MULTIPLIED_BASE
+            ));
+        }
+    }
+
+    @Override
+    public void clientTickRemote(Player player, PlayerMomentumContext context) {
+        if (player.tickCount % 2 == 0) {
+            player.playSound(
+                    GRASS.getStepSound(),
+                    0.05F,
+                    1F
+            );
+        }
+    }
+
+    @Override
+    public void onExit(Player player, PlayerMomentumContext context) {
+        super.onExit(player, context);
+        context.removeEffect(MomentumEffectType.LIMIT_ACCELERATION_SPEED, AIR_LIMIT_ACCELERATION);
+        var instance = player.getAttribute(Attributes.GRAVITY);
+        if (instance != null) {
+            instance.removeModifier(WALL_GRAVITY_ID);
+        }
+    }
+
+    @Override
+    public StateType getStateType() {
+        return StateType.WALL_SLIDE;
+    }
+}
