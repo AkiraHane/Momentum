@@ -1,4 +1,13 @@
-## 修复
+## English
+
+### Fixes
+
+- Animation errors: Fixed potential freezes caused by abnormal animation playback speeds, and errors when the animation controller was not ready.
+- Slide transitions: Exiting a slide now preserves sprinting so you can keep moving.
+
+## 中文
+
+### 修复
 
 - 动画异常修复：修复动画播放速度异常时可能导致的卡死，以及动画控制器尚未就绪时的报错。
 - 滑铲衔接修复：退出滑铲时保留疾跑，便于继续移动。

@@ -1,8 +1,23 @@
-## 新增
+## English
+
+### Added
+
+- Wall Interaction key: Unbound by default for automatic wall interaction. If bound, hold it to wall run, climb, slide, or hang; release it to exit the action.
+
+### Changes
+
+- Swimming: Hold forward and the lower-center key to start swimming underwater, just as at the surface.
+- Wall kicks: Looking up or down now affects the vertical direction of a wall kick.
+- Wall interaction: Improved situations where nearby walls caused an unexpected action or prevented an action from working.
+- Ledge movement: Added resistance when moving along a wall toward a point where you would lose your grip.
+
+## 中文
+
+### 新增
 
 - 墙面交互键：默认不绑定，自动进行墙面交互。绑定后，按住才能跑墙、爬墙、滑墙和挂墙，松开退出。
 
-## 调整
+### 调整
 
 - 水中交互优化：在水中也可以像水面一样，按住前进和降低重心进入游泳状态。
 - 墙跳交互优化：墙跳现在会根据抬头、低头的方向，改变跳跃的上下角度。

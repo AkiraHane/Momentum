@@ -1,3 +1,11 @@
-## 修复
+## English
+
+### Fixes
+
+- Release fix: Added files missing from the previous version so the Fabric and NeoForge mod files can be built.
+
+## 中文
+
+### 修复
 
 - 发布修复：补齐上一版遗漏的文件，修复无法生成 Fabric 和 NeoForge 模组文件的问题。
