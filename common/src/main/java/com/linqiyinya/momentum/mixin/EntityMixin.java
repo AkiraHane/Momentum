@@ -54,6 +54,37 @@ public abstract class EntityMixin {
     protected EntityMixin(EntityType<?> type, Level level) {
     }
 
+    @WrapOperation(method = "push(Lnet/minecraft/world/entity/Entity;)V", at = @At(value = "INVOKE",
+            target = "Lnet/minecraft/world/entity/Entity;push(DDD)V"))
+    private void momentum$preventMomentumPush(
+            Entity target, double x, double y, double z, Operation<Void> original,
+            @Local(argsOnly = true) Entity other
+    ) {
+        Entity self = (Entity) (Object) this;
+        // 原版分别给双方施力；先识别这对实体中的玩家和障碍，两个方向使用相同条件。
+        Player player;
+        Entity obstacle;
+        if (self instanceof Player selfPlayer) {
+            player = selfPlayer;
+            obstacle = other;
+        } else if (other instanceof Player otherPlayer) {
+            player = otherPlayer;
+            obstacle = self;
+        } else {
+            original.call(target, x, y, z);
+            return;
+        }
+        if (!player.isCrouching() && !obstacle.isSpectator() && player.canCollideWith(obstacle) &&
+                Services.PLATFORM.hasStateMachine(player)) {
+            MomentumStateMachine stateMachine = Services.PLATFORM.getOrCreateStateMachine(player);
+            if (stateMachine.getCurrentState().getStateType() != StateType.ORIGINAL) {
+                // 机动模式且非潜行时，跳过玩家与移动障碍实体之间的双向推力。
+                return;
+            }
+        }
+        original.call(target, x, y, z);
+    }
+
 
     // 扩大原版上台阶时收集碰撞体的高度，让一次高速移动能够检查多级台阶。
     @ModifyVariable(method = "collide", at = @At(value = "STORE", ordinal = 0), name = "stepUpAABB")
