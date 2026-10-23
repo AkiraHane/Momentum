@@ -119,6 +119,7 @@ public abstract class EntityMixin {
         // 过滤返回值
         FloatList filtered = new FloatArrayList();
         float lastHeight = 0.0F;
+        double lastLandingProgress = 0;
         for (float current : result) {
             if (current - lastHeight > this.maxUpStep()) {
                 break;
@@ -134,12 +135,17 @@ public abstract class EntityMixin {
                 continue;
             }
 
-            if (!momentum$hasGroundUnder(boundingBox.move(stepFromGround), colliders)) {
+            // 每一级在移动途中有真实落脚点即可；剩余位移可以让玩家越过楼梯顶端。
+            double landingProgress = momentum$findStepUpLanding(
+                    boundingBox, movement, current, lastLandingProgress, colliders
+            );
+            if (landingProgress < 0) {
                 break;
             }
 
             filtered.add(current);
             lastHeight = current;
+            lastLandingProgress = landingProgress;
         }
 
         result = filtered.toFloatArray();
@@ -232,6 +238,38 @@ public abstract class EntityMixin {
     @Unique
     private static boolean momentum$hasGroundUnder(AABB movedAABB, List<VoxelShape> colliders) {
         return momentum$findSupportingCollider(movedAABB, colliders) != null;
+    }
+
+    @Unique
+    private static double momentum$findStepUpLanding(
+            AABB box, Vec3 movement, double height, double previousProgress, List<VoxelShape> colliders
+    ) {
+        Vec3 horizontal = new Vec3(movement.x, 0, movement.z);
+        double distance = horizontal.horizontalDistance();
+        if (distance <= MOMENTUM_STEP_DOWN_EPSILON) return -1;
+
+        // 在这一高度寻找脚底会经过的顶面，按行进顺序检查，保留每一级对应的位置。
+        List<MomentumSupportInterval> intervals = momentum$collectSupportIntervals(box.move(0, height, 0), horizontal, colliders);
+        intervals.sort(Comparator.comparingDouble(MomentumSupportInterval::start));
+        for (MomentumSupportInterval interval : intervals) {
+            double start = Math.max(previousProgress, interval.start());
+            if (start >= interval.end()) continue;
+
+            // 取刚进入顶面的位置，避免仅接触边线；窄顶面也必须选在实际重叠范围内。
+            double progress = Math.min((start + interval.end()) * 0.5,
+                    start + MOMENTUM_STEP_DOWN_EPSILON / distance);
+            Vec3 requested = new Vec3(movement.x * progress, height, movement.z * progress);
+            Vec3 reached = collideWithShapes(requested, box, colliders);
+            if (Math.abs(reached.x - requested.x) > MOMENTUM_STEP_DOWN_EPSILON ||
+                    Math.abs(reached.y - height) > MOMENTUM_STEP_DOWN_EPSILON ||
+                    Math.abs(reached.z - requested.z) > MOMENTUM_STEP_DOWN_EPSILON) {
+                continue;
+            }
+            if (momentum$hasGroundUnder(box.move(reached), colliders)) {
+                return progress;
+            }
+        }
+        return -1;
     }
 
     /**
@@ -352,6 +390,21 @@ public abstract class EntityMixin {
 
     @Unique
     private static double momentum$findSupportEnd(AABB box, Vec3 movement, List<VoxelShape> colliders) {
+        List<MomentumSupportInterval> intervals = momentum$collectSupportIntervals(box, movement, colliders);
+
+        // 拼接从当前位置连续可踩到的顶面，遇到真正的空隙就停止，后面的地面不能跨空接上。
+        intervals.sort(Comparator.comparingDouble(MomentumSupportInterval::start));
+        double supportedUntil = 0;
+        double tolerance = MOMENTUM_STEP_DOWN_EPSILON / movement.horizontalDistance();
+        for (MomentumSupportInterval interval : intervals) {
+            if (interval.start() > supportedUntil + tolerance) break;
+            supportedUntil = Math.max(supportedUntil, interval.end());
+        }
+        return supportedUntil;
+    }
+
+    @Unique
+    private static List<MomentumSupportInterval> momentum$collectSupportIntervals(AABB box, Vec3 movement, List<VoxelShape> colliders) {
         List<MomentumSupportInterval> intervals = new ArrayList<>();
         for (VoxelShape collider : colliders) {
             collider.forAllBoxes((minX, minY, minZ, maxX, maxY, maxZ) -> {
@@ -384,15 +437,7 @@ public abstract class EntityMixin {
             });
         }
 
-        // 拼接从当前位置连续可踩到的顶面，遇到真正的空隙就停止，后面的地面不能跨空接上。
-        intervals.sort(Comparator.comparingDouble(MomentumSupportInterval::start));
-        double supportedUntil = 0;
-        double tolerance = MOMENTUM_STEP_DOWN_EPSILON / movement.horizontalDistance();
-        for (MomentumSupportInterval interval : intervals) {
-            if (interval.start() > supportedUntil + tolerance) break;
-            supportedUntil = Math.max(supportedUntil, interval.end());
-        }
-        return supportedUntil;
+        return intervals;
     }
 
     // 计算坡面单位
