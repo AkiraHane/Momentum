@@ -13,7 +13,6 @@ import com.linqiyinya.momentum.core.state.states.ground.SlideState;
 import com.linqiyinya.momentum.core.state.states.ground.WalkState;
 import com.linqiyinya.momentum.core.state.states.special.BreakFallState;
 import com.linqiyinya.momentum.core.state.states.special.DodgeState;
-import com.akirahane.momentum.core.state.states.wall.*;
 import com.linqiyinya.momentum.core.state.states.wall.*;
 import com.linqiyinya.momentum.core.state.states.water.SwimDashState;
 import com.linqiyinya.momentum.core.state.states.water.SwimState;

@@ -7,7 +7,6 @@ import com.linqiyinya.momentum.config.ServerConfig;
 import com.linqiyinya.momentum.core.context.PlayerMomentumContext;
 import com.linqiyinya.momentum.core.state.BaseState;
 import com.linqiyinya.momentum.core.state.StateType;
-import com.akirahane.momentum.core.state.states.wall.*;
 import com.linqiyinya.momentum.core.state.states.wall.WallClimbState;
 import com.linqiyinya.momentum.core.state.states.wall.WallSlideState;
 import com.linqiyinya.momentum.platform.Services;
