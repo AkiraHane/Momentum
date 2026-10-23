@@ -3,11 +3,11 @@ package com.linqiyinya.momentum.mixin;
 import com.linqiyinya.momentum.core.state.MomentumStateMachine;
 import com.linqiyinya.momentum.core.state.StateType;
 import com.linqiyinya.momentum.platform.Services;
-import com.google.common.collect.ImmutableList;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Local;
-import it.unimi.dsi.fastutil.doubles.DoubleList;
+import com.llamalad7.mixinextras.sugar.Share;
+import com.llamalad7.mixinextras.sugar.ref.LocalRef;
 import it.unimi.dsi.fastutil.floats.*;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -16,20 +16,21 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
-import org.jetbrains.annotations.NotNull;
 import org.jspecify.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 import static com.linqiyinya.momentum.core.utils.SlideUtils.setSlideAcceleration;
@@ -38,18 +39,12 @@ import static com.linqiyinya.momentum.core.utils.SlideUtils.setSlideAcceleration
 public abstract class EntityMixin {
 
     @Shadow
-    private Level level;
-
-    @Shadow
     private static List<VoxelShape> collectColliders(@Nullable Entity source, Level level, List<VoxelShape> entityColliders, AABB boundingBox) {
         throw new UnsupportedOperationException("Implemented via mixin");
     }
 
     @Shadow
     public abstract float maxUpStep();
-
-    @Shadow
-    public abstract boolean onGround();
 
     @Shadow
     private static Vec3 collideWithShapes(Vec3 movement, AABB boundingBox, List<VoxelShape> shapes){
@@ -157,111 +152,80 @@ public abstract class EntityMixin {
         return result;
     }
 
-    // 自动下坡
-    @Inject(
-            method = "collide",
-            at = @At("RETURN"),
-            cancellable = true
-    )
-    private void addStepDown(
-            Vec3 movement,
-            CallbackInfoReturnable<Vec3> cir,
-            @Local(name = "aabb") AABB aabb,
-            @Local(name = "entityColliders") List<VoxelShape> entityColliders,
-            @Local(name = "movementStep") Vec3 movementStep
+    @WrapOperation(method = "move", at = @At(value = "INVOKE",
+            target = "Lnet/minecraft/world/entity/Entity;collide(Lnet/minecraft/world/phys/Vec3;)Lnet/minecraft/world/phys/Vec3;"))
+    private Vec3 momentum$applyStepDown(
+            Entity self, Vec3 movement, Operation<Vec3> original,
+            @Share("momentumStepDown") LocalRef<MomentumStepDownResult> stepDown
     ) {
-        Entity self = (Entity) (Object) this;
+        Vec3 originalMovement = original.call(self, movement);
         if (!(self instanceof Player player)) {
-            return;
+            return originalMovement;
         }
-        if (!player.level().isClientSide()) {
-            return;
-        }
-        if (player.isInLiquid()) {
-            return;
+        if (!player.level().isClientSide() || player.isInLiquid()) {
+            return originalMovement;
         }
         MomentumStateMachine stateMachine = Services.PLATFORM.getOrCreateStateMachine(player);
         if (stateMachine.getCurrentState().getStateType().equals(StateType.ORIGINAL)) {
-            return;
-        }
-        // =================== 内容 ===================
-
-        // 已经上坡则不需要下坡
-        if (cir.getReturnValue().y > 0) {
-            setSlideAcceleration(movement, cir.getReturnValue().y, stateMachine, player);
-            return;
+            return originalMovement;
         }
 
-        movementStep = movement.lengthSqr() == (double) 0.0F ? movement : momentum$collideBoundingBoxDown(
-                self, movement, aabb, player.level(), entityColliders
-        );
-
-        // 上升或平地时不需要下坡
-        if (movementStep.y >= 0) {
-            return;
+        // 上坡沿用原来的结果；下坡只从仍然着地、正在向下移动的玩家开始。
+        if (originalMovement.y > 0) {
+            setSlideAcceleration(movement, originalMovement.y, stateMachine, player);
+            return originalMovement;
         }
-//        // 下落速度超过重力则不下坡
-//        if (movement.y < -player.getAttributeValue(Attributes.GRAVITY)) {
-//            return;
-//        }
-        boolean yCollision = movement.y != movementStep.y;
-        boolean onGroundAfterCollision = yCollision && movement.y < (double) 0.0F;
+        if (!player.onGround() || movement.y >= 0 || player.maxUpStep() <= 0 ||
+                movement.horizontalDistanceSqr() == 0) {
+            return originalMovement;
+        }
 
-//        if (movement.horizontalDistance() > 5) {
-//            System.out.println("test");
-//        }
+        MomentumStepDownResult result = momentum$stepDown(player, movement);
+        if (result == null) {
+            return originalMovement;
+        }
+        stepDown.set(result);
+        stateMachine.getContext().setSlopeUnitVector(momentum$getSlopeDirection(player, result.support()));
+        setSlideAcceleration(movement, -result.dropHeight(), stateMachine, player);
+        return result.movement();
+    }
 
-        // 步进加速度特殊处理, 原因如下
-        // 在stepdown为0.6时,如果当前的速度大于0.5小于1, 下楼梯会出现直接跳过中间小台阶
-        // 所需步进为1的情况, 这种情况依旧会向下0.6, 但是由于没有到1所以在目标位置是空中,然后飞出去
-        float maxDownStep = (float) (this.maxUpStep() + Math.ceil(Math.max(Math.abs(movement.x), Math.abs(movement.z))));
-        // 正常行走无法落地才考虑要不要下坡
-        if (maxDownStep > 0.0F && (!onGroundAfterCollision) && this.onGround()) {
-            entityColliders = this.level.getEntityCollisions(
-                    self,
-                    aabb.expandTowards(movement.subtract(0, maxDownStep, 0))
-            );
-            AABB stepDownAABB = aabb.expandTowards(
-                    movement.x, -maxDownStep, movement.z
-            );
-            // 似乎是原版修复浮点精度的, 但是不太理解, 目前不知道去掉会有什么bug, 推测是落地判定相关, 所以先保留
-            // 为了能碰撞地面, 所以特地往下拉了一个玩家的身位
-            stepDownAABB = stepDownAABB.expandTowards(
-                    0.0F, -player.getBoundingBox().getYsize() - 1.0E-5F, 0.0F
-            );
-            // 获取所有碰撞
-            List<VoxelShape> colliders = collectColliders(self, this.level, entityColliders, stepDownAABB);
-            float stepHeightToSkip = (float) movementStep.y;
-            float[] candidateStepDownHeights = momentum$collectCandidateStepDownHeights(aabb, colliders, -maxDownStep, stepHeightToSkip, this.maxUpStep());
+    @WrapOperation(method = "move", at = @At(value = "INVOKE",
+            target = "Lnet/minecraft/world/entity/Entity;setOnGroundWithMovement(ZZLnet/minecraft/world/phys/Vec3;)V"))
+    private void momentum$applyStepDownGroundState(
+            Entity self, boolean onGround, boolean horizontalCollision, Vec3 movement, Operation<Void> original,
+            @Share("momentumStepDown") LocalRef<MomentumStepDownResult> stepDown
+    ) {
+        MomentumStepDownResult result = stepDown.get();
+        if (result != null) {
+            // 台阶修正也会改变 Y 位移，必须用最终落脚情况判断落地，避免滑出悬崖后仍被当成着地。
+            onGround = result.onGround();
+            self.verticalCollision = onGround;
+            self.verticalCollisionBelow = onGround;
+        }
+        original.call(self, onGround, horizontalCollision, movement);
+    }
 
-            for (float candidateStepDHeight : candidateStepDownHeights) {
-                if (candidateStepDHeight == 0){
-                    continue;
-                }
-                Vec3 stepFromGround = momentum$collideWithShapesDown(new Vec3(movement.x, candidateStepDHeight, movement.z), aabb, colliders);
-                if (stepFromGround.horizontalDistanceSqr() <= 0) {
-                    continue;
-                }
+    @WrapOperation(method = "move", at = @At(value = "INVOKE",
+            target = "Lnet/minecraft/world/entity/Entity;checkFallDamage(DZLnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/core/BlockPos;)V"))
+    private void momentum$excludeStepDownFromFallDistance(
+            Entity self, double distance, boolean onGround, BlockState state, BlockPos pos, Operation<Void> original,
+            @Share("momentumStepDown") LocalRef<MomentumStepDownResult> stepDown
+    ) {
+        MomentumStepDownResult result = stepDown.get();
+        // 自动贴下台阶的距离不计入摔落；越过最后一级后的正常下落仍由原版累计。
+        original.call(self, result == null ? distance : distance + result.dropHeight(), onGround, state, pos);
+    }
 
-                // 位移后脚底没有踩到碰撞面，就尝试更高的那个候选高度。记录实际承重的碰撞体，
-                // 后续坡向检测不能依赖 colliders 的遍历顺序。
-                VoxelShape supportingCollider = momentum$findSupportingCollider(aabb.move(stepFromGround), colliders);
-                if (supportingCollider == null) {
-                    continue;
-                }
-                if (stepFromGround.horizontalDistanceSqr() > 0) {
-                    cir.setReturnValue(stepFromGround);
-                    if (!stateMachine.getCurrentState().getStateType().equals(StateType.SLIDE)) {
-                        return;
-                    }
-                    // 保留原本由地形决定的坡向，让速度逐渐向坡面方向偏转；这里只修正参考碰撞体。
-                    stateMachine.getContext().setSlopeUnitVector(
-                            momentum$getSlopeDirection(player, supportingCollider)
-                    );
-                    setSlideAcceleration(movement, stepFromGround.y, stateMachine, player);
-                    return;
-                }
-            }
+    @WrapOperation(method = "move", at = @At(value = "INVOKE",
+            target = "Lnet/minecraft/world/level/block/Block;updateEntityMovementAfterFallOn(Lnet/minecraft/world/level/BlockGetter;Lnet/minecraft/world/entity/Entity;)V"))
+    private void momentum$applyStepDownLanding(
+            Block block, BlockGetter level, Entity entity, Operation<Void> original,
+            @Share("momentumStepDown") LocalRef<MomentumStepDownResult> stepDown
+    ) {
+        MomentumStepDownResult result = stepDown.get();
+        if (result == null || result.onGround()) {
+            original.call(block, level, entity);
         }
     }
 
@@ -306,48 +270,129 @@ public abstract class EntityMixin {
 
 
     @Unique
-    private record MomentumStepDownCandidate(float height, AABB box) {
+    private static final double MOMENTUM_STEP_DOWN_EPSILON = 1.0E-5;
+
+    public record MomentumStepDownResult(Vec3 movement, double dropHeight, boolean onGround, VoxelShape support) {
+    }
+
+    public record MomentumSupportInterval(double start, double end) {
     }
 
     @Unique
-    private static float[] momentum$collectCandidateStepDownHeights(
-            AABB boundingBox, List<VoxelShape> colliders, float maxStepHeight, float stepHeightToSkip,
-            float original_StepHeight
-    ) {
-        FloatSet candidates = new FloatArraySet(4);
+    private static @Nullable MomentumStepDownResult momentum$stepDown(Player player, Vec3 movement) {
+        AABB box = player.getBoundingBox();
+        Vec3 travelled = Vec3.ZERO;
+        Vec3 remaining = new Vec3(movement.x, 0, movement.z);
+        double dropHeight = 0;
+        VoxelShape lastSupport = null;
 
-        for (VoxelShape collider : colliders) {
-            DoubleList coords = collider.getCoords(Direction.Axis.Y);
-            // 需要从高到低，所以和原版上坡逻辑是反着的
-            for (int i = coords.size() - 1; i >= 0; i--) {
-                float relativeCoord = (float) (coords.getDouble(i) - boundingBox.minY);
-                if (!(relativeCoord > 0.0F) && relativeCoord != stepHeightToSkip) {
-                    if (relativeCoord < maxStepHeight) {
-                        break;
-                    }
+        // 每轮只走到当前支撑面的边缘，再从新位置检查一级台阶；位移只在最后交给原版应用。
+        while (remaining.horizontalDistanceSqr() > MOMENTUM_STEP_DOWN_EPSILON * MOMENTUM_STEP_DOWN_EPSILON) {
+            List<VoxelShape> colliders = momentum$collectMovementColliders(player,
+                    box.expandTowards(remaining.x, -player.maxUpStep(), remaining.z));
+            if (dropHeight == 0 && momentum$findSupportingCollider(box, colliders) == null) {
+                return null;
+            }
 
-                    candidates.add(relativeCoord);
+            double supportedUntil = momentum$findSupportEnd(box, remaining, colliders);
+            // 稍微跨过边缘，避免浮点误差让刚离开的台阶继续挡住向下碰撞。
+            double progress = Math.min(1, supportedUntil + MOMENTUM_STEP_DOWN_EPSILON / remaining.horizontalDistance());
+            Vec3 requested = remaining.scale(progress);
+            Vec3 horizontal = collideWithShapes(requested, box, colliders);
+            box = box.move(horizontal);
+            travelled = travelled.add(horizontal);
+
+            // 被墙挡住的分量按原版停止，其余方向保留尚未走完的位移。
+            remaining = new Vec3(
+                    horizontal.x == requested.x ? remaining.x - horizontal.x : 0,
+                    0,
+                    horizontal.z == requested.z ? remaining.z - horizontal.z : 0
+            );
+            VoxelShape support = momentum$findSupportingCollider(box, colliders);
+            if (support != null) {
+                lastSupport = support;
+                continue;
+            }
+
+            // 从实际脚底向下碰撞，只允许下降一个上台阶高度；内部碰撞箱不能提供虚构的中间落脚点。
+            double down = Shapes.collide(Direction.Axis.Y, box, colliders, -player.maxUpStep());
+            AABB landingBox = box.move(0, down, 0);
+            VoxelShape landingSupport = down < -MOMENTUM_STEP_DOWN_EPSILON
+                    ? momentum$findSupportingCollider(landingBox, colliders) : null;
+            if (landingSupport == null) {
+                if (dropHeight == 0) {
+                    return null;
                 }
+
+                // 下一落差过大时保留已完成的台阶移动，剩余位移及原本的下落交回普通碰撞处理。
+                Vec3 falling = remaining.add(0, movement.y, 0);
+                List<VoxelShape> fallingColliders = momentum$collectMovementColliders(player, box.expandTowards(falling));
+                Vec3 normalMovement = collideWithShapes(falling, box, fallingColliders);
+                VoxelShape finalSupport = momentum$findSupportingCollider(box.move(normalMovement), fallingColliders);
+                boolean onGround = normalMovement.y != falling.y && finalSupport != null;
+                return new MomentumStepDownResult(travelled.add(normalMovement), dropHeight, onGround,
+                        finalSupport == null ? lastSupport : finalSupport);
             }
+
+            box = landingBox;
+            travelled = travelled.add(0, down, 0);
+            dropHeight -= down;
+            lastSupport = landingSupport;
         }
 
-        float[] sortedCandidates = candidates.toFloatArray();
-        FloatArrays.unstableSort(sortedCandidates);
-        FloatList filtered = new FloatArrayList();
-        float lastHeight = 0.0F;
+        return dropHeight == 0 ? null : new MomentumStepDownResult(travelled, dropHeight, true, lastSupport);
+    }
 
-        for (int i = sortedCandidates.length - 1; i >= 0; i--) {
-            float current = sortedCandidates[i];
-            if (Math.abs(current - lastHeight) <= original_StepHeight) {
-                filtered.add(current);
-                lastHeight = current;
-            } else {
-                break; // 超过单次限制，后面更低的都舍弃
-            }
+    @Unique
+    private static List<VoxelShape> momentum$collectMovementColliders(Player player, AABB range) {
+        // 包含刚好贴着脚底的碰撞面，否则碰撞查询可能漏掉边界上的支撑方块。
+        AABB search = range.inflate(MOMENTUM_STEP_DOWN_EPSILON);
+        return collectColliders(player, player.level(), player.level().getEntityCollisions(player, search), search);
+    }
+
+    @Unique
+    private static double momentum$findSupportEnd(AABB box, Vec3 movement, List<VoxelShape> colliders) {
+        List<MomentumSupportInterval> intervals = new ArrayList<>();
+        for (VoxelShape collider : colliders) {
+            collider.forAllBoxes((minX, minY, minZ, maxX, maxY, maxZ) -> {
+                if (Math.abs(box.minY - maxY) > MOMENTUM_STEP_DOWN_EPSILON) {
+                    return;
+                }
+
+                // 求脚底与这个顶面在本段移动中重叠的起止进度；X、Z 必须同时重叠。
+                double start = 0;
+                double end = 1;
+                if (movement.x == 0) {
+                    if (box.minX >= maxX || box.maxX <= minX) return;
+                } else {
+                    double first = (minX - box.maxX) / movement.x;
+                    double second = (maxX - box.minX) / movement.x;
+                    start = Math.max(start, Math.min(first, second));
+                    end = Math.min(end, Math.max(first, second));
+                }
+                if (movement.z == 0) {
+                    if (box.minZ >= maxZ || box.maxZ <= minZ) return;
+                } else {
+                    double first = (minZ - box.maxZ) / movement.z;
+                    double second = (maxZ - box.minZ) / movement.z;
+                    start = Math.max(start, Math.min(first, second));
+                    end = Math.min(end, Math.max(first, second));
+                }
+                if (start < end) {
+                    intervals.add(new MomentumSupportInterval(start, end));
+                }
+            });
         }
-        float[] result = filtered.toFloatArray();
-        FloatArrays.unstableSort(result);
-        return result;
+
+        // 拼接从当前位置连续可踩到的顶面，遇到真正的空隙就停止，后面的地面不能跨空接上。
+        intervals.sort(Comparator.comparingDouble(MomentumSupportInterval::start));
+        double supportedUntil = 0;
+        double tolerance = MOMENTUM_STEP_DOWN_EPSILON / movement.horizontalDistance();
+        for (MomentumSupportInterval interval : intervals) {
+            if (interval.start() > supportedUntil + tolerance) break;
+            supportedUntil = Math.max(supportedUntil, interval.end());
+        }
+        return supportedUntil;
     }
 
     // 计算坡面单位
@@ -418,40 +463,4 @@ public abstract class EntityMixin {
         return !level.getBlockState(check).getCollisionShape(level, check).isEmpty();
     }
 
-    @Unique
-    private static final ImmutableList<Direction.@NotNull Axis> XZY_AXIS_ORDER = ImmutableList.of(Direction.Axis.X, Direction.Axis.Z, Direction.Axis.Y);
-
-    @Unique
-    private static final ImmutableList<Direction.@NotNull Axis> ZXY_AXIS_ORDER = ImmutableList.of(Direction.Axis.Z, Direction.Axis.X, Direction.Axis.Y);
-
-    @Unique
-    private static Vec3 momentum$collideBoundingBoxDown(@Nullable Entity source, Vec3 movement, AABB boundingBox, Level level, List<VoxelShape> entityColliders) {
-        List<VoxelShape> colliders = collectColliders(source, level, entityColliders, boundingBox.expandTowards(movement));
-        return momentum$collideWithShapesDown(movement, boundingBox, colliders);
-    }
-
-
-    @Unique
-    private static Vec3 momentum$collideWithShapesDown(Vec3 movement, AABB boundingBox, List<VoxelShape> shapes) {
-        if (shapes.isEmpty()) {
-            return movement;
-        } else {
-            Vec3 resolvedMovement = Vec3.ZERO;
-
-            for (Direction.Axis axis : momentum$axisStepOrderDown(movement)) {
-                double axisMovement = movement.get(axis);
-                if (axisMovement != (double) 0.0F) {
-                    double collision = Shapes.collide(axis, boundingBox.move(resolvedMovement), shapes, axisMovement);
-                    resolvedMovement = resolvedMovement.with(axis, collision);
-                }
-            }
-
-            return resolvedMovement;
-        }
-    }
-
-    @Unique
-    private static ImmutableList<Direction.@NotNull Axis> momentum$axisStepOrderDown(Vec3 movement) {
-        return Math.abs(movement.x) < Math.abs(movement.z) ? XZY_AXIS_ORDER : ZXY_AXIS_ORDER;
-    }
 }
